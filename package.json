@@ -1,0 +1,20 @@
+{
+  "name": "welco",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Welco — guided project discovery & requirement management platform",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "setup": "npm run db:setup -w @welco/api",
+    "dev": "concurrently -k -n api,web -c magenta,cyan \"npm run dev -w @welco/api\" \"npm run dev -w @welco/web\"",
+    "build": "npm run build -w @welco/web",
+    "typecheck": "npm run typecheck -w @welco/shared && npm run typecheck -w @welco/api && npm run typecheck -w @welco/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "~5.9.3"
+  }
+}
