@@ -111,7 +111,7 @@ const PRESETS: ProjectPreset[] = [
 ];
 
 export function LandingHeroInteractive() {
-  const { locale } = useI18n();
+  const { locale, b, brand } = useI18n();
   const isAr = locale === 'ar';
 
   const [activePresetId, setActivePresetId] = useState('ecommerce');
@@ -162,7 +162,7 @@ export function LandingHeroInteractive() {
             <span className="size-3 rounded-full bg-emerald-400/90 shadow-sm" />
             <span className="ms-2 hidden text-xs font-mono font-medium text-muted sm:inline-flex items-center gap-1.5">
               <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
-              welco.app/interactive-sandbox
+              {brand.slug}.app/interactive-sandbox
             </span>
           </div>
 
@@ -424,9 +424,7 @@ export function LandingHeroInteractive() {
 
                     <div className="rounded-xl border border-dashed border-border-strong p-3 text-center">
                       <p className="text-xs text-muted">
-                        {isAr
-                          ? 'عند بدء الرحلة، سيقوم المساعد الذكي بتفكيك هذه الخيارات إلى User Stories وتوصيات معمارية فورية.'
-                          : 'Upon starting, Welco AI will convert these choices into complete User Stories and architecture.'}
+                        {b(isAr ? 'عند بدء الرحلة، سيقوم المساعد الذكي بتفكيك هذه الخيارات إلى User Stories وتوصيات معمارية فورية.' : 'Upon starting, Welco AI will convert these choices into complete User Stories and architecture.')}
                       </p>
                     </div>
                   </motion.div>
@@ -486,9 +484,7 @@ export function LandingHeroInteractive() {
               <div className="flex items-start gap-2.5 rounded-xl bg-brand-soft/70 p-3 text-xs leading-relaxed text-brand">
                 <Sparkles className="size-4 shrink-0 mt-0.5" />
                 <span>
-                  {isAr
-                    ? 'المساعد الذكي جاهز لإكمال التفاصيل الفنية فور تسجيل الدخول.'
-                    : 'Welco AI consultant is ready to detail technical specs upon sign up.'}
+                  {b(isAr ? 'المساعد الذكي جاهز لإكمال التفاصيل الفنية فور تسجيل الدخول.' : 'Welco AI consultant is ready to detail technical specs upon sign up.')}
                 </span>
               </div>
             </div>

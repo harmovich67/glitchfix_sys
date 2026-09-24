@@ -17,6 +17,7 @@ import { Avatar } from '../../components/ui/feedback';
 
 import { ContactSettingsCard } from './ContactSettingsCard';
 import { StaffContactCard } from './StaffContactCard';
+import { BrandSeoCard } from './BrandSeoCard';
 
 export default function SettingsPage() {
   const { t, locale } = useI18n();
@@ -61,7 +62,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
-      <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
+      <div className="grid w-full gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title={t('settings.profile')} icon={<UserRound className="size-4" />} />
           <div className="space-y-4 px-5 pb-5">
@@ -133,6 +134,10 @@ export default function SettingsPage() {
               </label>
             </div>
           </Card>
+        )}
+
+        {can('settings.manage') && platform.data && (
+          <BrandSeoCard settings={platform.data} onSave={(updated) => savePlatform.mutate(updated)} isPending={savePlatform.isPending} />
         )}
 
         {can('settings.manage') && platform.data && (

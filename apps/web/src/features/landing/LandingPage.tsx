@@ -55,7 +55,7 @@ const fadeUp = {
 };
 
 export function LandingPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, b } = useI18n();
   const { user } = useAuth();
   const isAr = locale === 'ar';
   const startHref = user ? '/app' : '/register';
@@ -255,9 +255,7 @@ export function LandingPage() {
           transition={{ delay: 0.12, duration: 0.6 }}
           className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted sm:text-lg"
         >
-          {isAr
-            ? 'استبدل النماذج المملة والاجتماعات المضيعة للوقت برحلة استكشاف بصرية ممتعة. مستشار ذكي يفكك فكرتك، يقترح الميزات المناسبة، ويُسلّم فريق البرمجة وثيقة متطلبات دقيقة وجاهزة للتنفيذ.'
-            : 'Replace confusing briefs and wasted meetings with a beautiful guided visual journey. Welco AI consultant asks the right questions and equips your dev team with structured PRDs.'}
+          {b(isAr ? 'استبدل النماذج المملة والاجتماعات المضيعة للوقت برحلة استكشاف بصرية ممتعة. مستشار ذكي يفكك فكرتك، يقترح الميزات المناسبة، ويُسلّم فريق البرمجة وثيقة متطلبات دقيقة وجاهزة للتنفيذ.' : 'Replace confusing briefs and wasted meetings with a beautiful guided visual journey. Welco AI consultant asks the right questions and equips your dev team with structured PRDs.')}
         </motion.p>
 
         {/* CTA Buttons */}
@@ -318,7 +316,7 @@ export function LandingPage() {
             {isAr ? 'خطوات بسيطة ونتائج مبهرة' : 'Seamless 3-Step Journey'}
           </span>
           <h2 className="text-3xl font-bold sm:text-4xl">
-            {isAr ? 'كيف يعمل ويلكو لتحويل فكرتك إلى واقع؟' : 'How Welco Accelerates Discovery'}
+            {b(isAr ? 'كيف يعمل ويلكو لتحويل فكرتك إلى واقع؟' : 'How Welco Accelerates Discovery')}
           </h2>
           <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
             {isAr
@@ -477,9 +475,7 @@ export function LandingPage() {
             </h2>
 
             <p className="text-base text-white/75 sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              {isAr
-                ? 'انضم إلى مئات الشركات والوكالات التي تستخدم ويلكو لتحديد نطاق المشاريع بدقة متناهية وسرعة فائقة.'
-                : 'Join hundreds of agencies and founders who craft unambiguous project briefs with Welco.'}
+              {b(isAr ? 'انضم إلى مئات الشركات والوكالات التي تستخدم ويلكو لتحديد نطاق المشاريع بدقة متناهية وسرعة فائقة.' : 'Join hundreds of agencies and founders who craft unambiguous project briefs with Welco.')}
             </p>
 
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">

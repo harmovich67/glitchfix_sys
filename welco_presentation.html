@@ -1,0 +1,2256 @@
+<!-- Standalone Welco Presentation Page -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Welco — المنصة الذكية لاكتشاف المشاريع وهندسة المتطلبات بالذكاء الاصطناعي</title>
+  <meta name="description" content="Welco منصة رائدة تحوّل أفكار المشاريع الرقمية إلى متطلبات تقنية دقيقة ومنظمة عبر رحلة بصرية ومستشار Gemini الذكي ومنشئ مسارات بدون كود.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%235b5bf6'/><path d='M16 7l9 9-9 9-9-9z' fill='%23fff'/><path d='M16 12l4 4-4 4-4-4z' fill='%2322d3ee'/></svg>">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── CSS Variables & Design Tokens ───────────────────────────────────── */
+    :root {
+      --font-ar: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+      --font-en: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --brand: #5b5bf6;
+      --brand-600: #4a48e2;
+      --brand-light: #7c7bff;
+      --brand-soft: rgba(91, 91, 246, 0.12);
+      --accent: #06b6d4;
+      --accent-soft: rgba(6, 182, 212, 0.12);
+      --success: #10b981;
+      --success-soft: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.12);
+      --danger: #ef4444;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --radius-full: 9999px;
+      
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #09090f;
+      --bg-alt: #0f0f18;
+      --surface: #141422;
+      --surface-2: #1b1b2d;
+      --surface-3: #24243a;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --border-hover: rgba(91, 91, 246, 0.4);
+      --fg: #f5f5fa;
+      --fg-2: #d0d0e2;
+      --muted: #8b8ba8;
+      --glass: rgba(20, 20, 34, 0.75);
+      --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+      --glow-shadow: 0 0 40px rgba(91, 91, 246, 0.25);
+    }
+
+    [data-theme="light"] {
+      --bg: #f8f9fd;
+      --bg-alt: #f1f3f9;
+      --surface: #ffffff;
+      --surface-2: #f4f5fb;
+      --surface-3: #e8eaf3;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-strong: rgba(0, 0, 0, 0.14);
+      --border-hover: rgba(91, 91, 246, 0.45);
+      --fg: #0d0d18;
+      --fg-2: #2d2d42;
+      --muted: #6a6a84;
+      --glass: rgba(255, 255, 255, 0.85);
+      --card-shadow: 0 10px 30px -10px rgba(91, 91, 246, 0.08), 0 0 0 1px var(--border);
+      --glow-shadow: 0 12px 35px rgba(91, 91, 246, 0.15);
+    }
+
+    /* ─── Reset & Base ────────────────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+      scrollbar-gutter: stable;
+    }
+
+    body {
+      font-family: var(--font-ar);
+      background-color: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html[dir="ltr"] body {
+      font-family: var(--font-en);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1280px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    /* ─── Background Ambient Effects ───────────────────────────────────────── */
+    .ambient-glow {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.35;
+      transition: opacity 0.5s ease;
+    }
+    .glow-1 {
+      top: -100px;
+      right: 10%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, var(--brand) 0%, transparent 70%);
+    }
+    .glow-2 {
+      top: 35%;
+      left: -120px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+    }
+    .glow-3 {
+      bottom: 10%;
+      right: -80px;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+    }
+
+    /* ─── Top Notification Bar ────────────────────────────────────────────── */
+    .top-bar {
+      position: relative;
+      z-index: 40;
+      background: linear-gradient(90deg, var(--brand) 0%, #7c3aed 50%, var(--accent) 100%);
+      color: #fff;
+      font-size: 0.84rem;
+      padding: 8px 16px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-weight: 500;
+    }
+    .top-bar .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+    .top-bar a {
+      text-decoration: underline;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* ─── Header & Navigation ──────────────────────────────────────────────── */
+    header.main-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--glass);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-logo svg {
+      width: 34px;
+      height: 34px;
+      filter: drop-shadow(0 4px 10px rgba(91, 91, 246, 0.4));
+    }
+    .badge-pro {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      background: var(--brand-soft);
+      color: var(--brand);
+      border: 1px solid rgba(91, 91, 246, 0.3);
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: var(--transition);
+      position: relative;
+      padding: 6px 0;
+    }
+    .nav-links a:hover {
+      color: var(--fg);
+    }
+    .nav-links a.active {
+      color: var(--brand);
+      font-weight: 600;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .control-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--fg-2);
+      transition: var(--transition);
+    }
+    .control-btn:hover {
+      color: var(--brand);
+      border-color: var(--border-hover);
+      background: var(--surface-3);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-600) 100%);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(91, 91, 246, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(91, 91, 246, 0.45);
+      filter: brightness(1.06);
+    }
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--fg);
+      border: 1px solid var(--border-strong);
+    }
+    .btn-secondary:hover {
+      background: var(--surface-3);
+      border-color: var(--brand);
+      transform: translateY(-2px);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 8px;
+    }
+    .mobile-menu-btn span {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background: var(--fg);
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+
+    /* ─── Mobile Drawer ───────────────────────────────────────────────────── */
+    .mobile-drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 290px;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 100;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+    html[dir="ltr"] .mobile-drawer {
+      right: auto;
+      left: -320px;
+      border-left: none;
+      border-right: 1px solid var(--border);
+      transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mobile-drawer.open {
+      right: 0;
+    }
+    html[dir="ltr"] .mobile-drawer.open {
+      left: 0;
+    }
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      list-style: none;
+      margin-top: 10px;
+    }
+    .mobile-nav-links a {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--fg-2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+    }
+    .mobile-nav-links a:hover {
+      background: var(--surface-2);
+      color: var(--brand);
+    }
+
+    /* ─── Hero Section ────────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      z-index: 10;
+      padding: 70px 0 50px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      background: var(--brand-soft);
+      border: 1px solid rgba(91, 91, 246, 0.3);
+      color: var(--brand);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      animation: float 4s ease-in-out infinite;
+    }
+    .hero-title {
+      font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      max-width: 950px;
+      margin: 0 auto 20px;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--brand) 0%, #a855f7 50%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--muted);
+      max-width: 780px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 50px;
+    }
+
+    /* ─── Interactive Hero Simulator Window ───────────────────────────────── */
+    .hero-mockup-wrapper {
+      position: relative;
+      max-width: 1040px;
+      margin: 0 auto;
+      border-radius: var(--radius-xl);
+      padding: 8px;
+      background: linear-gradient(135deg, rgba(91, 91, 246, 0.3) 0%, rgba(6, 182, 212, 0.2) 100%);
+      box-shadow: var(--glow-shadow), 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    }
+    .mockup-window {
+      background: var(--surface);
+      border-radius: calc(var(--radius-xl) - 6px);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .mockup-header {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .window-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .window-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .mockup-tabs {
+      display: flex;
+      background: var(--surface-3);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      gap: 4px;
+    }
+    .mockup-tab-btn {
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: calc(var(--radius-md) - 2px);
+      color: var(--muted);
+      transition: var(--transition);
+    }
+    .mockup-tab-btn.active {
+      background: var(--surface);
+      color: var(--fg);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .mockup-body {
+      padding: 24px;
+      min-height: 420px;
+      text-align: right;
+    }
+    html[dir="ltr"] .mockup-body {
+      text-align: left;
+    }
+
+    /* Tab Content 1: Client Journey Simulator */
+    .journey-sim-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+    }
+    .sim-sidebar {
+      background: var(--surface-2);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sim-step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .sim-step-item:hover, .sim-step-item.active {
+      background: var(--surface-3);
+      color: var(--fg);
+    }
+    .sim-step-item.active {
+      color: var(--brand);
+      font-weight: 600;
+      border: 1px solid rgba(91, 91, 246, 0.3);
+    }
+    .sim-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .sim-step-item.active .sim-step-num {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .sim-content-area {
+      background: var(--surface-2);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 22px;
+    }
+    .sim-type-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .sim-type-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+    }
+    .sim-type-card:hover {
+      border-color: var(--brand);
+      transform: translateY(-2px);
+    }
+    .sim-type-card.selected {
+      border: 2px solid var(--brand);
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-weight: 600;
+    }
+    .sim-type-card .icon {
+      font-size: 1.6rem;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    /* Tab Content 2: AI Chat Simulator */
+    .ai-chat-box {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .chat-bubble {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .chat-bubble.user {
+      flex-direction: row-reverse;
+    }
+    .bubble-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .bubble-avatar.ai {
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(91, 91, 246, 0.4);
+    }
+    .bubble-avatar.user-av {
+      background: #8b5cf6;
+      color: #fff;
+    }
+    .bubble-text {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: var(--radius-lg);
+      font-size: 0.92rem;
+      max-width: 82%;
+      line-height: 1.6;
+    }
+    .chat-bubble.user .bubble-text {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+    }
+    .ai-action-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .action-pill {
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      color: var(--fg-2);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .action-pill:hover {
+      background: var(--brand-soft);
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+    .prompt-suggestions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .prompt-chip {
+      font-size: 0.8rem;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--fg-2);
+    }
+    .prompt-chip:hover {
+      background: var(--surface);
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    /* Tab Content 3: Super Admin Metrics */
+    .admin-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .metric-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .metric-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--fg);
+    }
+    .metric-change {
+      font-size: 0.75rem;
+      color: var(--success);
+      margin-top: 4px;
+    }
+
+    /* ─── Highlights / Stat Banner ─────────────────────────────────────────── */
+    .stats-bar {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-alt);
+      margin: 40px 0 80px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 30px;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-size: clamp(2rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .stat-item p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ─── Section Header Standard ─────────────────────────────────────────── */
+    .section-header {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 50px;
+    }
+    .section-tag {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      background: var(--brand-soft);
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+      line-height: 1.25;
+    }
+    .section-desc {
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ─── Comparison Grid (Old vs Welco) ──────────────────────────────────── */
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 90px;
+    }
+    .compare-card {
+      border-radius: var(--radius-xl);
+      padding: 36px 30px;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .compare-card.old {
+      background: var(--surface-2);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    .compare-card.new {
+      background: linear-gradient(135deg, rgba(91, 91, 246, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%), var(--surface);
+      border: 2px solid rgba(91, 91, 246, 0.4);
+      box-shadow: var(--glow-shadow);
+    }
+    .compare-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      margin-bottom: 16px;
+    }
+    .compare-card.old .compare-badge {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    .compare-card.new .compare-badge {
+      background: var(--brand);
+      color: #fff;
+    }
+    .compare-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .compare-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: var(--fg-2);
+    }
+    .compare-icon {
+      flex-shrink: 0;
+      font-size: 1.1rem;
+      margin-top: 2px;
+    }
+
+    /* ─── Pillars / Core Features ─────────────────────────────────────────── */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 90px;
+    }
+    .pillar-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      padding: 32px 28px;
+      border: 1px solid var(--border);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .pillar-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--brand);
+      box-shadow: var(--card-shadow);
+    }
+    .pillar-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      border: 1px solid rgba(91, 91, 246, 0.25);
+    }
+    .pillar-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .pillar-desc {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .pillar-tag {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    html[dir="ltr"] .pillar-tag {
+      left: auto;
+      right: 24px;
+    }
+
+    /* ─── Roles & Credentials Section ─────────────────────────────────────── */
+    .roles-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 48px 36px;
+      margin-bottom: 90px;
+      box-shadow: var(--card-shadow);
+    }
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 30px;
+    }
+    .role-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .role-card:hover {
+      border-color: var(--brand);
+      transform: translateY(-3px);
+    }
+    .role-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .role-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .role-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .role-name {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .role-email {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: var(--surface);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      word-break: break-all;
+    }
+    .copy-btn {
+      width: 100%;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      background: var(--surface-3);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .copy-btn:hover {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+    }
+
+    .password-banner {
+      margin-top: 24px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      background: var(--brand-soft);
+      border: 1px solid rgba(91, 91, 246, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .pw-badge {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--brand);
+      background: var(--surface);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    /* ─── Interactive ROI Calculator ──────────────────────────────────────── */
+    .calculator-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      margin-bottom: 90px;
+    }
+    .calc-slider-wrapper {
+      margin-top: 24px;
+    }
+    .calc-slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .slider-val {
+      font-size: 1.4rem;
+      color: var(--brand);
+      font-weight: 800;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 8px;
+      border-radius: 5px;
+      background: var(--surface-3);
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--brand);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(91, 91, 246, 0.6);
+    }
+    .calc-results {
+      background: var(--surface-2);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .result-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .result-title {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    .result-number {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--fg);
+    }
+
+    /* ─── Tech Stack Grid ─────────────────────────────────────────────────── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 90px;
+    }
+    .tech-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 14px;
+      text-align: center;
+      transition: var(--transition);
+    }
+    .tech-pill:hover {
+      border-color: var(--brand);
+      transform: translateY(-3px);
+    }
+    .tech-pill h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .tech-pill span {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ─── FAQ Accordion ───────────────────────────────────────────────────── */
+    .faq-list {
+      max-width: 820px;
+      margin: 0 auto 90px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .faq-item:hover {
+      border-color: var(--border-hover);
+    }
+    .faq-question {
+      padding: 20px 24px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .faq-arrow {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+      color: var(--brand);
+    }
+    .faq-item.active .faq-arrow {
+      transform: rotate(180deg);
+    }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+      padding: 0 24px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .faq-item.active .faq-answer {
+      max-height: 250px;
+      padding: 0 24px 22px;
+    }
+
+    /* ─── CTA Footer Section ──────────────────────────────────────────────── */
+    .cta-banner {
+      background: linear-gradient(135deg, var(--brand) 0%, #7c3aed 50%, var(--accent) 100%);
+      border-radius: var(--radius-xl);
+      padding: 60px 40px;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 80px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(91, 91, 246, 0.4);
+    }
+    .cta-banner h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .cta-banner p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 32px;
+      opacity: 0.95;
+    }
+    .cta-btn-white {
+      background: #fff;
+      color: #1a1a2e;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      transition: var(--transition);
+    }
+    .cta-btn-white:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    footer.main-footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ─── Toast Notification ──────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--brand);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      padding: 12px 24px;
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      font-weight: 600;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ─── Responsive Media Queries (Mobile & Tablet) ──────────────────────── */
+    @media (max-width: 1024px) {
+      .compare-container {
+        grid-template-columns: 1fr;
+      }
+      .journey-sim-grid {
+        grid-template-columns: 1fr;
+      }
+      .calculator-card {
+        grid-template-columns: 1fr;
+        padding: 28px;
+        gap: 30px;
+      }
+    }
+
+    @media (max-width: 868px) {
+      .nav-links {
+        display: none;
+      }
+      .mobile-menu-btn {
+        display: flex;
+      }
+      .hero {
+        padding: 45px 0 30px;
+      }
+      .hero-title {
+        font-size: 2.15rem;
+      }
+      .mockup-body {
+        padding: 16px;
+      }
+      .roles-section {
+        padding: 28px 18px;
+      }
+      .cta-banner {
+        padding: 40px 20px;
+      }
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Ambient Backdrops -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Top Announcement Bar -->
+  <aside class="top-bar" aria-label="Announcement">
+    <span class="pulse-dot"></span>
+    <span id="txt-announcement">منظومة Welco v2.0 جاهزة للاستخدام الآن — اكتشاف وتوثيق المشاريع بالذكاء الاصطناعي</span>
+    <a href="#demo-accounts" id="txt-announcement-link">جرّب الحسابات الجاهزة ←</a>
+  </aside>
+
+  <!-- Sticky Navbar -->
+  <header class="main-header">
+    <div class="container">
+      <nav class="navbar" aria-label="Main Navigation">
+        <!-- Logo -->
+        <a href="#" class="brand-logo">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <defs>
+              <linearGradient id="welco-brand-g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#6d6bff" />
+                <stop offset="1" stop-color="#22d3ee" />
+              </linearGradient>
+            </defs>
+            <rect width="32" height="32" rx="9" fill="url(#welco-brand-g)" />
+            <path d="M16 7l9 9-9 9-9-9z" fill="#fff" opacity=".95" />
+            <path d="M16 12l4 4-4 4-4-4z" fill="url(#welco-brand-g)" />
+          </svg>
+          <span>Welco</span>
+          <span class="badge-pro">Platform</span>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <ul class="nav-links">
+          <li><a href="#overview" class="active" data-i18n="nav-overview">نظرة عامة</a></li>
+          <li><a href="#simulator" data-i18n="nav-journey">رحلة العميل</a></li>
+          <li><a href="#pillars" data-i18n="nav-pillars">الميزات الكبرى</a></li>
+          <li><a href="#demo-accounts" data-i18n="nav-roles">الأدوار والحسابات</a></li>
+          <li><a href="#calculator" data-i18n="nav-calculator">حاسبة التوفير</a></li>
+          <li><a href="#tech" data-i18n="nav-tech">التقنيات</a></li>
+          <li><a href="#faq" data-i18n="nav-faq">الأسئلة</a></li>
+        </ul>
+
+        <!-- Controls: Theme, Language, Actions -->
+        <div class="nav-controls">
+          <button class="control-btn" id="theme-btn" title="تبديل الثيم (فاتح/داكن)">
+            <span id="theme-icon">☀️</span>
+          </button>
+          <button class="control-btn" id="lang-btn" title="Switch Language / تبديل اللغة">
+            <span id="lang-label" style="font-size:0.75rem; font-weight:700;">EN</span>
+          </button>
+          <a href="#demo-accounts" class="btn btn-primary" id="txt-cta-nav">دخول تجريبي</a>
+          <button class="mobile-menu-btn" id="mobile-toggle" aria-label="فتح القائمة">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="mobile-drawer" id="mobile-drawer">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="brand-logo">
+        <svg viewBox="0 0 32 32" style="width:28px;height:28px;">
+          <rect width="32" height="32" rx="9" fill="#5b5bf6" />
+          <path d="M16 7l9 9-9 9-9-9z" fill="#fff" />
+        </svg>
+        <span>Welco</span>
+      </div>
+      <button id="drawer-close" style="font-size:1.4rem; color:var(--muted);">&times;</button>
+    </div>
+    <ul class="mobile-nav-links">
+      <li><a href="#overview" class="drawer-link">📌 <span data-i18n="nav-overview">نظرة عامة</span></a></li>
+      <li><a href="#simulator" class="drawer-link">🧭 <span data-i18n="nav-journey">رحلة العميل</span></a></li>
+      <li><a href="#pillars" class="drawer-link">⚡ <span data-i18n="nav-pillars">الميزات الكبرى</span></a></li>
+      <li><a href="#demo-accounts" class="drawer-link">👥 <span data-i18n="nav-roles">الأدوار والحسابات</span></a></li>
+      <li><a href="#calculator" class="drawer-link">💰 <span data-i18n="nav-calculator">حاسبة التوفير</span></a></li>
+      <li><a href="#tech" class="drawer-link">💻 <span data-i18n="nav-tech">التقنيات</span></a></li>
+      <li><a href="#faq" class="drawer-link">❓ <span data-i18n="nav-faq">الأسئلة الشائعة</span></a></li>
+    </ul>
+    <div style="margin-top:auto;">
+      <a href="#demo-accounts" class="btn btn-primary drawer-link" style="width:100%; text-align:center;">جرب المنصة الآن</a>
+    </div>
+  </aside>
+
+  <!-- ─── Hero Section ──────────────────────────────────────────────────────── -->
+  <section class="hero" id="overview">
+    <div class="container">
+      <div class="hero-badge">
+        <span>🚀</span>
+        <span data-i18n="hero-badge">المنصة الأولى لهندسة متطلبات البرمجيات · مدعومة بـ Gemini AI</span>
+      </div>
+      <h1 class="hero-title" data-i18n="hero-title">
+        حوّل أفكار عملائك إلى متطلبات تقنية كاملة ومقننة <br>
+        <span class="gradient-text">برحلة بصرية ذكية بدل النماذج التقليدية!</span>
+      </h1>
+      <p class="hero-subtitle" data-i18n="hero-subtitle">
+        استبدل استمارات الطلب المرهقة برحلة استكشاف تفاعلية مبهرة. يقترح مستشار Gemini الذكي الميزات، ويتكيف مسار الأسئلة تلقائياً بدون كود، لتستلم فرق البرمجة ملف مواصفات معتمد جاهز للتنفيذ الفوري.
+      </p>
+      <div class="hero-actions">
+        <a href="#simulator" class="btn btn-primary" style="padding:12px 28px; font-size:1rem;" data-i18n="hero-cta-sim">
+          🎮 جرّب محاكي المنصة التفاعلي
+        </a>
+        <a href="#demo-accounts" class="btn btn-secondary" style="padding:12px 28px; font-size:1rem;" data-i18n="hero-cta-demo">
+          🔑 بيانات الحسابات الجاهزة (5 أدوار)
+        </a>
+      </div>
+
+      <!-- Interactive Mockup Box -->
+      <div class="hero-mockup-wrapper" id="simulator">
+        <div class="mockup-window">
+          <!-- Window Header with Tabs -->
+          <div class="mockup-header">
+            <div class="window-dots">
+              <span class="window-dot dot-red"></span>
+              <span class="window-dot dot-yellow"></span>
+              <span class="window-dot dot-green"></span>
+            </div>
+            <div class="mockup-tabs">
+              <button class="mockup-tab-btn active" data-tab="tab-journey" data-i18n="tab-journey">🧭 مسار العميل التفاعلي</button>
+              <button class="mockup-tab-btn" data-tab="tab-ai" data-i18n="tab-ai">🤖 مستشار Gemini AI</button>
+              <button class="mockup-tab-btn" data-tab="tab-admin" data-i18n="tab-admin">📊 لوحة تحكم الإدارة</button>
+            </div>
+            <span style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono);">app.welco.dev</span>
+          </div>
+
+          <!-- Window Body Tab 1: Client Journey Simulator -->
+          <div class="mockup-body" id="tab-journey">
+            <div class="journey-sim-grid">
+              <div class="sim-sidebar">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase;">خطوات الرحلة الديناميكية</div>
+                <div class="sim-step-item active" onclick="switchSimStep(1)">
+                  <span class="sim-step-num">١</span>
+                  <span>نوع المشروع والمجال</span>
+                </div>
+                <div class="sim-step-item" onclick="switchSimStep(2)">
+                  <span class="sim-step-num">٢</span>
+                  <span>الهوية والاتجاه البصري</span>
+                </div>
+                <div class="sim-step-item" onclick="switchSimStep(3)">
+                  <span class="sim-step-num">٣</span>
+                  <span>الميزات التلقائية (Logic)</span>
+                </div>
+                <div class="sim-step-item" onclick="switchSimStep(4)">
+                  <span class="sim-step-num">٤</span>
+                  <span>الميزانية وتاريخ الإطلاق</span>
+                </div>
+              </div>
+
+              <div class="sim-content-area" id="sim-dynamic-view">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <h4 style="font-size:1.1rem; font-weight:700;" id="sim-step-title">اختر ما تريد بناءه:</h4>
+                  <span style="font-size:0.75rem; background:var(--surface); padding:2px 8px; border-radius:6px; border:1px solid var(--border);">تفرع شرطي نشط</span>
+                </div>
+                <p style="font-size:0.85rem; color:var(--muted); margin-top:4px;">تتغير الأسئلة التالية والميزات المقترحة فورا بحسب اختيارك أدناه:</p>
+
+                <div class="sim-type-cards">
+                  <div class="sim-type-card selected" onclick="selectSimType('store', this)">
+                    <span class="icon">🛍️</span>
+                    <span>متجر إلكتروني</span>
+                  </div>
+                  <div class="sim-type-card" onclick="selectSimType('app', this)">
+                    <span class="icon">📱</span>
+                    <span>تطبيق جوال</span>
+                  </div>
+                  <div class="sim-type-card" onclick="selectSimType('saas', this)">
+                    <span class="icon">☁️</span>
+                    <span>منصة سحابية (SaaS)</span>
+                  </div>
+                  <div class="sim-type-card" onclick="selectSimType('custom', this)">
+                    <span class="icon">⚡</span>
+                    <span>نظام شركة مخصص</span>
+                  </div>
+                </div>
+
+                <div id="sim-conditional-alert" style="margin-top:16px; padding:12px 14px; border-radius:var(--radius-md); background:var(--brand-soft); border:1px solid rgba(91,91,246,0.3); font-size:0.83rem;">
+                  ✨ <strong>الشروط المنطقية:</strong> عند اختيار «متجر»، تم تلقائياً تفعيل خطوة «بوابات الدفع»، «طرق الشحن»، و«إدارة المخزون».
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Window Body Tab 2: AI Chat Simulator -->
+          <div class="mockup-body" id="tab-ai" style="display:none;">
+            <div class="ai-chat-box">
+              <div class="chat-bubble">
+                <div class="bubble-avatar ai">AI</div>
+                <div class="bubble-text">
+                  مرحباً! أنا مستشارك الذكي في ويلكو. صف لي فكرة مشروعك باختصار، وسأقترح عليك أدق الميزات وأساعدك في الإجابة على الأسئلة.
+                </div>
+              </div>
+
+              <div class="chat-bubble user" id="user-sample-msg">
+                <div class="bubble-avatar user-av">عميل</div>
+                <div class="bubble-text" id="user-msg-content">
+                  أريد إنشاء متجر عطور فاخر مع اشتراكات شهرية لصناديق العينات.
+                </div>
+              </div>
+
+              <div class="chat-bubble">
+                <div class="bubble-avatar ai">AI</div>
+                <div class="bubble-text" id="ai-reply-content">
+                  فكرة ممتازة! إليك أفضل حزمة ميزات تقنية مقترحة لهذا النموذج:
+                  <div class="ai-action-pills">
+                    <span class="action-pill" onclick="applySuggestion('بوابة دفع متكرر للاشتراكات')">+ بوابة اشتراكات شهرية (Stripe/Paymob)</span>
+                    <span class="action-pill" onclick="applySuggestion('استبيان ذكي لتفضيل الروائح')">+ اختبار تحديد العطر المناسب (Quiz)</span>
+                    <span class="action-pill" onclick="applySuggestion('برنامج ولاء ونقاط إحالة')">+ نظام نقاط ومكافآت الولاء</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interactive Prompt Chips -->
+              <div class="prompt-suggestions">
+                <span class="prompt-chip" onclick="simulateAI('أريد تطبيق عقارات مع حجز جولات افتراضية')">💡 تطبيق عقارات بجولات 3D</span>
+                <span class="prompt-chip" onclick="simulateAI('نظام إدارة عيادات ومواعيد أطباء')">💡 نظام عيادات طبية</span>
+                <span class="prompt-chip" onclick="simulateAI('منصة تعليمية باختبارات وشهادات')">💡 منصة كورسات واختبارات</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Window Body Tab 3: Super Admin Dashboard -->
+          <div class="mockup-body" id="tab-admin" style="display:none;">
+            <div class="admin-metrics-grid">
+              <div class="metric-card">
+                <div class="metric-label">المشاريع النشطة</div>
+                <div class="metric-val">١٨ مشروع</div>
+                <div class="metric-change">↑ ٤ طلبات جديدة هذا الأسبوع</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">معدل اكتمال المتطلبات</div>
+                <div class="metric-val">٩٤.٢٪</div>
+                <div class="metric-change">بدون أي استفسارات مفقودة</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">حالة ذكاء Gemini</div>
+                <div class="metric-val" style="color:#10b981;">متصل 🟢</div>
+                <div class="metric-change">Gemini 2.5 Flash Live</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">رسائل قيد الإشراف</div>
+                <div class="metric-val" style="color:#f59e0b;">٢ معلقة</div>
+                <div class="metric-change">بانتظار اعتماد المدير العام</div>
+              </div>
+            </div>
+
+            <!-- Mini Kanban representation -->
+            <div style="margin-top:20px; background:var(--surface-2); border-radius:var(--radius-md); padding:16px; border:1px solid var(--border);">
+              <div style="font-size:0.85rem; font-weight:700; margin-bottom:10px;">لوحة تسليم المهام (Delivery Kanban Pipeline)</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; font-size:0.78rem;">
+                <div style="background:var(--surface); padding:8px 10px; border-radius:6px; border-top:3px solid #3b82f6;">جمع المتطلبات (٣)</div>
+                <div style="background:var(--surface); padding:8px 10px; border-radius:6px; border-top:3px solid #f59e0b;">مراجعة العميل (٢)</div>
+                <div style="background:var(--surface); padding:8px 10px; border-radius:6px; border-top:3px solid #8b5cf6;">مرحلة التصميم (٤)</div>
+                <div style="background:var(--surface); padding:8px 10px; border-radius:6px; border-top:3px solid #10b981;">التطوير والاختبار (٥)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Statistics Counter Banner ─────────────────────────────────────────── -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h3 class="gradient-text">٨٥٪</h3>
+          <p>توفير في وقت الاجتماعات والاتصالات</p>
+        </div>
+        <div class="stat-item">
+          <h3 class="gradient-text">١٠٠٪</h3>
+          <p>تحكم مرن بدون برمجة (No-Code)</p>
+        </div>
+        <div class="stat-item">
+          <h3 class="gradient-text">٥ أدوار</h3>
+          <p>صلاحيات متكاملة (RBAC Enterprise)</p>
+        </div>
+        <div class="stat-item">
+          <h3 class="gradient-text">&lt; ١٢ دقيقة</h3>
+          <p>متوسط وقت العميل لإنهاء مواصفات مشروعه</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Comparison Section (Old vs Welco) ─────────────────────────────────── -->
+  <section class="container" style="padding-top:40px;">
+    <div class="section-header">
+      <span class="section-tag">النقلة النوعية</span>
+      <h2 class="section-title">لماذا تفشل نماذج الطلبات العادية وتنجح منظومة Welco؟</h2>
+      <p class="section-desc">المقارنة الصريحة بين الأسلوب التقليدي المرهق ومنهجية ويلكو الذكية والمؤتمتة.</p>
+    </div>
+
+    <div class="compare-container">
+      <!-- Old Way -->
+      <div class="compare-card old">
+        <span class="compare-badge">❌ الطريقة التقليدية (Google Forms / PDFs)</span>
+        <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:10px;">استمارات جامدة وتوهان للعميل</h3>
+        <p style="font-size:0.9rem; color:var(--muted);">نماذج طويلة ومملة تسأل نفس الأسئلة لجميع أنواع المشاريع، مما يؤدي لمتطلبات ناقصة وغير مفهومة.</p>
+        <ul class="compare-list">
+          <li><span class="compare-icon">⚠️</span> <span>العميل لا يعرف المصطلحات التقنية فيكتب إجابات مبهمة مثل "أريد موقع ممتاز".</span></li>
+          <li><span class="compare-icon">⚠️</span> <span>عشرات الاجتماعات ورسائل الواتساب للتوضيح وإعادة الاستفسار.</span></li>
+          <li><span class="compare-icon">⚠️</span> <span>فريق التطوير يبدأ البرمجة بمتطلبات غير مكتملة، مما يسبب خلافات مالية وتأخيراً.</span></li>
+          <li><span class="compare-icon">⚠️</span> <span>أي تعديل على الأسئلة يتطلب تدخلاً برمجياً لإعادة بناء النماذج.</span></li>
+        </ul>
+      </div>
+
+      <!-- Welco Way -->
+      <div class="compare-card new">
+        <span class="compare-badge">✨ أسلوب Welco المبتكر والذكي</span>
+        <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:10px;">رحلة موجهة بالذكاء الاصطناعي مع تفرع منطقي</h3>
+        <p style="font-size:0.9rem; color:var(--muted);">تجربة مستخدم ساحرة خطوة بخطوة تسأل فقط ما يخص المشروع، مع دعم فوري من Gemini لاقتراح الميزات.</p>
+        <ul class="compare-list">
+          <li><span class="compare-icon">✅</span> <span>الذكاء الاصطناعي يشرح للعميل خياراته ويقترح الميزات المتوافقة مع ميزانيته.</span></li>
+          <li><span class="compare-icon">✅</span> <span>تفرع مسارات الأسئلة تلقائياً (متجر ➔ بوابات دفع، تطبيق ➔ متجر آبل وجوجل).</span></li>
+          <li><span class="compare-icon">✅</span> <span>تسليم ملف متطلبات مهيكل ومعتمد رسمياً وقفل التعديلات قبل كتابة الكود.</span></li>
+          <li><span class="compare-icon">✅</span> <span>المدير العام يتحكم في كل الأسئلة والخطوات والشروط من واجهة مرئية سهلة.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Core Pillars ──────────────────────────────────────────────────────── -->
+  <section class="container" id="pillars">
+    <div class="section-header">
+      <span class="section-tag">إمكانيات المنظومة</span>
+      <h2 class="section-title">أهم الركائز المعمارية في Welco</h2>
+      <p class="section-desc">صممت المنصة بمعمارية برمجية حديثة ونظيفة تجمع بين تجربة المستخدم السلسة وأعلى معايير الحوكمة.</p>
+    </div>
+
+    <div class="pillars-grid">
+      <!-- Pillar 1 -->
+      <div class="pillar-card">
+        <span class="pillar-tag">No-Code</span>
+        <div class="pillar-icon">🛠️</div>
+        <h3 class="pillar-title">منشئ مسارات العمل المرئي</h3>
+        <p class="pillar-desc">
+          المدير العام ينشئ الخطوات والأسئلة (نص، اختيار، خيارات متعددة، رفع ملفات) ويضبط شروط الظهور المنطقية (Logic Engine) بدون أي تعديل في الكود البرمجي.
+        </p>
+      </div>
+
+      <!-- Pillar 2 -->
+      <div class="pillar-card">
+        <span class="pillar-tag">Gemini AI</span>
+        <div class="pillar-icon">🤖</div>
+        <h3 class="pillar-title">مستشار الذكاء الاصطناعي</h3>
+        <p class="pillar-desc">
+          مدمج عبر REST API مع خوارزمية ذكية لاستخراج الميزات وحفظها كإجابات مباشرة. يعمل بوضع العرض (Mock) عند انقطاع الإنترنت أو بدون مفتاح API.
+        </p>
+      </div>
+
+      <!-- Pillar 3 -->
+      <div class="pillar-card">
+        <span class="pillar-tag">Enterprise RBAC</span>
+        <div class="pillar-icon">🛡️</div>
+        <h3 class="pillar-title">صلاحيات حازمة وأمان متقدم</h3>
+        <p class="pillar-desc">
+          جدول صلاحيات صارم بين المدير العام، والمدير، ومدير المشروع، والمطورين، والعملاء. مفاتيح الـ API مشفرة بنظام AES-256-GCM وملفات خاصة ومحمية.
+        </p>
+      </div>
+
+      <!-- Pillar 4 -->
+      <div class="pillar-card">
+        <span class="pillar-tag">Channels</span>
+        <div class="pillar-icon">💬</div>
+        <h3 class="pillar-title">قنوات محادثة مزدوجة مع إشراف</h3>
+        <p class="pillar-desc">
+          قناة محادثة خاصة بالفريق الداخلي، وقناة أخرى للعميل. ميزة الإشراف (Moderation) تسمح للأدمن بمراجعة واعتماد ردود المطورين قبل وصولها للعميل.
+        </p>
+      </div>
+
+      <!-- Pillar 5 -->
+      <div class="pillar-card">
+        <span class="pillar-tag">Realtime & Audit</span>
+        <div class="pillar-icon">⚡</div>
+        <h3 class="pillar-title">تحديثات فورية وسجل تدقيق شامل</h3>
+        <p class="pillar-desc">
+          اتصال فوري عبر Socket.io للإشعارات والتنبيهات، مع سجل تدقيق غير قابل للتلاعب (Audit Trail) يوثّق كل حركة حساسة في النظام بدقة وبصمة زمنية.
+        </p>
+      </div>
+
+      <!-- Pillar 6 -->
+      <div class="pillar-card">
+        <span class="pillar-tag">Bilingual & Themes</span>
+        <div class="pillar-icon">🌐</div>
+        <h3 class="pillar-title">ثنائي اللغة بالكامل وواجهة زجاجية</h3>
+        <p class="pillar-desc">
+          دعم حقيقي ودقيق للغة العربية (RTL) والإنجليزية (LTR)، مع ثيمات فاتحة وداكنة مدروسة جمالياً، وتصميم متجاوب 100% مع شاشات الهواتف والتابلت.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Roles & Credentials Section ─────────────────────────────────────── -->
+  <section class="container" id="demo-accounts">
+    <div class="roles-section">
+      <div class="section-header" style="margin-bottom:20px;">
+        <span class="section-tag">جاهز للتجربة الفورية</span>
+        <h2 class="section-title">بيانات الحسابات التجريبية لكافة الأدوار</h2>
+        <p class="section-desc">انسخ بيانات الدخول لأي دور بنقرة زر وجرّب المنصة من منظور مختلف لكل حساب.</p>
+      </div>
+
+      <div class="roles-grid">
+        <!-- Super Admin -->
+        <div class="role-card">
+          <div>
+            <div class="role-header">
+              <div class="role-avatar" style="background:#5b5bf6;">👑</div>
+              <div>
+                <div class="role-title">المدير العام</div>
+                <div class="role-name">Sara Al-Mansour</div>
+              </div>
+            </div>
+            <div class="role-email">superadmin@welco.dev</div>
+          </div>
+          <button class="copy-btn" onclick="copyCreds('superadmin@welco.dev')">📋 نسخ البريد</button>
+        </div>
+
+        <!-- Admin -->
+        <div class="role-card">
+          <div>
+            <div class="role-header">
+              <div class="role-avatar" style="background:#06b6d4;">💼</div>
+              <div>
+                <div class="role-title">مدير النظام</div>
+                <div class="role-name">Omar Haddad</div>
+              </div>
+            </div>
+            <div class="role-email">admin@welco.dev</div>
+          </div>
+          <button class="copy-btn" onclick="copyCreds('admin@welco.dev')">📋 نسخ البريد</button>
+        </div>
+
+        <!-- Project Manager -->
+        <div class="role-card">
+          <div>
+            <div class="role-header">
+              <div class="role-avatar" style="background:#8b5cf6;">📋</div>
+              <div>
+                <div class="role-title">مدير مشروع</div>
+                <div class="role-name">Lina Farouk</div>
+              </div>
+            </div>
+            <div class="role-email">pm@welco.dev</div>
+          </div>
+          <button class="copy-btn" onclick="copyCreds('pm@welco.dev')">📋 نسخ البريد</button>
+        </div>
+
+        <!-- Developer -->
+        <div class="role-card">
+          <div>
+            <div class="role-header">
+              <div class="role-avatar" style="background:#10b981;">💻</div>
+              <div>
+                <div class="role-title">مطور برمجيات</div>
+                <div class="role-name">Yusuf Karim</div>
+              </div>
+            </div>
+            <div class="role-email">dev@welco.dev</div>
+          </div>
+          <button class="copy-btn" onclick="copyCreds('dev@welco.dev')">📋 نسخ البريد</button>
+        </div>
+
+        <!-- Client -->
+        <div class="role-card">
+          <div>
+            <div class="role-header">
+              <div class="role-avatar" style="background:#f59e0b;">🛍️</div>
+              <div>
+                <div class="role-title">عميل (أورورا للعطور)</div>
+                <div class="role-name">Khalid Al-Rashid</div>
+              </div>
+            </div>
+            <div class="role-email">client@welco.dev</div>
+          </div>
+          <button class="copy-btn" onclick="copyCreds('client@welco.dev')">📋 نسخ البريد</button>
+        </div>
+      </div>
+
+      <!-- Password Banner -->
+      <div class="password-banner">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:1.5rem;">🔑</span>
+          <div>
+            <div style="font-weight:700; font-size:0.95rem;">كلمة المرور الموحدة لجميع الحسابات التجريبية أعلاه:</div>
+            <div style="font-size:0.8rem; color:var(--muted);">يمكن الدخول بها لأي حساب وتغييرها من الإعدادات بأمان.</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="pw-badge">Welco123!</span>
+          <button class="btn btn-secondary" style="padding:6px 14px; font-size:0.8rem;" onclick="copyText('Welco123!', 'تم نسخ كلمة المرور!')">نسخ الباسوورد</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Interactive ROI Calculator ────────────────────────────────────────── -->
+  <section class="container" id="calculator">
+    <div class="section-header">
+      <span class="section-tag">حساب الأثر المالي والزمني</span>
+      <h2 class="section-title">كم ساعة ومال ستوفره شركتك مع Welco؟</h2>
+      <p class="section-desc">حرّك المؤشر بحسب عدد المشاريع أو الطلبات التي تستقبلها شهرياً وشاهد النتائج الحية.</p>
+    </div>
+
+    <div class="calculator-card">
+      <div>
+        <h3 style="font-size:1.4rem; font-weight:700; margin-bottom:8px;">حاسبة كفاءة هندسة المتطلبات</h3>
+        <p style="font-size:0.9rem; color:var(--muted); line-height:1.6;">
+          بناء المتطلبات يدوياً يستهلك ما معدله ٦ إلى ١٠ ساعات من اجتماعات وتوثيق لكل مشروع. منصة Welco تقلصها إلى جلسة واحدة ذاتية ينهيها العميل بنفسه بمساعدة AI.
+        </p>
+
+        <div class="calc-slider-wrapper">
+          <div class="calc-slider-header">
+            <span>عدد المشاريع المستلمة شهرياً:</span>
+            <span class="slider-val" id="slider-display">٨ مشاريع</span>
+          </div>
+          <input type="range" id="project-slider" min="1" max="40" value="8" oninput="updateCalculator(this.value)">
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted); margin-top:6px;">
+            <span>١ مشروع</span>
+            <span>٢٠ مشروع</span>
+            <span>٤٠ مشروع</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-results">
+        <div class="result-item">
+          <div>
+            <div class="result-title">ساعات الاجتماعات الموفرة شهرياً</div>
+            <div style="font-size:0.75rem; color:var(--muted);">وقت الفريق والمدراء</div>
+          </div>
+          <div class="result-number" style="color:var(--brand);" id="calc-hours">٥٦ ساعة</div>
+        </div>
+
+        <div class="result-item">
+          <div>
+            <div class="result-title">التوفير المالي التقديري شهرياً</div>
+            <div style="font-size:0.75rem; color:var(--muted);">بمعدل ٥٠$/ساعة لفرق الاستشارة</div>
+          </div>
+          <div class="result-number" style="color:#10b981;" id="calc-money">٢,٨٠٠ $</div>
+        </div>
+
+        <div class="result-item">
+          <div>
+            <div class="result-title">سرعة تسليم المتطلبات للبرمجة</div>
+            <div style="font-size:0.75rem; color:var(--muted);">جاهزة للاعتماد والتقطيع</div>
+          </div>
+          <div class="result-number" style="color:#f59e0b;">نفس اليوم ⚡</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Architecture & Tech Stack ─────────────────────────────────────────── -->
+  <section class="container" id="tech">
+    <div class="section-header">
+      <span class="section-tag">البنية التحتية</span>
+      <h2 class="section-title">أحدث التقنيات البرمجية الأكثر موثوقية</h2>
+      <p class="section-desc">مبني وفق معمارية Clean Architecture ومكتبات رائدة لضمان السرعة الفائقة وقابلية التوسع.</p>
+    </div>
+
+    <div class="tech-grid">
+      <div class="tech-pill">
+        <h4>React 19 + Vite</h4>
+        <span>الواجهة الأمامية السريعة</span>
+      </div>
+      <div class="tech-pill">
+        <h4>TypeScript 5.9</h4>
+        <span>أمان كامل للأنواع (End-to-End)</span>
+      </div>
+      <div class="tech-pill">
+        <h4>TailwindCSS v4</h4>
+        <span>أحدث محرك تنسيق عصري</span>
+      </div>
+      <div class="tech-pill">
+        <h4>Express 5 REST API</h4>
+        <span>معمارية خادم خفيفة وقوية</span>
+      </div>
+      <div class="tech-pill">
+        <h4>Prisma ORM</h4>
+        <span>SQLite (Dev) / PostgreSQL (Prod)</span>
+      </div>
+      <div class="tech-pill">
+        <h4>Google Gemini AI</h4>
+        <span>نماذج 2.5 Flash الذكية</span>
+      </div>
+      <div class="tech-pill">
+        <h4>Socket.io Realtime</h4>
+        <span>إشعارات وأحداث فورية</span>
+      </div>
+      <div class="tech-pill">
+        <h4>Framer Motion</h4>
+        <span>أنيميشن ناعم ومدروس</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FAQ Accordion Section ─────────────────────────────────────────────── -->
+  <section class="container" id="faq">
+    <div class="section-header">
+      <span class="section-tag">الأسئلة المتكررة</span>
+      <h2 class="section-title">كل ما تريد معرفته عن منظومة Welco</h2>
+      <p class="section-desc">إجابات واضحة عن الأسئلة التقنية والإدارية الأكثر شيوعاً.</p>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item active">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>كيف أبدأ بتشغيل المشروع محلياً؟</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          الأمر بسيط جداً! كل ما تحتاجه هو تنفيذ الأمرين: <code>npm install</code> ثم <code>npm run setup</code> (لإنشاء قاعدة البيانات وتعبئتها ببيانات الحسابات والمشاريع الجاهزة). بعدها اكتب <code>npm run dev</code> وافتح الرابط <code>http://localhost:5173</code> في متصفحك.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>هل الذكاء الاصطناعي إلزامي، وماذا يحدث إذا لم أملك مفتاح API؟</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          المنصة تعمل بكفاءة تامة حتى بدون مفتاح API! صممنا نظام مزودي الذكاء الاصطناعي بواجهة (Provider Interface) توفر وضع المحاكاة الذكي (MockProvider) تلقائياً، فيقترح ميزات مناسبة ويعمل دون أي اتصال خارجي. ويمكن للمدير العام إضافة مفتاح Gemini في أي وقت من لوحة التحكم أو ملف .env ليتحول فوراً للوضع الحي.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>كيف يستطيع المدير العام تعديل الأسئلة والخطوات بدون كود؟</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          من خلال قسم «منشئ مسار الرحلة» (Workflow Builder) داخل لوحة الإدارة؛ يمتلك المدير العام واجهة مرئية كاملة لسحب وإفلات الخطوات، وإضافة الأسئلة وتحديد نوعها، ووضع شروط منطقية (مثل: أظهر هذا السؤال فقط إذا اختار العميل متجر إلكتروني).
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>كيف تضمن المنصة أمان وسرية ملفات ورسائل العملاء؟</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          الملفات المرفوعة لا تُخزن في روابط عامة، بل داخل مجلد تخزين خاص لا يمكن تحميل أي ملف منه إلا عبر فحص أمني للصلاحيات. كما تفصل المنظومة المحادثات الداخلية للفريق عن محادثات العميل، وتوفر ميزة الإشراف (Moderation) لمراجعة رسائل المطورين قبل اعتمادها.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>كيف يمكنني رفع هذه الصفحة واستخدامها خارجياً؟</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          هذه الصفحة ملف HTML & Vanilla JS & CSS نقي ومستقل بالكامل بدون أي اعتماديات خارجية أو حزم معقدة! يمكنك رفعها على أي استضافة مثل Vercel, Netlify, GitHub Pages، أو ربطها مباشرة مع مشروعك.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Call to Action Banner ─────────────────────────────────────────────── -->
+  <section class="container">
+    <div class="cta-banner">
+      <h2 data-i18n="cta-title">جاهز لنقل استقبال مشاريعك للمستوى القادم؟</h2>
+      <p data-i18n="cta-desc">انضم إلى أحدث طريقة لهندسة متطلبات البرمجيات وتوفير مئات الساعات من الجهد والتشتت.</p>
+      <a href="#demo-accounts" class="cta-btn-white" data-i18n="cta-btn">ابدأ التجربة الفورية الآن</a>
+    </div>
+  </section>
+
+  <!-- ─── Footer ────────────────────────────────────────────────────────────── -->
+  <footer class="main-footer">
+    <div class="container">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div class="brand-logo" style="font-size:1.15rem;">
+          <svg viewBox="0 0 32 32" style="width:26px;height:26px;">
+            <rect width="32" height="32" rx="9" fill="#5b5bf6" />
+            <path d="M16 7l9 9-9 9-9-9z" fill="#fff" />
+          </svg>
+          <span>Welco System</span>
+        </div>
+        <div style="font-size:0.85rem;">
+          جميع الحقوق محفوظة © <span id="year">2026</span> Welco Discovery Platform.
+        </div>
+        <div style="display:flex; gap:16px;">
+          <a href="#overview">الرئيسية</a>
+          <a href="#demo-accounts">الحسابات</a>
+          <a href="#faq">الأسئلة</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast">
+    <span id="toast-icon">✓</span>
+    <span id="toast-msg">تم نسخ البيانات بنجاح!</span>
+  </div>
+
+  <!-- ─── Interactive JavaScript Logic ──────────────────────────────────────── -->
+  <script>
+    // 1. Translations Dictionary (Bilingual Support)
+    const translations = {
+      ar: {
+        dir: 'rtl',
+        lang: 'ar',
+        nextLang: 'EN',
+        themeTitle: 'تبديل الثيم',
+        announcement: 'منظومة Welco v2.0 جاهزة للاستخدام الآن — اكتشاف وتوثيق المشاريع بالذكاء الاصطناعي',
+        announcementLink: 'جرّب الحسابات الجاهزة ←',
+        navOverview: 'نظرة عامة',
+        navJourney: 'رحلة العميل',
+        navPillars: 'الميزات الكبرى',
+        navRoles: 'الأدوار والحسابات',
+        navCalculator: 'حاسبة التوفير',
+        navTech: 'التقنيات',
+        navFaq: 'الأسئلة',
+        ctaNav: 'دخول تجريبي',
+        heroBadge: 'المنصة الأولى لهندسة متطلبات البرمجيات · مدعومة بـ Gemini AI',
+        heroTitle: 'حوّل أفكار عملائك إلى متطلبات تقنية كاملة ومقننة <br><span class="gradient-text">برحلة بصرية ذكية بدل النماذج التقليدية!</span>',
+        heroSubtitle: 'استبدل استمارات الطلب المرهقة برحلة استكشاف تفاعلية مبهرة. يقترح مستشار Gemini الذكي الميزات، ويتكيف مسار الأسئلة تلقائياً بدون كود، لتستلم فرق البرمجة ملف مواصفات معتمد جاهز للتنفيذ الفوري.',
+        heroCtaSim: '🎮 جرّب محاكي المنصة التفاعلي',
+        heroCtaDemo: '🔑 بيانات الحسابات الجاهزة (5 أدوار)',
+        tabJourney: '🧭 مسار العميل التفاعلي',
+        tabAi: '🤖 مستشار Gemini AI',
+        tabAdmin: '📊 لوحة تحكم الإدارة',
+        ctaTitle: 'جاهز لنقل استقبال مشاريعك للمستوى القادم؟',
+        ctaDesc: 'انضم إلى أحدث طريقة لهندسة متطلبات البرمجيات وتوفير مئات الساعات من الجهد والتشتت.',
+        ctaBtn: 'ابدأ التجربة الفورية الآن'
+      },
+      en: {
+        dir: 'ltr',
+        lang: 'en',
+        nextLang: 'عربي',
+        themeTitle: 'Toggle Theme',
+        announcement: 'Welco v2.0 is live now — Next-Gen AI-Powered Project Discovery & Requirements Platform',
+        announcementLink: 'Try Ready Demo Accounts →',
+        navOverview: 'Overview',
+        navJourney: 'Customer Journey',
+        navPillars: 'Core Pillars',
+        navRoles: 'Roles & Accounts',
+        navCalculator: 'ROI Calculator',
+        navTech: 'Tech Stack',
+        navFaq: 'FAQ',
+        ctaNav: 'Live Demo',
+        heroBadge: 'The Premier Software Requirements Engineering Platform · Powered by Gemini AI',
+        heroTitle: 'Turn Client Ideas into Bulletproof Technical Specs <br><span class="gradient-text">With an Interactive Visual Journey, Not Forms!</span>',
+        heroSubtitle: 'Replace cumbersome Google Forms with an inspiring visual discovery journey. The built-in Gemini AI consultant suggests features, and adaptive branching questions generate a structured, approved requirements dossier.',
+        heroCtaSim: '🎮 Launch Interactive Simulator',
+        heroCtaDemo: '🔑 Instant Demo Accounts (5 Roles)',
+        tabJourney: '🧭 Client Journey Simulator',
+        tabAi: '🤖 Gemini AI Consultant',
+        tabAdmin: '📊 Super Admin Console',
+        ctaTitle: 'Ready to elevate your project onboarding?',
+        ctaDesc: 'Join the modern way to engineer software requirements and eliminate hundreds of wasted meeting hours.',
+        ctaBtn: 'Get Started with Live Demo'
+      }
+    };
+
+    let currentLocale = localStorage.getItem('welco_showcase_lang') || 'ar';
+    let currentTheme = localStorage.getItem('welco_showcase_theme') || 'dark';
+
+    // 2. Initialize Theme & Language
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('welco_showcase_theme', theme);
+      currentTheme = theme;
+    }
+
+    function applyLanguage(lang) {
+      const data = translations[lang] || translations.ar;
+      document.documentElement.setAttribute('dir', data.dir);
+      document.documentElement.setAttribute('lang', data.lang);
+      document.getElementById('lang-label').textContent = data.nextLang;
+      
+      document.getElementById('txt-announcement').textContent = data.announcement;
+      document.getElementById('txt-announcement-link').textContent = data.announcementLink;
+      document.getElementById('txt-cta-nav').textContent = data.ctaNav;
+      
+      // Update data-i18n items
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key === 'nav-overview') el.textContent = data.navOverview;
+        else if (key === 'nav-journey') el.textContent = data.navJourney;
+        else if (key === 'nav-pillars') el.textContent = data.navPillars;
+        else if (key === 'nav-roles') el.textContent = data.navRoles;
+        else if (key === 'nav-calculator') el.textContent = data.navCalculator;
+        else if (key === 'nav-tech') el.textContent = data.navTech;
+        else if (key === 'nav-faq') el.textContent = data.navFaq;
+        else if (key === 'hero-badge') el.textContent = data.heroBadge;
+        else if (key === 'hero-title') el.innerHTML = data.heroTitle;
+        else if (key === 'hero-subtitle') el.textContent = data.heroSubtitle;
+        else if (key === 'hero-cta-sim') el.textContent = data.heroCtaSim;
+        else if (key === 'hero-cta-demo') el.textContent = data.heroCtaDemo;
+        else if (key === 'tab-journey') el.textContent = data.tabJourney;
+        else if (key === 'tab-ai') el.textContent = data.tabAi;
+        else if (key === 'tab-admin') el.textContent = data.tabAdmin;
+        else if (key === 'cta-title') el.textContent = data.ctaTitle;
+        else if (key === 'cta-desc') el.textContent = data.ctaDesc;
+        else if (key === 'cta-btn') el.textContent = data.ctaBtn;
+      });
+
+      localStorage.setItem('welco_showcase_lang', lang);
+      currentLocale = lang;
+    }
+
+    // Toggle Handlers
+    document.getElementById('theme-btn').addEventListener('click', () => {
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    document.getElementById('lang-btn').addEventListener('click', () => {
+      applyLanguage(currentLocale === 'ar' ? 'en' : 'ar');
+    });
+
+    // Mobile Drawer Handlers
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    const drawerClose = document.getElementById('drawer-close');
+
+    function openDrawer() {
+      mobileDrawer.classList.add('open');
+      drawerOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      mobileDrawer.classList.remove('open');
+      drawerOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    mobileToggle.addEventListener('click', openDrawer);
+    drawerClose.addEventListener('click', closeDrawer);
+    drawerOverlay.addEventListener('click', closeDrawer);
+    document.querySelectorAll('.drawer-link').forEach(link => link.addEventListener('click', closeDrawer));
+
+    // 3. Tab Switcher in Mockup Window
+    document.querySelectorAll('.mockup-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mockup-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        document.getElementById('tab-journey').style.display = 'none';
+        document.getElementById('tab-ai').style.display = 'none';
+        document.getElementById('tab-admin').style.display = 'none';
+        document.getElementById(targetId).style.display = 'block';
+      });
+    });
+
+    // 4. Client Journey Step Simulator
+    function switchSimStep(step) {
+      document.querySelectorAll('.sim-step-item').forEach((item, idx) => {
+        item.classList.toggle('active', idx === (step - 1));
+      });
+      const titleEl = document.getElementById('sim-step-title');
+      const alertEl = document.getElementById('sim-conditional-alert');
+      if (step === 1) {
+        titleEl.textContent = currentLocale === 'ar' ? 'اختر ما تريد بناءه:' : 'Select what you want to build:';
+        alertEl.innerHTML = currentLocale === 'ar' 
+          ? '✨ <strong>الشروط المنطقية:</strong> عند اختيار «متجر»، تظهر أسئلة الشحن والدفع تلقائياً.' 
+          : '✨ <strong>Branching Logic:</strong> Selecting "Store" automatically enables shipping & payment steps.';
+      } else if (step === 2) {
+        titleEl.textContent = currentLocale === 'ar' ? 'الاتجاه البصري والألوان:' : 'Visual Direction & Brand Identity:';
+        alertEl.innerHTML = currentLocale === 'ar'
+          ? '🎨 معاينة حية للطراز: عصري (Modern Neo-Tech)، فاخر (Luxury)، مينيمال (Nordic).'
+          : '🎨 Live style switcher: Modern Neo-Tech, Nordic Minimal, Corporate Trust.';
+      } else if (step === 3) {
+        titleEl.textContent = currentLocale === 'ar' ? 'الميزات التلقائية الخاصة بنوع المشروع:' : 'Dynamic Features for this Project:';
+        alertEl.innerHTML = currentLocale === 'ar'
+          ? '⚡ تم استبعاد أسئلة تطبيقات الجوال وتركيز الأسئلة على المتجر الإلكتروني فقط.'
+          : '⚡ Irrelevant mobile questions excluded; focus is 100% on e-commerce features.';
+      } else if (step === 4) {
+        titleEl.textContent = currentLocale === 'ar' ? 'الميزانية والوقت والتسليم:' : 'Budget, Timeline & Hand-off:';
+        alertEl.innerHTML = currentLocale === 'ar'
+          ? '📋 توليد ملف المتطلبات الرسمي وقفل التعديلات قبل مرحلة التصميم والتطوير.'
+          : '📋 Official requirements document generated and locked before engineering kickoff.';
+      }
+    }
+
+    function selectSimType(type, card) {
+      document.querySelectorAll('.sim-type-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      const alertEl = document.getElementById('sim-conditional-alert');
+      const titles = {
+        store: currentLocale === 'ar' ? 'متجر إلكتروني: تم تفعيل بوابات الدفع وإدارة المخزون والشحن.' : 'E-Commerce: Payment gateways, inventory & shipping steps enabled.',
+        app: currentLocale === 'ar' ? 'تطبيق جوال: تم تفعيل إشعارات Push ومتاجر App Store / Google Play.' : 'Mobile App: Push notifications and App Store/Play Store steps enabled.',
+        saas: currentLocale === 'ar' ? 'منصة سحابية (SaaS): تم تفعيل الاشتراكات متعددة المشتركين وأدوار الفرق.' : 'SaaS Platform: Multi-tenancy, subscription tiers and team roles enabled.',
+        custom: currentLocale === 'ar' ? 'نظام مخصص: تم تفعيل تكامل API وربط الأنظمة الداخلية ERP.' : 'Custom System: API integrations and ERP legacy bridge steps enabled.'
+      };
+      alertEl.innerHTML = `⚡ <strong>تفرع منطقي فوري:</strong> ${titles[type]}`;
+    }
+
+    // 5. AI Chat Simulator
+    function simulateAI(promptText) {
+      document.getElementById('user-msg-content').textContent = promptText;
+      const reply = document.getElementById('ai-reply-content');
+      reply.innerHTML = '<span style="color:var(--brand); font-weight:600;">جاري تحليل الفكرة عبر Gemini AI... ⚡</span>';
+      
+      setTimeout(() => {
+        reply.innerHTML = `
+          تم تحليل المتطلبات بنجاح بناءً على نموذج الذكاء الاصطناعي:
+          <div class="ai-action-pills" style="margin-top:10px;">
+            <span class="action-pill" onclick="applySuggestion('بنية تحتية متوافقة')">+ نظام مصادقة وحماية متقدمة</span>
+            <span class="action-pill" onclick="applySuggestion('تقارير وتحليلات ذكية')">+ لوحة مؤشرات أداء تفاعلية</span>
+            <span class="action-pill" onclick="applySuggestion('إشعارات فورية')">+ تنبيهات فورية ورسائل SMS</span>
+          </div>
+        `;
+      }, 700);
+    }
+
+    function applySuggestion(feature) {
+      showToast(`✨ تمت إضافة الميزة بنجاح: "${feature}" إلى ملف المتطلبات!`);
+    }
+
+    // 6. Interactive ROI Calculator
+    function updateCalculator(val) {
+      document.getElementById('slider-display').textContent = `${val} ${currentLocale === 'ar' ? 'مشاريع' : 'Projects'}`;
+      const hoursSaved = val * 7;
+      const moneySaved = hoursSaved * 50;
+      document.getElementById('calc-hours').textContent = `${hoursSaved} ${currentLocale === 'ar' ? 'ساعة' : 'hrs'}`;
+      document.getElementById('calc-money').textContent = `${moneySaved.toLocaleString()} $`;
+    }
+
+    // 7. Clipboard Copy Helper & Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    function copyText(text, successMsg) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(successMsg || 'تم النسخ بنجاح!');
+      }).catch(() => {
+        showToast('تم النسخ: ' + text);
+      });
+    }
+
+    function copyCreds(email) {
+      copyText(email, `تم نسخ البريد: ${email} (الباسوورد: Welco123!)`);
+    }
+
+    // 8. FAQ Accordion Toggle
+    function toggleFaq(header) {
+      const item = header.parentElement;
+      const isOpen = item.classList.contains('active');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+      if (!isOpen) item.classList.add('active');
+    }
+
+    // Initial setup
+    applyTheme(currentTheme);
+    applyLanguage(currentLocale);
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

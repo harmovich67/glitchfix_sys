@@ -19,6 +19,7 @@ import type { AuthUser } from '../../types/express';
 import { auditService } from '../audit/audit.service';
 import { notificationsService } from '../notifications/notifications.service';
 import { assertManage, assertWork, loadProjectAccess } from '../projects/projects.access';
+import { settingsService } from '../settings/settings.service';
 import { STATUS_LABELS } from '../projects/projects.service';
 import { projectsRepository } from '../projects/projects.repository';
 import { briefUserSelect } from '../users/users.repository';
@@ -122,9 +123,9 @@ function recordUsage(userId: string, projectId: string | null, kind: AIUsageKind
   return prisma.aIUsage.create({ data: { userId, projectId, kind, inputTokens: inTok, outputTokens: outTok, mock } });
 }
 
-function systemPrompt(s: AISettings, locale: string) {
+function systemPrompt(s: AISettings, locale: string, brandName: string) {
   return [
-    PERSONAS[s.persona as keyof typeof PERSONAS] ?? PERSONAS.consultant,
+    (PERSONAS[s.persona as keyof typeof PERSONAS] ?? PERSONAS.consultant).replace(/\bWelco\b/g, brandName),
     s.systemPrompt,
     !s.allowExplain ? 'Do not give long explanations of technical terms; keep definitions to a few words.' : '',
     `Reply in the language the client writes in (Arabic → clear, friendly Modern Standard Arabic). If unclear, reply in ${locale === 'ar' ? 'Arabic' : 'English'}.`,
@@ -372,7 +373,7 @@ export const aiService = {
       await recordUsage(user.id, input.projectId, 'CHAT', 0, 0, true);
     } else {
       const gen = await generateWithFallback(s, apiKey, {
-        system: systemPrompt(s, user.locale),
+        system: systemPrompt(s, user.locale, (({ brand }) => (user.locale === 'ar' ? brand.nameAr : brand.nameEn))(await settingsService.get())),
         history: history.reverse().map((m) => ({ role: m.role === 'USER' ? 'user' : 'model', text: m.content })),
         prompt: `${journeyContext(def, answers, input.stepKey)}\n\n${
           s.allowSuggest

@@ -27,7 +27,7 @@ interface Props {
 }
 
 export function ContactSettingsCard({ settings, onSave, isPending }: Props) {
-  const { locale } = useI18n();
+  const { locale, brand } = useI18n();
   const isAr = locale === 'ar';
 
   const defaultContact: ContactInfo = {
@@ -352,7 +352,7 @@ export function ContactSettingsCard({ settings, onSave, isPending }: Props) {
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
               {/* Col 1: Bio & hours */}
               <div className="space-y-2">
-                <span className="font-extrabold text-sm text-fg tracking-tight">Welco.</span>
+                <span className="font-extrabold text-sm text-fg tracking-tight">{brand.name}.</span>
                 <p className="text-muted leading-relaxed">
                   {previewLang === 'ar'
                     ? contact.bioAr || 'منصة استكشاف وتحديد متطلبات المشاريع الذكية، مدعومة بالذكاء الاصطناعي.'

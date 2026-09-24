@@ -13,6 +13,8 @@ settingsRoutes.get('/public', async (_req, res) => {
   res.json({
     allowClientRegistration: s.allowClientRegistration,
     contact: s.contact,
+    brand: s.brand,
+    seo: s.seo,
   });
 });
 

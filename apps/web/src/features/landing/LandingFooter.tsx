@@ -1,5 +1,4 @@
 import { Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import {
   Mail,
   Phone,
@@ -11,7 +10,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { ContactInfo } from '@welco/shared';
-import { api } from '../../lib/api';
+import { usePublicSettings } from '../../lib/brand';
 import { useI18n } from '../../lib/i18n';
 import { Logo } from '../../components/layout/Logo';
 import { LanguageToggle, ThemeToggle } from '../../components/layout/Preferences';
@@ -33,14 +32,10 @@ const DEFAULT_FALLBACK_CONTACT: ContactInfo = {
 };
 
 export function LandingFooter() {
-  const { locale } = useI18n();
+  const { locale, brand } = useI18n();
   const isAr = locale === 'ar';
 
-  const { data } = useQuery({
-    queryKey: ['settings', 'public'],
-    queryFn: () => api.get<{ allowClientRegistration: boolean; contact?: ContactInfo }>('/settings/public'),
-    staleTime: 60_000,
-  });
+  const { data } = usePublicSettings();
 
   const contact: ContactInfo = {
     ...DEFAULT_FALLBACK_CONTACT,
@@ -255,7 +250,7 @@ export function LandingFooter() {
       {/* Bottom Bar: Copyright, Language, Back to Top */}
       <div className="border-t border-border/60 bg-surface/60 px-6 py-6">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-xs text-muted sm:flex-row">
-          <p>© {new Date().getFullYear()} Welco Platform. {isAr ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</p>
+          <p>© {new Date().getFullYear()} {brand.name}. {isAr ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</p>
 
           <div className="flex items-center gap-3">
             <LanguageToggle />

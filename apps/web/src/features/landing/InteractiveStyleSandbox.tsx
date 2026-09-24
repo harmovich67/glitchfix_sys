@@ -123,7 +123,7 @@ const STYLES: DesignStyleMeta[] = [
 ];
 
 export function InteractiveStyleSandbox() {
-  const { locale } = useI18n();
+  const { locale, b, brand } = useI18n();
   const isAr = locale === 'ar';
 
   const [activeStyleKey, setActiveStyleKey] = useState<DesignStyleKey>('modern');
@@ -231,7 +231,7 @@ export function InteractiveStyleSandbox() {
               <span className="size-2.5 rounded-full bg-emerald-400" />
             </div>
             <div className="rounded-lg bg-surface px-3 py-1 text-center font-mono text-[10.5px] sm:text-[11px] text-muted ring-1 ring-border/70 truncate max-w-[200px]">
-              preview.welco.app/{activeStyleKey}
+              preview.{brand.slug}.app/{activeStyleKey}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -247,9 +247,9 @@ export function InteractiveStyleSandbox() {
             <div className={`flex items-center justify-between rounded-xl px-4 py-3 mb-6 transition-all ${th.navbar}`}>
               <div className="flex items-center gap-2">
                 <span className="flex size-7 items-center justify-center rounded-lg bg-current text-inverted font-black text-xs">
-                  W
+                  {brand.name.charAt(0).toUpperCase()}
                 </span>
-                <span className={`text-sm font-bold ${th.heading}`}>WelcoBrand</span>
+                <span className={`text-sm font-bold ${th.heading}`}>{brand.name}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`hidden text-xs sm:inline-block ${th.subtext}`}>
@@ -283,9 +283,7 @@ export function InteractiveStyleSandbox() {
                     {isAr ? 'صُمّم ليمنحك الانطباع الأول الذي لا يُنسى' : 'Engineered for Unforgettable First Impressions'}
                   </h4>
                   <p className={`text-xs sm:text-sm leading-relaxed ${th.subtext}`}>
-                    {isAr
-                      ? 'هذا النموذج الحي يوضح دقة ويلكو في محاذاة الهوية البصرية مع رغبة عميلك الحقيقية.'
-                      : 'This live sandbox demonstrates how Welco captures your exact visual identity.'}
+                    {b(isAr ? 'هذا النموذج الحي يوضح دقة ويلكو في محاذاة الهوية البصرية مع رغبة عميلك الحقيقية.' : 'This live sandbox demonstrates how Welco captures your exact visual identity.')}
                   </p>
 
                   <div className="flex items-center gap-2 pt-2">
@@ -326,7 +324,7 @@ export function InteractiveStyleSandbox() {
                       <p className={`text-xs font-bold ${th.heading}`}>
                         {isAr ? 'إصدار التميز المحدود' : 'Signature Edition'}
                       </p>
-                      <p className={`text-[11px] ${th.subtext}`}>SKU: WELCO-2026</p>
+                      <p className={`text-[11px] ${th.subtext}`}>SKU: {brand.slug.toUpperCase()}-2026</p>
                     </div>
                     <span className={`text-sm font-bold ${th.heading}`}>$249.00</span>
                   </div>

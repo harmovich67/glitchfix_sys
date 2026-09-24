@@ -18,7 +18,7 @@ import { useI18n } from '../../lib/i18n';
 type PerspectiveKey = 'client' | 'pm' | 'developer';
 
 export function InteractivePerspectiveTabs() {
-  const { locale } = useI18n();
+  const { locale, b } = useI18n();
   const isAr = locale === 'ar';
 
   const [activeTab, setActiveTab] = useState<PerspectiveKey>('client');
@@ -108,9 +108,7 @@ export function InteractivePerspectiveTabs() {
           {isAr ? 'منصة واحدة تجمع كل أطراف المشروع' : 'One Platform, Three Tailored Perspectives'}
         </h3>
         <p className="text-muted text-sm sm:text-base max-w-2xl mx-auto">
-          {isAr
-            ? 'سواء كنت عميلاً يبحث عن السهولة، أو مديراً يريد التنظيم، أو مطوراً يريد كوداً نقياً بدون غموض'
-            : 'Whether you are a founder, project manager, or developer — Welco delivers perfection'}
+          {b(isAr ? 'سواء كنت عميلاً يبحث عن السهولة، أو مديراً يريد التنظيم، أو مطوراً يريد كوداً نقياً بدون غموض' : 'Whether you are a founder, project manager, or developer — Welco delivers perfection')}
         </p>
       </div>
 

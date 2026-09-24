@@ -3,6 +3,7 @@ import { Direction } from 'radix-ui';
 import { en } from './locales/en';
 import { ar } from './locales/ar';
 import { storage } from './utils';
+import { brandify, resolveBrand, usePublicSettings, type ResolvedBrand } from './brand';
 
 export type Locale = 'en' | 'ar';
 type Vars = Record<string, string | number>;
@@ -28,6 +29,10 @@ interface I18nValue {
   dir: 'ltr' | 'rtl';
   setLocale: (l: Locale) => void;
   t: (key: string, vars?: Vars) => string;
+  /** The configured product name/logo; every built-in mention of the default name follows it. */
+  brand: ResolvedBrand;
+  /** Swap the built-in product name inside a literal string for the configured one. */
+  b: (text: string) => string;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -46,12 +51,16 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     setLocaleState(l);
   }, []);
 
-  const t = useCallback(
-    (key: string, vars?: Vars) => interpolate(lookup(dictionaries[locale], key) ?? lookup(en, key) ?? key, vars),
-    [locale],
-  );
+  const pub = usePublicSettings();
+  const brand = useMemo(() => resolveBrand(pub.data?.brand, locale), [pub.data?.brand, locale]);
 
-  const value = useMemo(() => ({ locale, dir, setLocale, t }), [locale, dir, setLocale, t]) as I18nValue;
+  const t = useCallback(
+    (key: string, vars?: Vars) => brandify(interpolate(lookup(dictionaries[locale], key) ?? lookup(en, key) ?? key, vars), brand.name),
+    [locale, brand.name],
+  );
+  const b = useCallback((text: string) => brandify(text, brand.name), [brand.name]);
+
+  const value = useMemo(() => ({ locale, dir, setLocale, t, brand, b }), [locale, dir, setLocale, t, brand, b]) as I18nValue;
   return (
     <I18nContext.Provider value={value}>
       <Direction.Provider dir={dir}>{children}</Direction.Provider>

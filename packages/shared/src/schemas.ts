@@ -351,10 +351,44 @@ export const contactInfoSchema = z.object({
 });
 export type ContactInfo = z.infer<typeof contactInfoSchema>;
 
+/** A logo/image reference: an https:// link or a site-relative /path (never javascript: or data: URLs). */
+const assetUrl = z.union([z.literal(''), z.string().trim().max(500).regex(/^(https?:\/\/|\/)[^\s"'<>]+$/, 'Use an https:// link or a /path')]);
+
+/** The product name shown across the site, dashboard, e-mails and the AI assistant. */
+export const brandSchema = z.object({
+  nameEn: z.string().trim().min(1).max(40).default('Welco'),
+  nameAr: z.string().trim().min(1).max(40).default('ويلكو'),
+  taglineEn: z.string().trim().max(120).default('Project Discovery'),
+  taglineAr: z.string().trim().max(120).default('استكشاف المشاريع'),
+  /** Replaces the built-in logo mark when set. */
+  logoUrl: assetUrl.default(''),
+  faviconUrl: assetUrl.default(''),
+});
+export type BrandSettings = z.infer<typeof brandSchema>;
+
+/** Search-engine and social-sharing metadata for the public site. */
+export const seoSchema = z.object({
+  titleEn: z.string().trim().max(70).default(''),
+  titleAr: z.string().trim().max(70).default(''),
+  descriptionEn: z.string().trim().max(200).default(''),
+  descriptionAr: z.string().trim().max(200).default(''),
+  keywordsEn: z.string().trim().max(300).default(''),
+  keywordsAr: z.string().trim().max(300).default(''),
+  /** Public address of the site, used for canonical links, the sitemap and social cards. */
+  siteUrl: z.union([z.literal(''), z.string().trim().max(200).regex(/^https?:\/\/[^\s"'<>]+$/, 'Use a full address such as https://example.com')]).default(''),
+  ogImage: assetUrl.default(''),
+  twitterHandle: z.union([z.literal(''), z.string().trim().regex(/^@?\w{1,15}$/, 'Use a handle such as @yourbrand')]).default(''),
+  /** false → noindex everywhere and robots.txt disallows the whole site. */
+  indexable: z.boolean().default(true),
+});
+export type SeoSettings = z.infer<typeof seoSchema>;
+
 export const platformSettingsSchema = z.object({
   developerClientMode: z.enum(DEV_CLIENT_MODES),
   emailNotifications: z.boolean(),
   allowClientRegistration: z.boolean(),
   contact: contactInfoSchema.default({}),
+  brand: brandSchema.default({}),
+  seo: seoSchema.default({}),
 });
 export type PlatformSettings = z.infer<typeof platformSettingsSchema>;

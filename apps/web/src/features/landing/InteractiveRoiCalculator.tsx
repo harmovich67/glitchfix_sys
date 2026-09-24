@@ -15,7 +15,7 @@ import { Button } from '../../components/ui/button';
 import { Link } from 'react-router';
 
 export function InteractiveRoiCalculator() {
-  const { locale } = useI18n();
+  const { locale, b } = useI18n();
   const isAr = locale === 'ar';
 
   const [featuresCount, setFeaturesCount] = useState<number>(18);
@@ -48,7 +48,7 @@ export function InteractiveRoiCalculator() {
                 {isAr ? 'حاسبة العائد والوقت الموفر (ROI Calculator)' : 'Interactive ROI Calculator'}
               </span>
               <h3 className="mt-2 text-2xl font-bold sm:text-3xl text-fg">
-                {isAr ? 'كم توفر من الساعات والأموال مع ويلكو؟' : 'Calculate Your Time & Capital Savings'}
+                {b(isAr ? 'كم توفر من الساعات والأموال مع ويلكو؟' : 'Calculate Your Time & Capital Savings')}
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-muted">
                 {isAr

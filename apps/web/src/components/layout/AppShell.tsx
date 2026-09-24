@@ -138,7 +138,7 @@ function NavList({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => v
 }
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
-  const { t, locale } = useI18n();
+  const { t, locale, brand } = useI18n();
   const isAr = locale === 'ar';
   const { user, isClient, logout } = useAuth();
   const { main, control } = useNav();
@@ -214,7 +214,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             </span>
             <span className="font-medium text-[11px] text-muted">{isAr ? 'النظام متصل' : 'System online'}</span>
           </div>
-          <span className="text-[10px] font-mono text-muted/50 font-medium tracking-wide">Welco OS</span>
+          <span className="text-[10px] font-mono text-muted/50 font-medium tracking-wide">{brand.name}</span>
         </div>
 
         {/* User Card */}
@@ -312,14 +312,14 @@ export function AppShell() {
           <NotificationBell />
         </header>
 
-        <main className="min-w-0 flex-1 w-full max-w-full px-3 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
+        <main className="min-w-0 flex-1 w-full max-w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           {/* Enter-only transition: an exit animation around <Outlet> would render the *new* route twice. */}
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.18 }}
-            className="mx-auto min-w-0 w-full max-w-[1400px]"
+            className="min-w-0 w-full"
           >
             <Suspense fallback={<PageLoader />}>
               <Outlet />

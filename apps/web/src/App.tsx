@@ -7,6 +7,7 @@ import { useAuth, useLocaleSwitch } from './lib/auth';
 import { useTheme } from './lib/theme';
 import { useI18n } from './lib/i18n';
 import { RealtimeBridge } from './lib/realtime';
+import { BrandHead } from './components/layout/BrandHead';
 import { AppShell } from './components/layout/AppShell';
 import { EmptyState, PageLoader } from './components/ui/feedback';
 import { Button } from './components/ui/button';
@@ -87,7 +88,7 @@ const guarded = (permission: Permission, node: ReactNode) => <RequirePermission 
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<Suspense fallback={<PageLoader />}><Outlet /></Suspense>}>
+    <Route element={<><BrandHead /><Suspense fallback={<PageLoader />}><Outlet /></Suspense></>}>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
       <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />

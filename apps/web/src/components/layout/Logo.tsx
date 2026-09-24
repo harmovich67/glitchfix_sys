@@ -1,7 +1,11 @@
 import { Link } from 'react-router';
 import { cn } from '../../lib/utils';
+import { useI18n } from '../../lib/i18n';
 
 export function LogoMark({ className }: { className?: string }) {
+  const { brand } = useI18n();
+  // A custom logo replaces the built-in mark everywhere it appears.
+  if (brand.logoUrl) return <img src={brand.logoUrl} alt={brand.name} className={cn('size-8 rounded-[9px] object-contain', className)} />;
   return (
     <svg viewBox="0 0 32 32" className={cn('size-8', className)} aria-hidden>
       <defs>
@@ -18,10 +22,11 @@ export function LogoMark({ className }: { className?: string }) {
 }
 
 export function Logo({ to = '/', className }: { to?: string; className?: string }) {
+  const { brand } = useI18n();
   return (
     <Link to={to} className={cn('flex items-center gap-2.5', className)}>
       <LogoMark />
-      <span className="text-[17px] font-semibold tracking-tight text-fg">Welco</span>
+      <span className="text-[17px] font-semibold tracking-tight text-fg">{brand.name}</span>
     </Link>
   );
 }

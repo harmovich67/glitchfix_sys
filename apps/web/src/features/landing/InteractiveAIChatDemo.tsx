@@ -151,7 +151,7 @@ const PRESET_CHATS: PromptPreset[] = [
 ];
 
 export function InteractiveAIChatDemo() {
-  const { locale } = useI18n();
+  const { locale, brand } = useI18n();
   const isAr = locale === 'ar';
 
   const [activePreset, setActivePreset] = useState<PromptPreset>(PRESET_CHATS[0]);
@@ -404,7 +404,7 @@ export function InteractiveAIChatDemo() {
                   <Cpu className="size-4 text-brand" />
                   {isAr ? 'مواصفات المعمارية المقترحة' : 'Architecture Blueprint'}
                 </span>
-                <span className="text-[11px] font-mono text-muted">Welco SRS v2.4</span>
+                <span className="text-[11px] font-mono text-muted">{brand.name} SRS v2.4</span>
               </div>
 
               {/* Recommended Stack */}

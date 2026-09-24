@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { platformSettingsSchema, type PlatformSettings, type ContactInfo } from '@welco/shared';
+import { brandSchema, platformSettingsSchema, seoSchema, type BrandSettings, type ContactInfo, type PlatformSettings, type SeoSettings } from '@welco/shared';
 import { prisma } from '../../core/prisma';
 
 const KEY = 'platform';
@@ -20,11 +20,16 @@ export const DEFAULT_CONTACT_INFO: ContactInfo = {
   github: 'https://github.com',
 };
 
+export const DEFAULT_BRAND: BrandSettings = brandSchema.parse({});
+export const DEFAULT_SEO: SeoSettings = seoSchema.parse({});
+
 export const DEFAULT_SETTINGS: PlatformSettings = {
   developerClientMode: 'moderated',
   emailNotifications: true,
   allowClientRegistration: true,
   contact: DEFAULT_CONTACT_INFO,
+  brand: DEFAULT_BRAND,
+  seo: DEFAULT_SEO,
 };
 
 let cache: { value: PlatformSettings; at: number } | null = null;
@@ -42,6 +47,8 @@ export const settingsService = {
         ...DEFAULT_CONTACT_INFO,
         ...(raw.contact ?? {}),
       },
+      brand: { ...DEFAULT_BRAND, ...(raw.brand ?? {}) },
+      seo: { ...DEFAULT_SEO, ...(raw.seo ?? {}) },
     };
     cache = { value, at: Date.now() };
     return value;

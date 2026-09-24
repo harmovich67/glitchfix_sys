@@ -86,7 +86,7 @@ const FAQS: FaqItem[] = [
 ];
 
 export function InteractiveFaq() {
-  const { locale } = useI18n();
+  const { locale, b } = useI18n();
   const isAr = locale === 'ar';
 
   const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'ai' | 'agencies' | 'security'>('all');
@@ -120,7 +120,7 @@ export function InteractiveFaq() {
           {isAr ? 'الأسئلة الشائعة والأجوبة الفورية' : 'Frequently Asked Questions'}
         </span>
         <h3 className="text-3xl font-bold sm:text-4xl text-fg">
-          {isAr ? 'كل ما تحتاج معرفته عن منصة ويلكو' : 'Everything You Need to Know About Welco'}
+          {b(isAr ? 'كل ما تحتاج معرفته عن منصة ويلكو' : 'Everything You Need to Know About Welco')}
         </h3>
         <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
           {isAr
@@ -182,7 +182,7 @@ export function InteractiveFaq() {
                   className="flex w-full items-center justify-between gap-4 p-5 text-start cursor-pointer transition-colors hover:bg-surface-2/40"
                 >
                   <span className="text-sm sm:text-base font-semibold text-fg">
-                    {isAr ? faq.q.ar : faq.q.en}
+                    {b(isAr ? faq.q.ar : faq.q.en)}
                   </span>
                   <motion.span
                     animate={{ rotate: isOpen ? 180 : 0 }}
@@ -202,7 +202,7 @@ export function InteractiveFaq() {
                       transition={{ duration: 0.25, ease: 'easeInOut' }}
                     >
                       <div className="border-t border-border/60 bg-surface-2/30 p-5 pt-3 text-xs sm:text-sm leading-relaxed text-fg-2">
-                        {isAr ? faq.a.ar : faq.a.en}
+                        {b(isAr ? faq.a.ar : faq.a.en)}
                       </div>
                     </motion.div>
                   )}
