@@ -24,8 +24,8 @@ export function ticketRef(task: Pick<Task, 'number' | 'project'>, projectCode?: 
 
 /** Ids of team members on approved leave today, so managers do not hand them work. */
 export function useOnLeaveToday() {
-  const { isClient } = useAuth();
-  const away = useQuery({ queryKey: ['timeoff', 'away'], queryFn: () => api.get<AwayItem[]>('/time-off/away'), enabled: !isClient, staleTime: 5 * 60_000 });
+  const { isStaff } = useAuth();
+  const away = useQuery({ queryKey: ['timeoff', 'away'], queryFn: () => api.get<AwayItem[]>('/time-off/away'), enabled: isStaff, staleTime: 5 * 60_000 });
   const today = new Date().toISOString().slice(0, 10);
   return new Set((away.data ?? []).filter((a) => a.startDate.slice(0, 10) <= today && a.endDate.slice(0, 10) >= today).map((a) => a.user.id));
 }

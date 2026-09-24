@@ -44,6 +44,23 @@ buttons for each role.
   database, then run `npm run setup`.
 - **MySQL:** see [Using MySQL](#using-mysql) below.
 
+## Going live: remove the demo data
+
+The seed fills the app with a demo organisation. To start empty and ready for real clients:
+
+```bash
+npm run clean:demo -- --dry-run        # shows exactly what would be deleted
+npm run clean:demo -- --admin-email you@company.com --admin-password 'a-strong-password'
+```
+
+It asks you to type `CLEAN` before deleting (or pass `--yes` for scripts). Removed: all projects, clients, conversations,
+files (also from disk), tickets, technical reports, time-off requests, notifications, AI history and the audit log. Kept: **the
+whole team** (Super Admin, Admins, Project Managers, Developers — only their project data is cleared), the journey templates,
+the platform name/SEO/contact and AI settings. Pass `--admin-*` to replace the first Super Admin's e-mail/name/password, or
+`--delete-team` to also remove every team account except Super Admins. The one-click demo sign-in buttons on the login page
+stay for every kept team account; each button disappears on its own once that account is deleted, renamed or given a real
+password (the demo client button goes when the clients are cleared). Re-running `npm run setup` / `db:reset` brings the demo back.
+
 ## Branding & SEO
 
 **Settings → Platform name & SEO** (Super Admin) renames the product everywhere — logo, site, dashboard, browser tabs, e-mails

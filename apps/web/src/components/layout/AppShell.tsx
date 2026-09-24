@@ -35,7 +35,7 @@ interface NavItem {
 
 function useNav() {
   const { t } = useI18n();
-  const { can, isClient } = useAuth();
+  const { can, isClient, isStaff } = useAuth();
   const moderation = useQuery({
     queryKey: ['moderation', 'count'],
     queryFn: () => api.get<{ counts: { pending: number } }>('/moderation?status=PENDING').then((r) => r.counts.pending),
@@ -47,7 +47,7 @@ function useNav() {
     queryKey: ['timeoff', 'summary'],
     queryFn: () => api.get<TimeOffSummary>('/time-off/summary'),
     select: (r) => r.review,
-    enabled: !isClient,
+    enabled: isStaff,
     refetchInterval: 60_000,
   });
 

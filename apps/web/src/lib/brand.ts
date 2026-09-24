@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import type { BrandSettings, ContactInfo, SeoSettings } from '@welco/shared';
+import type { BrandSettings, ContactInfo, Role, SeoSettings } from '@welco/shared';
 import { api } from './api';
 
 /** What the public site needs from the platform settings (no login required). */
 export interface PublicSettings {
   allowClientRegistration: boolean;
+  /** One-click sign-in buttons: demo accounts that still exist with the demo password. */
+  demoAccounts?: { email: string; role: Role }[];
   contact?: ContactInfo;
   brand?: Partial<BrandSettings>;
   seo?: Partial<SeoSettings>;

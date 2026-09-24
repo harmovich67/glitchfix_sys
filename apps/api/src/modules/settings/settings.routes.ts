@@ -3,6 +3,7 @@ import { platformSettingsSchema } from '@welco/shared';
 import { requireAuth, requirePermission } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { auditService } from '../audit/audit.service';
+import { demoLogins } from './demo-logins';
 import { settingsService } from './settings.service';
 
 export const settingsRoutes = Router();
@@ -11,6 +12,8 @@ export const settingsRoutes = Router();
 settingsRoutes.get('/public', async (_req, res) => {
   const s = await settingsService.get();
   res.json({
+    // One-click sign-in buttons for demo accounts that still exist with the demo password.
+    demoAccounts: await demoLogins(),
     allowClientRegistration: s.allowClientRegistration,
     contact: s.contact,
     brand: s.brand,

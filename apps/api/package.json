@@ -15,7 +15,8 @@
     "db:mysql": "node scripts/db-provider.mjs mysql --push",
     "db:mysql:setup": "node scripts/db-provider.mjs mysql --push --seed",
     "db:mysql:sql": "node scripts/db-provider.mjs mysql --print-sql",
-    "db:sqlite": "node scripts/db-provider.mjs sqlite"
+    "db:sqlite": "node scripts/db-provider.mjs sqlite",
+    "db:clean": "tsx scripts/clean-demo.ts"
   },
   "dependencies": {
     "@prisma/client": "~6.19.3",

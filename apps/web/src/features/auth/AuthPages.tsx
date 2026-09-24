@@ -10,6 +10,7 @@ import { loginSchema, registerSchema, type LoginInput, type RegisterInput } from
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
+import { usePublicSettings } from '../../lib/brand';
 import type { User } from '../../lib/types';
 import { Button } from '../../components/ui/button';
 import { Field, Input } from '../../components/ui/form';
@@ -75,14 +76,6 @@ function AuthLayout({ title, subtitle, children, footer }: { title: string; subt
   );
 }
 
-const DEMO = [
-  ['superadmin@welco.dev', 'SUPER_ADMIN'],
-  ['admin@welco.dev', 'ADMIN'],
-  ['pm@welco.dev', 'PROJECT_MANAGER'],
-  ['dev@welco.dev', 'DEVELOPER'],
-  ['client@welco.dev', 'CLIENT'],
-] as const;
-
 function useAfterAuth() {
   const { setUser } = useAuth();
   const { setLocale } = useI18n();
@@ -98,6 +91,7 @@ function useAfterAuth() {
 
 export function LoginPage() {
   const { t } = useI18n();
+  const demoLogins = usePublicSettings().data?.demoAccounts ?? [];
   const after = useAfterAuth();
   const form = useForm<LoginInput>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } });
   const login = useMutation({
@@ -131,26 +125,28 @@ export function LoginPage() {
         </Button>
       </form>
 
-      <div className="mt-8 rounded-2xl bg-surface-2/70 p-4 ring-1 ring-border">
-        <p className="text-xs font-semibold text-fg-2">{t('auth.demoAccounts')}</p>
-        <p className="mt-0.5 text-[11px] text-muted">{t('auth.demoHint')}</p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {DEMO.map(([email, role]) => (
-            <button
-              key={email}
-              type="button"
-              onClick={() => {
-                form.setValue('email', email);
-                form.setValue('password', 'Welco123!');
-                login.mutate({ email, password: 'Welco123!' });
-              }}
-              className="rounded-lg bg-surface px-2.5 py-1.5 text-[11px] font-medium text-fg-2 ring-1 ring-border transition hover:text-brand hover:ring-brand/40"
-            >
-              {t(`roles.${role}`)}
-            </button>
-          ))}
+      {demoLogins.length > 0 && (
+        <div className="mt-8 rounded-2xl bg-surface-2/70 p-4 ring-1 ring-border">
+          <p className="text-xs font-semibold text-fg-2">{t('auth.demoAccounts')}</p>
+          <p className="mt-0.5 text-[11px] text-muted">{t('auth.demoHint')}</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {demoLogins.map(({ email, role }) => (
+              <button
+                key={email}
+                type="button"
+                onClick={() => {
+                  form.setValue('email', email);
+                  form.setValue('password', 'Welco123!');
+                  login.mutate({ email, password: 'Welco123!' });
+                }}
+                className="rounded-lg bg-surface px-2.5 py-1.5 text-[11px] font-medium text-fg-2 ring-1 ring-border transition hover:text-brand hover:ring-brand/40"
+              >
+                {t(`roles.${role}`)}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </AuthLayout>
   );
 }
