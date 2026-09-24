@@ -64,7 +64,7 @@ export function LandingPage() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-bg text-fg selection:bg-brand selection:text-white pb-20 md:pb-0">
+    <div className="relative min-h-screen overflow-x-hidden bg-bg text-fg selection:bg-brand selection:text-white pb-0">
       {/* Dynamic Background Grid & Radial Highlights */}
       <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-[1000px] [mask-image:radial-gradient(ellipse_at_top,black_35%,transparent_75%)]" />
       <div className="pointer-events-none absolute top-[-100px] left-1/2 -translate-x-1/2 h-[450px] w-[900px] rounded-full bg-gradient-to-tr from-brand/20 via-accent/15 to-transparent blur-[120px]" />
@@ -116,6 +116,11 @@ export function LandingPage() {
                 </Button>
               </>
             )}
+
+            {/* Quick Mobile Header CTA */}
+            <Button asChild size="sm" className="md:hidden font-bold text-xs px-3 py-1 shadow-sm shadow-brand/20">
+              <Link to={startHref}>{user ? (isAr ? 'التحكم' : 'App') : isAr ? 'ابدأ الآن' : 'Start'}</Link>
+            </Button>
 
             {/* Mobile / Tablet Menu Toggle Button */}
             <button
@@ -211,45 +216,6 @@ export function LandingPage() {
           )}
         </AnimatePresence>
       </header>
-
-      {/* Floating Native-App Bottom Dock (Phones & Tablets) */}
-      <div className="fixed bottom-3 inset-x-3 z-40 md:hidden max-w-md mx-auto pointer-events-none">
-        <div className="glass pointer-events-auto flex items-center justify-between rounded-2xl p-2 px-3 shadow-2xl ring-1 ring-border/80 border border-white/20">
-          <div className="flex items-center gap-1">
-            <a
-              href="#sandbox"
-              className="flex flex-col items-center justify-center size-10 rounded-xl text-muted hover:text-brand hover:bg-brand/10 transition-colors"
-              title={isAr ? 'المُحاكي' : 'Sandbox'}
-            >
-              <SlidersHorizontal className="size-4" />
-              <span className="text-[9px] font-bold mt-0.5">{isAr ? 'المحاكي' : 'Demo'}</span>
-            </a>
-            <a
-              href="#ai"
-              className="flex flex-col items-center justify-center size-10 rounded-xl text-muted hover:text-violet-500 hover:bg-violet-500/10 transition-colors"
-              title={isAr ? 'المستشار الذكي' : 'AI'}
-            >
-              <Bot className="size-4" />
-              <span className="text-[9px] font-bold mt-0.5">{isAr ? 'الذكاء' : 'AI'}</span>
-            </a>
-            <a
-              href="#calculator"
-              className="flex flex-col items-center justify-center size-10 rounded-xl text-muted hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
-              title={isAr ? 'حاسبة التوفير' : 'ROI'}
-            >
-              <Calculator className="size-4" />
-              <span className="text-[9px] font-bold mt-0.5">{isAr ? 'الوفر' : 'ROI'}</span>
-            </a>
-          </div>
-
-          <Button asChild size="sm" className="shadow-md shadow-brand/25 px-4 font-bold">
-            <Link to={startHref} className="flex items-center gap-1.5">
-              <span>{isAr ? 'ابدأ الآن' : 'Start'}</span>
-              <Sparkles className="size-3.5 text-amber-300" />
-            </Link>
-          </Button>
-        </div>
-      </div>
 
       {/* Hero Section */}
       <section className="relative z-10 mx-auto max-w-7xl px-6 pt-12 pb-20 text-center sm:pt-16">

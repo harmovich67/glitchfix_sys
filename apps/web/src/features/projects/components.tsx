@@ -55,9 +55,17 @@ export function StatusTracker({ status, compact }: { status: ProjectStatus; comp
         })}
       </div>
       {!compact && (
-        <div className="mt-2.5 flex justify-between">
+        <div className="mt-2.5 flex justify-between gap-0.5">
           {PROJECT_STATUSES.map((s, i) => (
-            <span key={s} className={cn('w-14 text-center text-[10.5px] leading-tight sm:w-20 sm:text-[11px]', i === current ? 'font-semibold text-fg' : 'text-muted', i === 0 && 'text-start', i === PROJECT_STATUSES.length - 1 && 'text-end')}>
+            <span
+              key={s}
+              className={cn(
+                'flex-1 min-w-0 truncate text-center text-[10px] leading-tight sm:text-[11px]',
+                i === current ? 'font-semibold text-fg' : 'text-muted',
+                i === 0 && 'text-start',
+                i === PROJECT_STATUSES.length - 1 && 'text-end',
+              )}
+            >
               {t(`statusShort.${s}`)}
             </span>
           ))}

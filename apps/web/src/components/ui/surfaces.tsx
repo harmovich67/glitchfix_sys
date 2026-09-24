@@ -93,13 +93,15 @@ export function StatCard({
     danger: 'bg-danger-soft text-danger',
   };
   return (
-    <Card className="relative overflow-hidden p-4 sm:p-5">
-      <div className="flex items-start justify-between">
-        <p className="text-xs sm:text-[13px] font-medium text-muted">{label}</p>
-        {icon && <div className={cn('flex size-7 sm:size-8 items-center justify-center rounded-lg', tones[tone])}>{icon}</div>}
+    <Card className="relative overflow-hidden p-3.5 sm:p-5">
+      <div className="flex items-start justify-between gap-1.5 min-w-0">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs sm:text-[13px] font-medium text-muted truncate">{label}</p>
+        </div>
+        {icon && <div className={cn('flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-lg', tones[tone])}>{icon}</div>}
       </div>
-      <p className="mt-2.5 sm:mt-3 text-2xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{value}</p>
-      {hint && <p className="mt-2 text-[11px] sm:text-xs text-muted">{hint}</p>}
+      <p className="mt-2.5 sm:mt-3 text-xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{value}</p>
+      {hint && <div className="mt-2 text-[11px] sm:text-xs text-muted truncate">{hint}</div>}
     </Card>
   );
 }

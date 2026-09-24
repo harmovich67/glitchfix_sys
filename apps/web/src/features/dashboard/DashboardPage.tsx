@@ -185,16 +185,29 @@ function StaffDashboard() {
         }
       />
       <div className="grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4">
-        <Card className="p-4 sm:p-5">
-          <p className="text-xs sm:text-[13px] font-medium text-muted">{t('dashboard.newRequests')}</p>
-          <p className="mt-2.5 sm:mt-3 text-2xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{k?.requests ?? '—'}</p>
+        <Card className="p-3.5 sm:p-5">
+          <p className="text-xs sm:text-[13px] font-medium text-muted truncate">{t('dashboard.newRequests')}</p>
+          <p className="mt-2.5 sm:mt-3 text-xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{k?.requests ?? '—'}</p>
           <div className="mt-2">{overview.data && <Sparkline data={overview.data.weekly.map((w) => w.started)} />}</div>
         </Card>
         <StatCard label={t('dashboard.awaitingReview')} value={k?.awaitingReview ?? '—'} icon={<Clock className="size-4" />} tone="warning" />
         <StatCard label={t('dashboard.activeProjects')} value={k?.active ?? '—'} icon={<FolderKanban className="size-4" />} tone="info" />
-        <StatCard label={t('dashboard.conversion')} value={k ? `${k.conversionRate}%` : '—'} icon={<CheckCircle2 className="size-4" />} tone="success" hint={k && can('messages.moderate') && k.pendingMessages ? (
-          <Link to="/app/moderation" className="inline-flex items-center gap-1 font-medium text-warning"><MessageSquareWarning className="size-3.5" />{k.pendingMessages} {t('dashboard.pendingMessages')}</Link>
-        ) : undefined} />
+        <StatCard
+          label={t('dashboard.conversion')}
+          value={k ? `${k.conversionRate}%` : '—'}
+          icon={<CheckCircle2 className="size-4" />}
+          tone="success"
+          hint={
+            k && can('messages.moderate') && k.pendingMessages ? (
+              <Link to="/app/moderation" className="inline-flex items-center gap-1 font-medium text-warning truncate max-w-full">
+                <MessageSquareWarning className="size-3.5 shrink-0" />
+                <span className="truncate">
+                  {k.pendingMessages} {t('dashboard.pendingMessages')}
+                </span>
+              </Link>
+            ) : undefined
+          }
+        />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_400px]">
@@ -204,14 +217,24 @@ function StaffDashboard() {
             <div className="px-2 pb-2">
               {unassigned.length ? (
                 unassigned.map((p) => (
-                  <Link key={p.id} to={`/app/projects/${p.id}?tab=manage`} className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-2">
+                  <Link
+                    key={p.id}
+                    to={`/app/projects/${p.id}?tab=manage`}
+                    className="flex items-center gap-2.5 sm:gap-3 rounded-xl px-2.5 sm:px-3 py-2.5 sm:py-3 hover:bg-surface-2 transition-colors"
+                  >
                     <TypeTile type={p.projectType} size="sm" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13.5px] font-medium">{p.title}</p>
-                      <p className="text-xs text-muted">{p.client.clientProfile?.companyName || p.client.name} · {timeAgo(p.submittedAt!, locale)}</p>
+                      <p className="truncate text-[13px] sm:text-[13.5px] font-medium text-fg">{p.title}</p>
+                      <p className="truncate text-[11px] sm:text-xs text-muted">
+                        {p.client.clientProfile?.companyName || p.client.name} · {timeAgo(p.submittedAt!, locale)}
+                      </p>
                     </div>
-                    <PriorityBadge priority={p.priority} />
-                    <StatusBadge status={p.status} short />
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span className="hidden sm:inline-flex">
+                        <PriorityBadge priority={p.priority} />
+                      </span>
+                      <StatusBadge status={p.status} short />
+                    </div>
                   </Link>
                 ))
               ) : (
@@ -221,18 +244,18 @@ function StaffDashboard() {
           </Card>
           <Card>
             <CardHeader title={t('dashboard.recentActivity')} icon={<Activity className="size-4" />} />
-            <ol className="relative px-5 pb-5">
+            <ol className="relative px-3 sm:px-5 pb-4 sm:pb-5">
               {overview.data?.recent.map((e, i) => (
-                <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex gap-3 pb-4 last:pb-0">
-                  <div className="relative flex flex-col items-center">
+                <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex gap-2.5 sm:gap-3 pb-4 last:pb-0">
+                  <div className="relative flex shrink-0 flex-col items-center">
                     {e.actor ? <Avatar name={e.actor.name} size="sm" /> : <div className="size-7 rounded-full bg-surface-3" />}
                     {i < overview.data!.recent.length - 1 && <span className="mt-1 w-px flex-1 bg-border" />}
                   </div>
-                  <div className="min-w-0 pt-0.5">
-                    <p className="text-[13px] text-fg">
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <p className="truncate text-[12.5px] sm:text-[13px] text-fg">
                       <span className="font-medium">{e.actor?.name ?? t('chat.system')}</span> · {e.title}
                     </p>
-                    <Link to={`/app/projects/${e.project.id}`} className="text-xs text-muted hover:text-brand">
+                    <Link to={`/app/projects/${e.project.id}`} className="block truncate text-[11px] sm:text-xs text-muted hover:text-brand">
                       {e.project.code} — {e.project.title} · {timeAgo(e.createdAt, locale)}
                     </Link>
                   </div>
@@ -244,16 +267,16 @@ function StaffDashboard() {
         <div className="space-y-6">
           <Card>
             <CardHeader title={t('dashboard.workload')} icon={<Users className="size-4" />} />
-            <div className="space-y-4 px-5 pb-5">
+            <div className="space-y-4 px-3 sm:px-5 pb-4 sm:pb-5">
               {overview.data?.workload.map((w) => (
                 <div key={w.id}>
-                  <div className="mb-1.5 flex items-center gap-2.5">
+                  <div className="mb-1.5 flex items-center gap-2 sm:gap-2.5">
                     <Avatar name={w.name} size="sm" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium">{w.name}</p>
-                      <p className="truncate text-[11px] text-muted">{w.title ?? t(`roles.${w.role}`)}</p>
+                      <p className="truncate text-[12.5px] sm:text-[13px] font-medium">{w.name}</p>
+                      <p className="truncate text-[10.5px] sm:text-[11px] text-muted">{w.title ?? t(`roles.${w.role}`)}</p>
                     </div>
-                    <span className="text-xs tabular-nums text-muted">
+                    <span className="shrink-0 text-xs tabular-nums text-muted">
                       {w.activeProjects}/{w.capacity}
                     </span>
                   </div>

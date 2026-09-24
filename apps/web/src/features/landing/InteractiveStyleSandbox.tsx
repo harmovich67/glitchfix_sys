@@ -184,7 +184,7 @@ export function InteractiveStyleSandbox() {
             <button
               key={st.id}
               onClick={() => setActiveStyleKey(st.id)}
-              className={`group flex items-center gap-2.5 rounded-2xl p-2.5 px-4 text-xs font-semibold transition-all cursor-pointer ${
+              className={`group flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-2xl p-2.5 px-4 text-xs font-semibold transition-all cursor-pointer ${
                 active
                   ? 'bg-surface text-fg ring-2 ring-brand shadow-md scale-102'
                   : 'bg-surface-2/70 text-muted hover:bg-surface-2 hover:text-fg ring-1 ring-border'
@@ -199,11 +199,20 @@ export function InteractiveStyleSandbox() {
                   />
                 ))}
               </div>
-              <span>{isAr ? st.label.ar : st.label.en}</span>
+              <span className="whitespace-nowrap">{isAr ? st.label.ar : st.label.en}</span>
               {active && <Check className="size-3.5 text-brand ms-1" />}
             </button>
           );
         })}
+      </div>
+
+      {/* Active Style Vibe Banner */}
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted pb-4 px-1">
+        <span className="font-semibold text-fg flex items-center gap-1.5 shrink-0">
+          <Sparkles className="size-3.5 text-brand" />
+          {isAr ? currentStyle.label.ar : currentStyle.label.en}:
+        </span>
+        <span className="text-muted leading-relaxed">{isAr ? currentStyle.vibe.ar : currentStyle.vibe.en}</span>
       </div>
 
       {/* Sandbox Window Preview */}
@@ -215,18 +224,21 @@ export function InteractiveStyleSandbox() {
           }`}
         >
           {/* Mock Browser Header */}
-          <div className="flex items-center justify-between border-b border-border bg-surface-2/90 px-4 py-3">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2 border-b border-border bg-surface-2/90 px-3 sm:px-4 py-2 sm:py-2.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <span className="size-2.5 rounded-full bg-rose-400" />
               <span className="size-2.5 rounded-full bg-amber-400" />
               <span className="size-2.5 rounded-full bg-emerald-400" />
             </div>
-            <div className="rounded-lg bg-surface px-4 py-1 text-center font-mono text-[11px] text-muted ring-1 ring-border/70">
+            <div className="rounded-lg bg-surface px-3 py-1 text-center font-mono text-[10.5px] sm:text-[11px] text-muted ring-1 ring-border/70 truncate max-w-[200px]">
               preview.welco.app/{activeStyleKey}
             </div>
-            <span className="text-[11px] font-medium text-muted">
-              {isAr ? currentStyle.vibe.ar : currentStyle.vibe.en}
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">
+                {isAr ? 'مباشر' : 'Live'}
+              </span>
+            </div>
           </div>
 
           {/* Rendered Mockup Container */}

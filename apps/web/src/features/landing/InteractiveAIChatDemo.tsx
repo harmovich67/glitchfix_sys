@@ -232,21 +232,21 @@ export function InteractiveAIChatDemo() {
       {/* Outer Shell */}
       <div className="overflow-hidden rounded-3xl border border-border/80 bg-surface/95 shadow-xl backdrop-blur-md">
         {/* Terminal Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/70 bg-surface-2/60 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-accent text-white shadow-md shadow-brand/20">
-              <Bot className="size-5" />
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-surface-2/60 px-4 sm:px-6 py-3.5 sm:py-4">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <span className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-accent text-white shadow-md shadow-brand/20">
+              <Bot className="size-4 sm:size-5" />
             </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-fg">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h3 className="text-xs sm:text-sm font-bold text-fg truncate">
                   {isAr ? 'مستشار الذكاء الاصطناعي (Gemini Live Consultant)' : 'AI Project Consultant'}
                 </h3>
-                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9.5px] sm:text-[10px] font-semibold text-emerald-600 shrink-0">
                   {isAr ? 'متاح ومباشر' : 'Online & Active'}
                 </span>
               </div>
-              <p className="text-xs text-muted">
+              <p className="text-[11px] sm:text-xs text-muted truncate">
                 {isAr
                   ? 'يحلل فكرتك، يفككها إلى متطلبات تقنية، ويقترح ميزات دقيقة للمطورين'
                   : 'Analyzes your idea, decomposes specs, and crafts tech requirements'}
@@ -255,8 +255,8 @@ export function InteractiveAIChatDemo() {
           </div>
 
           {/* Quick preset selector buttons */}
-          <div className="no-scrollbar flex w-full items-center gap-1.5 overflow-x-auto py-1 touch-pan-x sm:w-auto">
-            <span className="text-[11px] font-medium text-muted me-1">
+          <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-auto py-1 touch-pan-x sm:w-auto">
+            <span className="shrink-0 whitespace-nowrap text-[11px] font-semibold text-muted me-1">
               {isAr ? 'جرّب أمثلة سريعة:' : 'Quick examples:'}
             </span>
             {PRESET_CHATS.map((p) => {
@@ -265,7 +265,7 @@ export function InteractiveAIChatDemo() {
                 <button
                   key={p.id}
                   onClick={() => handleSelectPreset(p)}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`shrink-0 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
                     active
                       ? 'bg-brand text-white shadow-sm ring-2 ring-brand/30'
                       : 'bg-surface-2 text-fg-2 hover:bg-surface-3'
@@ -281,23 +281,23 @@ export function InteractiveAIChatDemo() {
         {/* Chat Body & Dissection Grid */}
         <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
           {/* Chat Stream View */}
-          <div className="p-6 sm:p-7 space-y-5 border-b lg:border-b-0 lg:border-e border-border">
+          <div className="p-4 sm:p-7 space-y-4 sm:space-y-5 border-b lg:border-b-0 lg:border-e border-border">
             {/* User Message Bubble */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2.5 sm:gap-3">
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-xs font-bold text-fg">
                 {isAr ? 'أنت' : 'You'}
               </span>
-              <div className="rounded-2xl rounded-ss-xs bg-brand-soft/70 px-4 py-3 text-xs sm:text-sm font-medium text-fg shadow-xs ring-1 ring-brand/20">
+              <div className="min-w-0 max-w-full rounded-2xl rounded-ss-xs bg-brand-soft/70 px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-fg shadow-xs ring-1 ring-brand/20 break-words leading-relaxed">
                 {isAr ? activePreset.userPrompt.ar : activePreset.userPrompt.en}
               </div>
             </div>
 
             {/* AI Response Card */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2.5 sm:gap-3">
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand to-accent text-white shadow-xs">
                 <Sparkles className="size-3.5" />
               </span>
-              <div className="flex-1 space-y-4 rounded-2xl rounded-ss-xs bg-surface-2/60 p-4 ring-1 ring-border">
+              <div className="min-w-0 flex-1 space-y-3 sm:space-y-4 rounded-2xl rounded-ss-xs bg-surface-2/60 p-3.5 sm:p-4 ring-1 ring-border">
                 {isTyping ? (
                   <div className="flex items-center gap-2 py-4 text-xs text-muted">
                     <span className="size-2 animate-ping rounded-full bg-brand" />
@@ -305,13 +305,13 @@ export function InteractiveAIChatDemo() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-xs sm:text-sm leading-relaxed text-fg-2 font-normal">
+                    <p className="text-xs sm:text-sm leading-relaxed text-fg-2 font-normal break-words">
                       {isAr ? activePreset.aiSummary.ar : activePreset.aiSummary.en}
                     </p>
 
                     {/* Features extracted */}
                     <div className="space-y-2 pt-2 border-t border-border/70">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-1">
                         <span className="text-[11px] font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
                           <Layers className="size-3 text-brand" />
                           {isAr ? 'الميزات المقترحة (انقر للإضافة إلى متطلباتك):' : 'Suggested Scope Modules (Click to Add):'}
@@ -333,14 +333,14 @@ export function InteractiveAIChatDemo() {
                               whileTap={{ scale: 0.99 }}
                               type="button"
                               onClick={() => toggleAddFeature(feat.id)}
-                              className={`group w-full rounded-xl p-3 text-start transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                              className={`group w-full rounded-xl p-3 text-start transition-all cursor-pointer flex items-center justify-between gap-2.5 sm:gap-3 ${
                                 isAdded
                                   ? 'bg-emerald-500/10 border-2 border-emerald-500/80 text-fg shadow-xs'
                                   : 'bg-surface border border-border text-fg-2 hover:border-brand/50 hover:bg-brand/5'
                               }`}
                             >
-                              <div className="min-w-0 space-y-1">
-                                <div className="flex items-center gap-2">
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                   <span className="text-xs font-semibold text-fg">
                                     {isAr ? feat.title.ar : feat.title.en}
                                   </span>

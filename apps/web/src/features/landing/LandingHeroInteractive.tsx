@@ -273,7 +273,7 @@ export function LandingHeroInteractive() {
                                 : 'bg-surface-2/60 border border-border text-muted hover:bg-surface-2 hover:text-fg'
                             }`}
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
                               <span
                                 className={`flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
                                   isSelected ? 'bg-brand text-white' : 'bg-surface-3 text-muted'
