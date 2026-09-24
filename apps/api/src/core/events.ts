@@ -15,6 +15,8 @@ export interface DomainEvents {
   'message.approved': { messageId: string; projectId: string; actorId: string };
   'file.uploaded': { fileId: string; projectId: string; actorId: string; visibility: string; category: string };
   'task.assigned': { taskId: string; projectId: string; actorId: string; userId: string };
+  'task.statusChanged': { taskId: string; projectId: string; actorId: string; from: string; to: string };
+  'task.blocked': { taskId: string; projectId: string; actorId: string };
 }
 
 class TypedBus {

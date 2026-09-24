@@ -28,6 +28,8 @@ const ModerationPage = lazy(() => import('./features/moderation/ModerationPage')
 const AuditPage = lazy(() => import('./features/audit/AuditPage'));
 const NotificationsPage = lazy(() => import('./features/notifications/NotificationsPage'));
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
+const ReportPage = lazy(() => import('./features/reports/ReportPage'));
+const TimeOffPage = lazy(() => import('./features/timeoff/TimeOffPage'));
 
 /** Keeps the account's saved language in step with the UI, so AI replies and emails match what the user sees. */
 function LocaleSync() {
@@ -94,6 +96,7 @@ const router = createBrowserRouter(
         <Route index element={<DashboardPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectPage />} />
+        <Route path="reports/:id" element={<ReportPage />} />
         <Route path="clients" element={guarded('clients.view', <ClientsPage />)} />
         <Route path="clients/:id" element={guarded('clients.view', <ClientDetailPage />)} />
         <Route path="team" element={guarded('users.manage', <TeamPage />)} />
@@ -104,6 +107,7 @@ const router = createBrowserRouter(
         <Route path="moderation" element={guarded('messages.moderate', <ModerationPage />)} />
         <Route path="audit" element={guarded('audit.view', <AuditPage />)} />
         <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="time-off" element={<TimeOffPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>

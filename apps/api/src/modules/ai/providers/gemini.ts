@@ -10,6 +10,8 @@ export interface GenerateRequest {
   maxOutputTokens: number;
   /** OpenAPI-subset schema; when set, the model must answer with JSON matching it. */
   responseSchema?: Record<string, unknown>;
+  /** Request timeout; long documents (technical reports) need more than a chat turn. */
+  timeoutMs?: number;
 }
 
 export interface GenerateResult {
@@ -48,7 +50,7 @@ export async function geminiGenerate(req: GenerateRequest): Promise<GenerateResu
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': req.apiKey },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(req.timeoutMs ?? 45_000),
     });
   } catch (err) {
     throw new AppError(502, 'AI_UNREACHABLE', `Could not reach the AI provider: ${(err as Error).message}`, { retryable: true });

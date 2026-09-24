@@ -16,10 +16,11 @@ import { Card, CardHeader, PageHeader } from '../../components/ui/surfaces';
 import { Avatar } from '../../components/ui/feedback';
 
 import { ContactSettingsCard } from './ContactSettingsCard';
+import { StaffContactCard } from './StaffContactCard';
 
 export default function SettingsPage() {
   const { t, locale } = useI18n();
-  const { user, setUser, can } = useAuth();
+  const { user, setUser, can, isClient } = useAuth();
   const { theme, setTheme } = useTheme();
   const switchLocale = useLocaleSwitch();
   const navigate = useNavigate();
@@ -75,6 +76,8 @@ export default function SettingsPage() {
             <Button disabled={name.trim().length < 2 || name === user?.name} loading={saveProfile.isPending} onClick={() => saveProfile.mutate({ name })}>{t('common.save')}</Button>
           </div>
         </Card>
+
+        {!isClient && <StaffContactCard />}
 
         <Card>
           <CardHeader title={t('settings.appearance')} icon={<Palette className="size-4" />} />

@@ -18,6 +18,7 @@ export const PERMISSIONS = [
   'ai.manage',
   'audit.view',
   'settings.manage',
+  'timeoff.review_all', // see every time-off request and choose who approves it
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -32,6 +33,7 @@ const MATRIX: Record<Role, readonly Permission[]> = {
     'users.manage',
     'analytics.view',
     'messages.moderate',
+    'timeoff.review_all',
   ],
   PROJECT_MANAGER: [
     'projects.view_all',

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ROLES } from './roles';
 import {
+  LEAVE_KINDS,
+  TIMEOFF_TYPES,
   AI_PERSONAS,
   DEV_CLIENT_MODES,
   FILE_CATEGORIES,
@@ -42,6 +44,12 @@ export const updateMeSchema = z.object({
   locale: z.enum(['en', 'ar']).optional(),
   currentPassword: z.string().max(200).optional(),
   newPassword: z.string().min(8).max(200).optional(),
+  // Staff contact details; an empty string clears the field.
+  phone: z.string().trim().max(40).optional(),
+  whatsapp: z.string().trim().max(40).optional(),
+  altEmail: z.union([z.literal(''), z.string().trim().email().max(120)]).optional(),
+  emergencyName: z.string().trim().max(80).optional(),
+  emergencyPhone: z.string().trim().max(40).optional(),
 });
 
 // ─── Users ─────────────────────────────────────────────────────────────────────
@@ -229,13 +237,64 @@ export const createTaskSchema = z.object({
   assigneeId: z.string().nullish(),
   dueDate: z.string().datetime().nullish(),
 });
-export const updateTaskSchema = createTaskSchema.partial();
+export const updateTaskSchema = createTaskSchema
+  .extend({
+    estimateHours: z.number().int().min(0).max(2000).nullish(),
+    /** Non-empty = blocked (with the reason); null clears the block. */
+    blockedReason: z.string().trim().max(500).nullish(),
+  })
+  .partial();
+
+/** Tickets a manager approved from an AI/requirements task plan. */
+export const bulkCreateTasksSchema = z.object({
+  reportId: z.string().min(1).optional(),
+  tasks: z
+    .array(
+      createTaskSchema.extend({
+        stepKey: z.string().max(60).nullish(),
+        estimateHours: z.number().int().min(0).max(2000).nullish(),
+      }),
+    )
+    .min(1)
+    .max(60),
+});
+export const taskPlanSchema = z.object({
+  reportId: z.string().min(1).optional(),
+  locale: z.enum(['en', 'ar']).optional(),
+});
 
 export const createNoteSchema = z.object({
   body: z.string().trim().min(1).max(10000),
   pinned: z.boolean().optional(),
 });
 export const updateNoteSchema = z.object({ pinned: z.boolean() });
+
+// ─── Time off (leave & permissions) ───────────────────────────────────────────
+const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD');
+const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use HH:MM');
+export const createTimeOffSchema = z
+  .object({
+    type: z.enum(TIMEOFF_TYPES),
+    leaveKind: z.enum(LEAVE_KINDS).optional(),
+    startDate: isoDay,
+    endDate: isoDay,
+    startTime: clock.optional(),
+    endTime: clock.optional(),
+    reason: z.string().trim().max(1000).default(''),
+  })
+  .superRefine((v, ctx) => {
+    if (v.endDate < v.startDate) ctx.addIssue({ code: 'custom', path: ['endDate'], message: 'End date is before the start date' });
+    if (v.type === 'PERMISSION') {
+      if (v.endDate !== v.startDate) ctx.addIssue({ code: 'custom', path: ['endDate'], message: 'A permission covers a single day' });
+      if (!v.startTime || !v.endTime) ctx.addIssue({ code: 'custom', path: ['startTime'], message: 'Start and end time are required' });
+      else if (v.endTime <= v.startTime) ctx.addIssue({ code: 'custom', path: ['endTime'], message: 'End time must be after the start time' });
+    }
+  });
+export const assignTimeOffSchema = z.object({ approverId: z.string().min(1) });
+export const decideTimeOffSchema = z.object({
+  decision: z.enum(['APPROVED', 'REJECTED']),
+  note: z.string().trim().max(500).optional(),
+});
 
 // ─── Notifications ─────────────────────────────────────────────────────────────
 export const markReadSchema = z.object({ ids: z.array(z.string()).max(200).optional(), all: z.boolean().optional() });
@@ -250,6 +309,12 @@ export const aiImproveSchema = z.object({
   projectId: z.string().min(1),
   questionKey: key,
   text: z.string().trim().min(3).max(5000),
+});
+export const technicalReportGenerateSchema = z.object({
+  locale: z.enum(['en', 'ar']).optional(),
+});
+export const technicalReportShareSchema = z.object({
+  userIds: z.array(z.string().min(1)).min(1).max(50),
 });
 export const aiSettingsSchema = z.object({
   enabled: z.boolean(),
@@ -293,4 +358,3 @@ export const platformSettingsSchema = z.object({
   contact: contactInfoSchema.default({}),
 });
 export type PlatformSettings = z.infer<typeof platformSettingsSchema>;
-

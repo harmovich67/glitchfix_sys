@@ -14,6 +14,24 @@ export const publicUserSelect = {
   createdAt: true,
   clientProfile: true,
   developerProfile: true,
+  phone: true,
+  whatsapp: true,
+  altEmail: true,
+  emergencyName: true,
+  emergencyPhone: true,
+} satisfies Prisma.UserSelect;
+
+/** Who a reviewer needs to reach the requester: name plus contact details. */
+export const contactUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  phone: true,
+  whatsapp: true,
+  altEmail: true,
+  emergencyName: true,
+  emergencyPhone: true,
 } satisfies Prisma.UserSelect;
 
 export type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;

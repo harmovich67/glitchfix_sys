@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Check, MoreHorizontal, Power, Shield, UserPlus, X } from 'lucide-react';
+import { Check, Contact, MoreHorizontal, Power, Shield, UserPlus, X } from 'lucide-react';
 import { PERMISSIONS, ROLES, STAFF_ROLES, can, type Role } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -21,6 +21,7 @@ export default function TeamPage() {
   const { user: me } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [contactOf, setContactOf] = useState<TeamUser | null>(null);
   const [form, setForm] = useState({ name: '', email: '', role: 'DEVELOPER' as Role, password: '', title: '', skills: '' });
   const team = useQuery({ queryKey: ['team'], queryFn: () => api.get<TeamUser[]>('/users') });
   const refresh = () => qc.invalidateQueries({ queryKey: ['team'] });
@@ -94,6 +95,8 @@ export default function TeamPage() {
                             <Button size="icon-sm" variant="ghost" aria-label={t('common.actions')}><MoreHorizontal className="size-4" /></Button>
                           </Menu.Trigger>
                           <Menu.Content>
+                            <Menu.Item icon={<Contact />} onSelect={() => setContactOf(u)}>{t('timeoff.contactCard.view')}</Menu.Item>
+                            <Menu.Separator />
                             <Menu.Label>{t('team.role')}</Menu.Label>
                             {assignableRoles.map((r) => (
                               <Menu.Item key={r} icon={u.role === r ? <Check /> : <Shield />} onSelect={() => update.mutate({ id: u.id, role: r })}>{t(`roles.${r}`)}</Menu.Item>
@@ -139,6 +142,31 @@ export default function TeamPage() {
           </table>
         </div>
       </Card>
+
+      <Modal
+        open={!!contactOf}
+        onOpenChange={(o) => !o && setContactOf(null)}
+        size="sm"
+        title={contactOf?.name ?? ''}
+        description={contactOf ? `${t(`roles.${contactOf.role}`)} · ${contactOf.email}` : undefined}
+      >
+        {contactOf && (
+          <dl className="space-y-3 text-sm">
+            {([
+              ['phone', contactOf.phone],
+              ['whatsapp', contactOf.whatsapp],
+              ['altEmail', contactOf.altEmail],
+              ['emergencyName', contactOf.emergencyName],
+              ['emergencyPhone', contactOf.emergencyPhone],
+            ] as const).map(([k, v]) => (
+              <div key={k} className="flex items-baseline justify-between gap-4">
+                <dt className="text-muted">{t(`timeoff.contactCard.${k}`)}</dt>
+                <dd dir="ltr" className="font-medium text-fg [overflow-wrap:anywhere]">{v || '—'}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </Modal>
 
       <Modal
         open={open}

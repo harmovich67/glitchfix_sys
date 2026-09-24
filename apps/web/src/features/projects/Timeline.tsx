@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { CheckCircle2, Eye, Flag, History, Lock, PlayCircle, Send, Sparkles, UserPlus } from 'lucide-react';
+import { CheckCircle2, Eye, FileText, Flag, History, ListChecks, Lock, PlayCircle, Send, Sparkles, UserPlus } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useI18n } from '../../lib/i18n';
 import type { ProjectEvent } from '../../lib/types';
@@ -17,6 +17,8 @@ const ICON: Record<string, React.ReactNode> = {
   reopened: <Lock />,
   preview: <Eye />,
   brief: <Sparkles />,
+  technical_report: <FileText />,
+  task: <ListChecks />,
 };
 
 export function Timeline({ projectId }: { projectId: string }) {

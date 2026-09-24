@@ -1,22 +1,31 @@
 import type { Request } from 'express';
 import { Prisma } from '@prisma/client';
 import type { z } from 'zod';
-import { createNoteSchema, createTaskSchema, updateTaskSchema } from '@welco/shared';
+import { bulkCreateTasksSchema, can, createNoteSchema, createTaskSchema, updateTaskSchema, type WorkflowDefinition } from '@welco/shared';
 import { prisma } from '../../core/prisma';
 import { badRequest, forbidden, notFound } from '../../core/errors';
 import { events } from '../../core/events';
 import type { AuthUser } from '../../types/express';
 import { auditService } from '../audit/audit.service';
-import { assertWork, loadProjectAccess } from '../projects/projects.access';
+import { notificationsService } from '../notifications/notifications.service';
+import { assertManage, assertWork, loadProjectAccess } from '../projects/projects.access';
+import { projectsRepository } from '../projects/projects.repository';
 import { briefUserSelect } from '../users/users.repository';
 
 const taskInclude = { assignee: { select: briefUserSelect }, createdBy: { select: briefUserSelect } } satisfies Prisma.TaskInclude;
+const taskWithProject = { ...taskInclude, project: { select: { id: true, code: true, title: true } } } satisfies Prisma.TaskInclude;
 
-async function assertAssignee(projectId: string, assigneeId: string | null | undefined) {
+/** Finished tickets stay on the cross-project board for this long, then drop off (they remain on the project). */
+const DONE_VISIBLE_DAYS = 30;
+
+async function assertAssignee(assigneeId: string | null | undefined) {
   if (!assigneeId) return;
   const member = await prisma.user.findUnique({ where: { id: assigneeId } });
-  if (!member || member.role === 'CLIENT') throw badRequest('Tasks can only be assigned to team members');
+  if (!member || !member.isActive || member.role === 'CLIENT') throw badRequest('Tasks can only be assigned to team members');
 }
+
+const lastNumber = async (tx: Prisma.TransactionClient, projectId: string) =>
+  (await tx.task.aggregate({ where: { projectId }, _max: { number: true } }))._max.number ?? 0;
 
 export const tasksService = {
   mine: (user: AuthUser) =>
@@ -24,8 +33,32 @@ export const tasksService = {
       where: { assigneeId: user.id, status: { not: 'DONE' } },
       orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
       take: 50,
-      include: { ...taskInclude, project: { select: { id: true, code: true, title: true } } },
+      include: taskWithProject,
     }),
+
+  /**
+   * Cross-project ticket board. Developers see tickets in their projects that are theirs or still
+   * unclaimed; managers see everything so they can follow progress and unblock people.
+   */
+  async board(user: AuthUser, filters: { projectId?: string; assigneeId?: string }) {
+    const scope: Prisma.TaskWhereInput = can(user.role, 'projects.view_all')
+      ? {}
+      : { project: { members: { some: { userId: user.id } } }, OR: [{ assigneeId: user.id }, { assigneeId: null }] };
+    const since = new Date(Date.now() - DONE_VISIBLE_DAYS * 24 * 3600 * 1000);
+    const where: Prisma.TaskWhereInput = {
+      AND: [
+        scope,
+        { OR: [{ status: { not: 'DONE' } }, { completedAt: null }, { completedAt: { gte: since } }] },
+        ...(filters.projectId ? [{ projectId: filters.projectId }] : []),
+        ...(filters.assigneeId === 'unassigned'
+          ? [{ assigneeId: null }]
+          : filters.assigneeId
+            ? [{ assigneeId: filters.assigneeId === 'me' ? user.id : filters.assigneeId }]
+            : []),
+      ],
+    };
+    return prisma.task.findMany({ where, orderBy: [{ updatedAt: 'desc' }], take: 500, include: taskWithProject });
+  },
 
   async list(user: AuthUser, projectId: string) {
     assertWork(await loadProjectAccess(user, projectId));
@@ -34,20 +67,25 @@ export const tasksService = {
 
   async create(req: Request, user: AuthUser, projectId: string, input: z.infer<typeof createTaskSchema>) {
     assertWork(await loadProjectAccess(user, projectId));
-    await assertAssignee(projectId, input.assigneeId);
-    const task = await prisma.task.create({
-      data: {
-        projectId,
-        title: input.title,
-        description: input.description,
-        status: input.status,
-        priority: input.priority,
-        assigneeId: input.assigneeId ?? null,
-        dueDate: input.dueDate ? new Date(input.dueDate) : null,
-        createdById: user.id,
-      },
-      include: taskInclude,
-    });
+    await assertAssignee(input.assigneeId);
+    const task = await prisma.$transaction(async (tx) =>
+      tx.task.create({
+        data: {
+          projectId,
+          number: (await lastNumber(tx, projectId)) + 1,
+          title: input.title,
+          description: input.description,
+          status: input.status,
+          priority: input.priority,
+          assigneeId: input.assigneeId ?? null,
+          dueDate: input.dueDate ? new Date(input.dueDate) : null,
+          createdById: user.id,
+          startedAt: input.status === 'IN_PROGRESS' ? new Date() : null,
+          completedAt: input.status === 'DONE' ? new Date() : null,
+        },
+        include: taskInclude,
+      }),
+    );
     if (task.assigneeId && task.assigneeId !== user.id)
       events.emit('task.assigned', { taskId: task.id, projectId, actorId: user.id, userId: task.assigneeId });
     events.emit('project.updated', { projectId });
@@ -55,11 +93,85 @@ export const tasksService = {
     return task;
   },
 
+  /** A manager approves an AI/requirements task plan: every accepted ticket becomes a real, traceable ticket. */
+  async bulkCreate(req: Request, user: AuthUser, projectId: string, input: z.infer<typeof bulkCreateTasksSchema>) {
+    const access = await loadProjectAccess(user, projectId);
+    assertManage(access);
+    if (input.reportId) {
+      const report = await prisma.technicalReport.findFirst({ where: { id: input.reportId, projectId }, select: { id: true } });
+      if (!report) throw notFound('Report');
+    }
+    for (const id of new Set(input.tasks.map((t) => t.assigneeId).filter(Boolean))) await assertAssignee(id);
+    const def = access.project.workflowSnapshot as unknown as WorkflowDefinition;
+    const stepKeys = new Set(def.steps.map((s) => s.key));
+
+    const created = await prisma.$transaction(async (tx) => {
+      let n = await lastNumber(tx, projectId);
+      const out = [];
+      for (const t of input.tasks) {
+        out.push(
+          await tx.task.create({
+            data: {
+              projectId,
+              number: ++n,
+              source: 'REQUIREMENT',
+              stepKey: t.stepKey && stepKeys.has(t.stepKey) ? t.stepKey : null,
+              reportId: input.reportId ?? null,
+              title: t.title,
+              description: t.description,
+              status: 'TODO',
+              priority: t.priority,
+              estimateHours: t.estimateHours ?? null,
+              assigneeId: t.assigneeId ?? null,
+              dueDate: t.dueDate ? new Date(t.dueDate) : null,
+              createdById: user.id,
+            },
+            include: taskInclude,
+          }),
+        );
+      }
+      return out;
+    });
+
+    const perAssignee = new Map<string, number>();
+    for (const t of created) if (t.assigneeId && t.assigneeId !== user.id) perAssignee.set(t.assigneeId, (perAssignee.get(t.assigneeId) ?? 0) + 1);
+    for (const [assigneeId, count] of perAssignee)
+      await notificationsService.notify([assigneeId], {
+        type: 'task.assigned',
+        title: `${count} new ticket${count > 1 ? 's' : ''} on ${access.project.code}`,
+        body: `${user.name} assigned you requirement tickets for “${access.project.title}”.`,
+        link: '/app?tab=tickets',
+      });
+    await projectsRepository.addEvent(projectId, {
+      type: 'task',
+      title: `${created.length} requirement ticket(s) created`,
+      actorId: user.id,
+      visibility: 'INTERNAL',
+      meta: { count: created.length, reportId: input.reportId ?? null },
+    });
+    await auditService.log(req, { action: 'task.bulk_created', entityType: 'Project', entityId: projectId, meta: { count: created.length, reportId: input.reportId ?? null } });
+    events.emit('project.updated', { projectId });
+    return created;
+  },
+
   async update(req: Request, user: AuthUser, taskId: string, input: z.infer<typeof updateTaskSchema>) {
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw notFound('Task');
     assertWork(await loadProjectAccess(user, task.projectId));
-    if (input.assigneeId !== undefined) await assertAssignee(task.projectId, input.assigneeId);
+
+    // Developers move their own tickets (or claim unassigned ones); managers steer everything else.
+    const isDeveloper = user.role === 'DEVELOPER';
+    if (isDeveloper && task.assigneeId && task.assigneeId !== user.id) throw forbidden('This ticket is assigned to someone else');
+    if (isDeveloper && input.assigneeId && input.assigneeId !== user.id) throw forbidden('You can only assign tickets to yourself');
+    if (input.assigneeId !== undefined) await assertAssignee(input.assigneeId);
+
+    const moved = input.status !== undefined && input.status !== task.status;
+    const next = input.status ?? task.status;
+    // A developer starting an unclaimed ticket takes ownership of it.
+    const claimed = isDeveloper && moved && !task.assigneeId && input.assigneeId === undefined ? user.id : undefined;
+    const blockedReason =
+      input.blockedReason === undefined ? undefined : input.blockedReason?.trim() ? input.blockedReason.trim() : null;
+
     const updated = await prisma.task.update({
       where: { id: taskId },
       data: {
@@ -67,13 +179,33 @@ export const tasksService = {
         ...(input.description !== undefined ? { description: input.description } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.priority !== undefined ? { priority: input.priority } : {}),
-        ...(input.assigneeId !== undefined ? { assigneeId: input.assigneeId } : {}),
+        ...(input.assigneeId !== undefined ? { assigneeId: input.assigneeId } : claimed ? { assigneeId: claimed } : {}),
         ...(input.dueDate !== undefined ? { dueDate: input.dueDate ? new Date(input.dueDate) : null } : {}),
+        ...(input.estimateHours !== undefined ? { estimateHours: input.estimateHours } : {}),
+        ...(moved && next === 'IN_PROGRESS' && !task.startedAt ? { startedAt: new Date() } : {}),
+        ...(moved ? { completedAt: next === 'DONE' ? new Date() : null } : {}),
+        // Finishing a ticket resolves any block.
+        ...(moved && next === 'DONE' ? { blockedReason: null } : blockedReason !== undefined ? { blockedReason } : {}),
       },
       include: taskInclude,
     });
-    if (input.assigneeId && input.assigneeId !== task.assigneeId && input.assigneeId !== user.id)
-      events.emit('task.assigned', { taskId, projectId: task.projectId, actorId: user.id, userId: input.assigneeId });
+
+    const assignedTo = claimed ?? input.assigneeId;
+    if (assignedTo && assignedTo !== task.assigneeId && assignedTo !== user.id)
+      events.emit('task.assigned', { taskId, projectId: task.projectId, actorId: user.id, userId: assignedTo });
+    if (moved) {
+      await projectsRepository.addEvent(task.projectId, {
+        type: 'task',
+        title: task.title,
+        body: `${task.status} → ${next}`,
+        actorId: user.id,
+        visibility: 'INTERNAL',
+        meta: { taskId, from: task.status, to: next },
+      });
+      events.emit('task.statusChanged', { taskId, projectId: task.projectId, actorId: user.id, from: task.status, to: next });
+    }
+    if (blockedReason && blockedReason !== task.blockedReason && !(moved && next === 'DONE'))
+      events.emit('task.blocked', { taskId, projectId: task.projectId, actorId: user.id });
     events.emit('project.updated', { projectId: task.projectId });
     return updated;
   },

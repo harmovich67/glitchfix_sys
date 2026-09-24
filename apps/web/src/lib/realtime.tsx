@@ -16,14 +16,20 @@ export function RealtimeBridge({ userId, children }: { userId: string; children:
     socket.on('connect', () => joined.forEach((id) => socket?.emit('project:join', id)));
     socket.on('notification:new', (n: Notification) => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
+      if (n.type === 'report.shared') qc.invalidateQueries({ queryKey: ['reports', 'shared'] });
       toast(n.title, { description: n.body ?? undefined });
+    });
+    // Cross-project ticket boards aren't tied to a project room, so the server nudges each team member directly.
+    socket.on('tasks:changed', () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
     });
     socket.on('project:changed', ({ projectId, scope }: { projectId: string; scope: string }) => {
       if (scope === 'messages') qc.invalidateQueries({ queryKey: ['threads', projectId] });
       if (scope === 'files') qc.invalidateQueries({ queryKey: ['files', projectId] });
       qc.invalidateQueries({ queryKey: ['project', projectId] });
       qc.invalidateQueries({ queryKey: ['timeline', projectId] });
-      qc.invalidateQueries({ queryKey: ['tasks', projectId] });
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['reports', projectId] });
       qc.invalidateQueries({ queryKey: ['notes', projectId] });
       qc.invalidateQueries({ queryKey: ['projects'] });
       qc.invalidateQueries({ queryKey: ['moderation'] });

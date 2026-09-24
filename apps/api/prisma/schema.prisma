@@ -19,6 +19,12 @@ model User {
   locale       String    @default("en")
   isActive     Boolean   @default(true)
   tokenVersion Int       @default(0)
+  /// Staff contact details (visible to admins and to whoever reviews their time-off requests).
+  phone          String?
+  whatsapp       String?
+  altEmail       String?
+  emergencyName  String?
+  emergencyPhone String?
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -36,6 +42,13 @@ model User {
   notifications    Notification[]
   aiUsage          AIUsage[]
   aiMessages       AIMessage[]
+  technicalReports TechnicalReport[]      @relation("TechnicalReportCreator")
+  reportShares     TechnicalReportShare[] @relation("TechnicalReportRecipient")
+  reportSharesSent TechnicalReportShare[] @relation("TechnicalReportSharer")
+  timeOffRequests  TimeOffRequest[]       @relation("TimeOffRequester")
+  timeOffToReview  TimeOffRequest[]       @relation("TimeOffApprover")
+  timeOffAssigned  TimeOffRequest[]       @relation("TimeOffAssigner")
+  timeOffDecided   TimeOffRequest[]       @relation("TimeOffDecider")
   auditLogs        AuditLog[]
   events           ProjectEvent[]
 
@@ -150,6 +163,7 @@ model Project {
   notes      Note[]
   aiMessages AIMessage[]
   aiUsage    AIUsage[]
+  technicalReports TechnicalReport[]
 
   @@index([clientId])
   @@index([status])
@@ -271,10 +285,24 @@ model Task {
   createdBy   User      @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
   dueDate     DateTime?
   order       Int       @default(0)
+  /// Per-project ticket number (0 = legacy task created before numbering).
+  number      Int       @default(0)
+  /// MANUAL, or REQUIREMENT when the ticket was generated from the client's requirements.
+  source      String    @default("MANUAL")
+  /// Journey step the ticket traces back to (a requirement group).
+  stepKey     String?
+  reportId    String?
+  report      TechnicalReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  estimateHours Int?
+  /// Set while the developer is blocked; the project manager is notified.
+  blockedReason String?
+  startedAt   DateTime?
+  completedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([projectId, status])
+  @@index([assigneeId, status])
 }
 
 model Note {
@@ -352,6 +380,73 @@ model AIMessage {
   createdAt DateTime @default(now())
 
   @@index([projectId, createdAt])
+}
+
+model TechnicalReport {
+  id                    String   @id @default(cuid())
+  projectId             String
+  project               Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version               Int
+  locale                String   @default("en")
+  content               String
+  model                 String?
+  mock                  Boolean  @default(false)
+  requirementsUpdatedAt DateTime
+  answerCount           Int      @default(0)
+  createdById           String
+  createdBy             User     @relation("TechnicalReportCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt             DateTime @default(now())
+  shares                TechnicalReportShare[]
+  tasks                 Task[]
+
+  @@unique([projectId, version])
+  @@index([projectId, createdAt])
+}
+
+model TechnicalReportShare {
+  id          String          @id @default(cuid())
+  reportId    String
+  report      TechnicalReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User            @relation("TechnicalReportRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sharedById  String
+  sharedBy    User            @relation("TechnicalReportSharer", fields: [sharedById], references: [id], onDelete: Restrict)
+  sharedAt    DateTime        @default(now())
+
+  @@unique([reportId, recipientId])
+  @@index([recipientId, sharedAt])
+}
+
+model TimeOffRequest {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation("TimeOffRequester", fields: [userId], references: [id], onDelete: Cascade)
+  /// LEAVE (whole days) or PERMISSION (a few hours on one day).
+  type         String
+  leaveKind    String?
+  startDate    DateTime
+  endDate      DateTime
+  startTime    String?
+  endTime      String?
+  reason       String    @default("")
+  /// PENDING → APPROVED | REJECTED, or CANCELLED by the requester.
+  status       String    @default("PENDING")
+  /// The project manager an admin asked to decide.
+  approverId   String?
+  approver     User?     @relation("TimeOffApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  assignedById String?
+  assignedBy   User?     @relation("TimeOffAssigner", fields: [assignedById], references: [id], onDelete: SetNull)
+  assignedAt   DateTime?
+  decidedById  String?
+  decidedBy    User?     @relation("TimeOffDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt    DateTime?
+  decisionNote String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@index([approverId, status])
+  @@index([status, createdAt])
 }
 
 model AuditLog {

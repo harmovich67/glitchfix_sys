@@ -1,7 +1,7 @@
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { Activity, ArrowRight, CheckCircle2, Clock, FolderKanban, Inbox, ListTodo, MessageSquareWarning, Plus, Rocket, TrendingUp, Users } from 'lucide-react';
+import { Activity, ArrowRight, CheckCircle2, Clock, FolderKanban, Inbox, LayoutGrid, ListChecks, ListTodo, MessageSquareWarning, Plus, Rocket, TrendingUp, Users } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
@@ -11,9 +11,12 @@ import { TASK_STYLE } from '../../lib/meta';
 import { Button } from '../../components/ui/button';
 import { Card, CardHeader, PageHeader, PriorityBadge, StatCard, StatusBadge } from '../../components/ui/surfaces';
 import { Avatar, EmptyState, Progress, Skeleton } from '../../components/ui/feedback';
+import { Tabs } from '../../components/ui/tabs';
 import { NotificationItem, useNotifications } from '../../components/layout/NotificationBell';
 import { useCreateProject } from '../projects/useCreateProject';
 import { DueLabel, ProjectCard, TypeTile } from '../projects/components';
+import { DeliveryBoard } from '../tickets/DeliveryBoard';
+import { SharedReportsCard } from '../reports/SharedReportsCard';
 
 function useProjects() {
   return useQuery({ queryKey: ['projects', {}], queryFn: () => api.get<ProjectListItem[]>('/projects') });
@@ -35,6 +38,36 @@ function RecentNotifications() {
         {data?.items.length ? data.items.slice(0, 6).map((n) => <NotificationItem key={n.id} n={n} />) : <p className="px-3 pb-4 text-sm text-muted">{t('notifications.empty')}</p>}
       </div>
     </Card>
+  );
+}
+
+type DashTab = 'overview' | 'tickets';
+
+/** Overview / tickets switch kept in the URL (`?tab=tickets`) so notifications can deep-link to the board. */
+function useDashTab() {
+  const [params, setParams] = useSearchParams();
+  const tab: DashTab = params.get('tab') === 'tickets' ? 'tickets' : 'overview';
+  const setTab = (v: DashTab) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true });
+  return [tab, setTab] as const;
+}
+
+function DashTabs({ tab, onChange, trackingLabel, count }: { tab: DashTab; onChange: (t: DashTab) => void; trackingLabel: string; count?: number }) {
+  const { t } = useI18n();
+  return (
+    <Tabs
+      className="mb-6"
+      value={tab}
+      onChange={onChange}
+      items={[
+        { value: 'overview', label: t('tickets.overviewTab'), icon: <LayoutGrid /> },
+        {
+          value: 'tickets',
+          label: trackingLabel,
+          icon: <ListChecks />,
+          badge: count ? <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white tabular-nums">{count}</span> : undefined,
+        },
+      ]}
+    />
   );
 }
 
@@ -89,13 +122,12 @@ function ClientDashboard() {
   );
 }
 
-function DeveloperDashboard() {
+function DeveloperOverview() {
   const { t } = useI18n();
   const projects = useProjects();
   const tasks = useQuery({ queryKey: ['tasks', 'mine'], queryFn: () => api.get<Task[]>('/tasks/mine') });
   return (
     <>
-      <Greeting subtitle={t('dashboard.devSubtitle')} />
       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
         <StatCard label={t('dashboard.assigned')} value={projects.data?.length ?? '—'} icon={<FolderKanban className="size-4" />} />
         <StatCard label={t('dashboard.myTasks')} value={tasks.data?.length ?? '—'} icon={<ListTodo className="size-4" />} tone="info" />
@@ -121,7 +153,7 @@ function DeveloperDashboard() {
             <div className="px-2 pb-2">
               {tasks.data?.length ? (
                 tasks.data.map((task) => (
-                  <Link key={task.id} to={`/app/projects/${task.projectId}?tab=workspace`} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-2">
+                  <Link key={task.id} to="/app?tab=tickets" className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-2">
                     <span className={cn('size-2 shrink-0 rounded-full', TASK_STYLE[task.status])} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-medium text-fg">{task.title}</span>
@@ -135,9 +167,23 @@ function DeveloperDashboard() {
               )}
             </div>
           </Card>
+          <SharedReportsCard />
           <RecentNotifications />
         </div>
       </div>
+    </>
+  );
+}
+
+function DeveloperDashboard() {
+  const { t } = useI18n();
+  const [tab, setTab] = useDashTab();
+  const tasks = useQuery({ queryKey: ['tasks', 'mine'], queryFn: () => api.get<Task[]>('/tasks/mine') });
+  return (
+    <>
+      <Greeting subtitle={tab === 'tickets' ? t('tickets.subtitleDev') : t('dashboard.devSubtitle')} />
+      <DashTabs tab={tab} onChange={setTab} trackingLabel={t('tickets.tab')} count={tasks.data?.length} />
+      {tab === 'tickets' ? <DeliveryBoard /> : <DeveloperOverview />}
     </>
   );
 }
@@ -166,7 +212,7 @@ function Sparkline({ data }: { data: number[] }) {
   );
 }
 
-function StaffDashboard() {
+function StaffOverview() {
   const { t, locale } = useI18n();
   const { can } = useAuth();
   const overview = useQuery({ queryKey: ['analytics', 30], queryFn: () => api.get<Overview>('/analytics/overview?range=30'), enabled: can('analytics.view') });
@@ -176,14 +222,6 @@ function StaffDashboard() {
 
   return (
     <>
-      <Greeting
-        subtitle={t('dashboard.staffSubtitle')}
-        actions={
-          <Button asChild variant="secondary" rightIcon={<ArrowRight className="rtl-flip size-4" />}>
-            <Link to="/app/projects">{t('nav.projects')}</Link>
-          </Button>
-        }
-      />
       <div className="grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4">
         <Card className="p-3.5 sm:p-5 flex flex-col justify-between min-h-[105px] sm:min-h-[120px]">
           <div>
@@ -212,8 +250,8 @@ function StaffDashboard() {
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_400px]">
-        <div className="space-y-6">
+      <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="min-w-0 space-y-6">
           <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.needsAttention')} description={t('dashboard.unassignedProjects')} icon={<Inbox className="size-4" />} />
             <div className="p-2 sm:p-3 space-y-1.5">
@@ -251,25 +289,25 @@ function StaffDashboard() {
           <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.recentActivity')} icon={<Activity className="size-4" />} />
             <div className="px-3 sm:px-5 pb-4 sm:pb-5">
-              <ol className="relative min-w-0 space-y-4">
+              <ol className="relative min-w-0 max-w-full space-y-4">
                 {overview.data?.recent.map((e, i) => (
-                  <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex items-start gap-3">
+                  <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex min-w-0 max-w-full items-start gap-3">
                     <div className="relative flex shrink-0 flex-col items-center">
                       {e.actor ? <Avatar name={e.actor.name} size="sm" /> : <div className="size-7 rounded-full bg-surface-3" />}
                       {i < overview.data!.recent.length - 1 && <span className="mt-1.5 w-px h-full min-h-[24px] bg-border" />}
                     </div>
-                    <div className="min-w-0 flex-1 pt-0.5">
-                      <p className="text-[13px] text-fg leading-snug break-words">
-                        <span className="font-semibold text-fg">{e.actor?.name ?? t('chat.system')}</span>
+                    <div className="min-w-0 max-w-full flex-1 pt-0.5 [overflow-wrap:anywhere]">
+                      <p className="max-w-full text-[13px] text-fg leading-snug">
+                        <bdi className="font-semibold text-fg">{e.actor?.name ?? t('chat.system')}</bdi>
                         <span className="mx-1 text-muted">·</span>
-                        <span>{e.title}</span>
+                        <bdi>{e.title}</bdi>
                       </p>
-                      <Link to={`/app/projects/${e.project.id}`} className="mt-1 block text-xs text-muted hover:text-brand leading-relaxed break-words">
-                        <span className="font-mono text-fg-2 font-medium">{e.project.code}</span>
+                      <Link to={`/app/projects/${e.project.id}`} className="mt-1 block max-w-full text-xs text-muted hover:text-brand leading-relaxed">
+                        <bdi dir="ltr" className="font-mono text-fg-2 font-medium">{e.project.code}</bdi>
                         <span className="mx-1.5 text-muted/60">—</span>
-                        <span>{e.project.title}</span>
+                        <bdi>{e.project.title}</bdi>
                         <span className="mx-1.5 text-muted/60">·</span>
-                        <span className="text-muted/80">{timeAgo(e.createdAt, locale)}</span>
+                        <bdi className="text-muted/80">{timeAgo(e.createdAt, locale)}</bdi>
                       </Link>
                     </div>
                   </motion.li>
@@ -278,7 +316,7 @@ function StaffDashboard() {
             </div>
           </Card>
         </div>
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.workload')} icon={<Users className="size-4" />} />
             <div className="space-y-4 px-3 sm:px-5 pb-4 sm:pb-5">
@@ -301,9 +339,29 @@ function StaffDashboard() {
               ))}
             </div>
           </Card>
+          <SharedReportsCard />
           <RecentNotifications />
         </div>
       </div>
+    </>
+  );
+}
+
+function StaffDashboard() {
+  const { t } = useI18n();
+  const [tab, setTab] = useDashTab();
+  return (
+    <>
+      <Greeting
+        subtitle={tab === 'tickets' ? t('tickets.subtitleMgr') : t('dashboard.staffSubtitle')}
+        actions={
+          <Button asChild variant="secondary" rightIcon={<ArrowRight className="rtl-flip size-4" />}>
+            <Link to="/app/projects">{t('nav.projects')}</Link>
+          </Button>
+        }
+      />
+      <DashTabs tab={tab} onChange={setTab} trackingLabel={t('tickets.trackingTab')} />
+      {tab === 'tickets' ? <DeliveryBoard /> : <StaffOverview />}
     </>
   );
 }

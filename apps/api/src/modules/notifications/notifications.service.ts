@@ -51,6 +51,12 @@ async function usersByRole(roles: Role[], exclude?: string) {
   return users.map((u) => u.id).filter((id) => id !== exclude);
 }
 
+/** Project managers on this project (project-level MANAGER members), who follow delivery day to day. */
+async function projectManagers(projectId: string) {
+  const rows = await prisma.projectMember.findMany({ where: { projectId, role: 'MANAGER' }, select: { userId: true } });
+  return rows.map((r) => r.userId);
+}
+
 async function projectContext(projectId: string) {
   return prisma.project.findUnique({
     where: { id: projectId },
@@ -190,6 +196,49 @@ export function registerNotificationListeners() {
     });
   });
 
-  events.on('project.updated', ({ projectId }) => realtime.projectChanged(projectId, 'project'));
+  // Tickets move through review/done: the managers following the project (and whoever created the ticket) hear about it.
+  events.on('task.statusChanged', async ({ taskId, projectId, actorId, to }) => {
+    const [p, task] = await Promise.all([
+      projectContext(projectId),
+      prisma.task.findUnique({ where: { id: taskId }, include: { assignee: { select: { name: true } } } }),
+    ]);
+    if (!p || !task) return;
+    const managers = await projectManagers(projectId);
+    const mover = await prisma.user.findUnique({ where: { id: actorId }, select: { name: true } });
+    if (to === 'REVIEW' || to === 'DONE')
+      await notificationsService.notify([...managers, task.createdById].filter((id) => id !== actorId), {
+        type: 'task.status',
+        title: `${p.code} · ${to === 'DONE' ? 'Ticket done' : 'Ticket ready for review'}`,
+        body: `${mover?.name ?? 'Someone'} moved “${task.title}” to ${to === 'DONE' ? 'Done' : 'Review'}.`,
+        link: link(projectId, 'workspace'),
+      });
+    if (task.assigneeId && task.assigneeId !== actorId)
+      await notificationsService.notify([task.assigneeId], {
+        type: 'task.status',
+        title: `${p.code} · your ticket was moved`,
+        body: `${mover?.name ?? 'Someone'} moved “${task.title}” to ${to}.`,
+        link: link(projectId, 'workspace'),
+      });
+  });
+
+  events.on('task.blocked', async ({ taskId, projectId, actorId }) => {
+    const [p, task] = await Promise.all([projectContext(projectId), prisma.task.findUnique({ where: { id: taskId } })]);
+    if (!p || !task?.blockedReason) return;
+    const managers = await projectManagers(projectId);
+    await notificationsService.notify([...managers, task.createdById].filter((id) => id !== actorId), {
+      type: 'task.blocked',
+      title: `${p.code} · a ticket is blocked`,
+      body: `“${task.title}” — ${task.blockedReason}`.slice(0, 200),
+      link: link(projectId, 'workspace'),
+      email: true,
+    });
+  });
+
+  events.on('project.updated', async ({ projectId }) => {
+    realtime.projectChanged(projectId, 'project');
+    // The cross-project ticket boards are not tied to a project room, so nudge the team directly.
+    const p = await projectContext(projectId);
+    p?.members.forEach((m) => realtime.toUser(m.userId, 'tasks:changed', { projectId }));
+  });
   events.on('project.created', async ({ projectId }) => realtime.projectChanged(projectId, 'project'));
 }

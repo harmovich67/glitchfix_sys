@@ -103,7 +103,7 @@ export function ProgressRing({ value, size = 56, stroke = 5, children }: { value
 export function Avatar({ name, size = 'md', className }: { name: string; size?: 'xs' | 'sm' | 'md' | 'lg'; className?: string }) {
   const sizes = { xs: 'size-5 text-[9px]', sm: 'size-7 text-[11px]', md: 'size-9 text-xs', lg: 'size-12 text-sm' };
   return (
-    <div
+    <span
       title={name}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-semibold text-white ring-2 ring-surface',
@@ -113,7 +113,7 @@ export function Avatar({ name, size = 'md', className }: { name: string; size?: 
       )}
     >
       {initials(name)}
-    </div>
+    </span>
   );
 }
 

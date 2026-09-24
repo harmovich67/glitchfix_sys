@@ -36,6 +36,18 @@ export type MessageStatus = (typeof MESSAGE_STATUSES)[number];
 export const TASK_STATUSES = ['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
+export const TIMEOFF_TYPES = ['LEAVE', 'PERMISSION'] as const;
+export type TimeOffType = (typeof TIMEOFF_TYPES)[number];
+
+export const LEAVE_KINDS = ['ANNUAL', 'SICK', 'UNPAID', 'OTHER'] as const;
+export type LeaveKind = (typeof LEAVE_KINDS)[number];
+
+export const TIMEOFF_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'] as const;
+export type TimeOffStatus = (typeof TIMEOFF_STATUSES)[number];
+
+export const TASK_SOURCES = ['MANUAL', 'REQUIREMENT'] as const;
+export type TaskSource = (typeof TASK_SOURCES)[number];
+
 export const STEP_PROGRESS = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED'] as const;
 export type StepProgress = (typeof STEP_PROGRESS)[number];
 
@@ -46,7 +58,7 @@ export type DevClientMode = (typeof DEV_CLIENT_MODES)[number];
 export const AI_PERSONAS = ['consultant', 'friendly', 'concise', 'technical'] as const;
 export type AIPersona = (typeof AI_PERSONAS)[number];
 
-export const AI_USAGE_KINDS = ['CHAT', 'IMPROVE', 'BRIEF', 'TEST'] as const;
+export const AI_USAGE_KINDS = ['CHAT', 'IMPROVE', 'BRIEF', 'TECHNICAL_REPORT', 'TASK_PLAN', 'TEST'] as const;
 export type AIUsageKind = (typeof AI_USAGE_KINDS)[number];
 
 export const UPLOAD_LIMITS = {

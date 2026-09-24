@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Dialog, DropdownMenu, Tooltip as RTooltip } from 'radix-ui';
 import { X } from 'lucide-react';
@@ -121,17 +121,39 @@ export function Drawer({
 }
 
 export const Menu = {
-  Root: DropdownMenu.Root,
+  Root: ({ modal = false, ...props }: ComponentProps<typeof DropdownMenu.Root>) => (
+    <DropdownMenu.Root modal={modal} {...props} />
+  ),
   Trigger: DropdownMenu.Trigger,
-  Content({ children, align = 'end', className }: { children: ReactNode; align?: 'start' | 'end' | 'center'; className?: string }) {
+  Content({
+    children,
+    align = 'end',
+    side = 'bottom',
+    sideOffset = 6,
+    collisionPadding = 8,
+    className,
+  }: {
+    children: ReactNode;
+    align?: 'start' | 'end' | 'center';
+    side?: 'top' | 'bottom' | 'left' | 'right';
+    sideOffset?: number;
+    collisionPadding?: number;
+    className?: string;
+  }) {
     return (
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align={align}
-          sideOffset={6}
+          side={side}
+          sideOffset={sideOffset}
+          collisionPadding={collisionPadding}
           className={cn(
             'z-50 min-w-48 rounded-xl bg-surface p-1.5 shadow-lg ring-1 ring-border',
-            'data-[state=open]:animate-in data-[side=bottom]:origin-top',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+            'data-[side=bottom]:origin-top data-[side=bottom]:slide-in-from-top-2',
+            'data-[side=top]:origin-bottom data-[side=top]:slide-in-from-bottom-2',
+            'data-[side=left]:origin-right data-[side=left]:slide-in-from-right-2',
+            'data-[side=right]:origin-left data-[side=right]:slide-in-from-left-2',
             className,
           )}
         >

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createNoteSchema, createTaskSchema, updateNoteSchema, updateTaskSchema } from '@welco/shared';
+import { bulkCreateTasksSchema, createNoteSchema, createTaskSchema, updateNoteSchema, updateTaskSchema } from '@welco/shared';
 import { requireAuth } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { currentUser, param } from '../../core/http';
@@ -12,8 +12,16 @@ projectTasksRoutes.post('/', validate(createTaskSchema), async (req, res) =>
   res.status(201).json(await tasksService.create(req, currentUser(req), param(req, 'id'), req.body)),
 );
 
+projectTasksRoutes.post('/bulk', validate(bulkCreateTasksSchema), async (req, res) =>
+  res.status(201).json(await tasksService.bulkCreate(req, currentUser(req), param(req, 'id'), req.body)),
+);
+
 export const tasksRoutes = Router();
 tasksRoutes.use(requireAuth);
+const q = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 60) : undefined);
+tasksRoutes.get('/board', async (req, res) =>
+  res.json(await tasksService.board(currentUser(req), { projectId: q(req.query.projectId), assigneeId: q(req.query.assigneeId) })),
+);
 tasksRoutes.get('/mine', async (req, res) => res.json(await tasksService.mine(currentUser(req))));
 tasksRoutes.patch('/:id', validate(updateTaskSchema), async (req, res) =>
   res.json(await tasksService.update(req, currentUser(req), param(req, 'id'), req.body)),

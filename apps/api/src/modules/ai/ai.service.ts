@@ -5,6 +5,7 @@ import {
   allQuestions,
   formatAnswer,
   isEmptyValue,
+  tr,
   visibleQuestions,
   visibleSteps,
   type AISettingsInput,
@@ -13,14 +14,18 @@ import {
   type WorkflowDefinition,
 } from '@welco/shared';
 import { prisma } from '../../core/prisma';
-import { AppError, forbidden, tooMany } from '../../core/errors';
+import { AppError, badRequest, forbidden, notFound, tooMany } from '../../core/errors';
 import type { AuthUser } from '../../types/express';
 import { auditService } from '../audit/audit.service';
-import { assertWork, loadProjectAccess } from '../projects/projects.access';
+import { notificationsService } from '../notifications/notifications.service';
+import { assertManage, assertWork, loadProjectAccess } from '../projects/projects.access';
+import { STATUS_LABELS } from '../projects/projects.service';
 import { projectsRepository } from '../projects/projects.repository';
+import { briefUserSelect } from '../users/users.repository';
 import { PERSONAS, effectiveApiKey, getAISettings, publicSettings, updateAISettings } from './ai.settings';
 import { geminiGenerate, type GenerateRequest } from './providers/gemini';
 import { mockBrief, mockChat, mockImprove } from './providers/mock';
+import { mockTaskPlan, mockTechnicalReport, type PlannedTask, type ReportFacts } from './providers/mock-report';
 import { isBriefLocale, parseBriefs, serializeBriefs, type BriefLocale, type BriefMap, type StoredBrief } from './brief-store';
 
 export interface ChatResult {
@@ -51,6 +56,17 @@ const CHAT_SCHEMA = {
   },
   required: ['reply'],
 };
+
+const technicalReportInclude = {
+  createdBy: { select: briefUserSelect },
+  shares: {
+    orderBy: { sharedAt: 'desc' },
+    include: {
+      recipient: { select: briefUserSelect },
+      sharedBy: { select: briefUserSelect },
+    },
+  },
+} satisfies Prisma.TechnicalReportInclude;
 
 /**
  * Call the main model, then each configured fallback in order, when the provider is overloaded,
@@ -144,6 +160,160 @@ function journeyContext(def: WorkflowDefinition, answers: AnswerMap, currentStep
   }
   return lines.join('\n');
 }
+
+type ReportProject = NonNullable<Awaited<ReturnType<typeof projectsRepository.findDetail>>>;
+type ReportFile = { id: string; originalName: string; category: string; visibility: string };
+
+/** Full, labelled source pack for an engineering report. Facts are kept separate from AI recommendations. */
+function technicalReportContext(project: ReportProject, def: WorkflowDefinition, answers: AnswerMap, files: ReportFile[], locale: BriefLocale) {
+  const fileNames = new Map(files.map((f) => [f.id, f.originalName]));
+  const lines: string[] = [
+    '# Source of truth',
+    'Everything below is supplied project data. Missing answers are explicitly marked; do not infer them as facts.',
+    '',
+    '## Project metadata',
+    `- Code: ${project.code}`,
+    `- Name: ${project.title}`,
+    `- Status: ${STATUS_LABELS[project.status as keyof typeof STATUS_LABELS] ?? project.status}`,
+    `- Priority: ${project.priority.charAt(0)}${project.priority.slice(1).toLowerCase()}`,
+    `- Project type key: ${project.projectType ?? '(not specified)'}`,
+    `- Progress: ${project.progress}%`,
+    `- Submitted at: ${project.submittedAt?.toISOString() ?? '(not submitted)'}`,
+    `- Approved at: ${project.approvedAt?.toISOString() ?? '(not approved)'}`,
+    `- Planned start: ${project.startDate?.toISOString() ?? '(not specified)'}`,
+    `- Due date: ${project.dueDate?.toISOString() ?? '(not specified)'}`,
+    `- Workflow: ${project.template?.name ?? 'Snapshot'} v${project.workflowSnapshot && typeof project.workflowSnapshot === 'object' && 'version' in project.workflowSnapshot ? String(project.workflowSnapshot.version) : project.template?.version ?? 1}`,
+    '',
+    '## Client context',
+    `- Contact: ${project.client.name}`,
+    `- Company: ${project.client.clientProfile?.companyName || '(not specified)'}`,
+    `- Industry: ${project.client.clientProfile?.industry || '(not specified)'}`,
+    `- Country: ${project.client.clientProfile?.country || '(not specified)'}`,
+    `- Website: ${project.client.clientProfile?.website || '(not specified)'}`,
+    '',
+    '## Assigned delivery team',
+  ];
+
+  if (project.members.length) {
+    for (const member of project.members) {
+      const skills = member.user.developerProfile?.skills;
+      lines.push(
+        `- ${member.user.name} — ${member.role}${member.user.developerProfile?.title ? `, ${member.user.developerProfile.title}` : ''}${Array.isArray(skills) && skills.length ? `; skills: ${skills.join(', ')}` : ''}`,
+      );
+    }
+  } else lines.push('- (No team assigned yet)');
+
+  lines.push('', '## Requirements and client answers');
+  for (const step of visibleSteps(def, answers)) {
+    lines.push(`### ${tr(step, 'title', locale)} [${step.key}]`);
+    for (const q of visibleQuestions(step, answers)) {
+      const value = answers[q.key];
+      let shown: string;
+      if (isEmptyValue(value)) shown = '(unanswered)';
+      else if (q.type === 'file') {
+        shown = (Array.isArray(value) ? value : []).map((id) => fileNames.get(String(id)) ?? String(id)).join(', ') || '(no files)';
+      } else shown = formatAnswer(q, value, locale).join(', ');
+      lines.push(`- [${q.key}] ${tr(q, 'label', locale)}: ${shown.slice(0, 4000)}`);
+    }
+  }
+
+  lines.push('', '## Uploaded project files');
+  if (files.length) files.forEach((f) => lines.push(`- ${f.originalName} (${f.category}, ${f.visibility})`));
+  else lines.push('- (No files uploaded)');
+  return lines.join('\n');
+}
+
+const TASK_PLAN_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    tasks: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          title: { type: 'STRING', description: 'Short imperative ticket title.' },
+          description: { type: 'STRING', description: 'What to build plus acceptance criteria as bullet points.' },
+          priority: { type: 'STRING', enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] },
+          stepKey: { type: 'STRING', description: 'The requirement group (step key) this ticket traces back to, when there is one.' },
+          estimateHours: { type: 'INTEGER', description: 'Realistic effort in hours (2-40).' },
+        },
+        required: ['title', 'description', 'priority'],
+      },
+    },
+  },
+  required: ['tasks'],
+};
+
+type ReportRow = Prisma.TechnicalReportGetPayload<{ include: typeof technicalReportInclude }>;
+type ReportListRow = Omit<ReportRow, 'content'> & { content?: string };
+interface RequirementsSnapshot {
+  updatedAt: Date;
+  answerCount: number;
+}
+
+/** What the client requirements look like right now — used to tell when a report is out of date. */
+async function requirementsSnapshot(projectId: string, projectCreatedAt: Date): Promise<RequirementsSnapshot> {
+  const agg = await prisma.answer.aggregate({ where: { projectId }, _max: { updatedAt: true }, _count: true });
+  return { updatedAt: agg._max.updatedAt ?? projectCreatedAt, answerCount: agg._count };
+}
+
+function serializeReport(r: ReportListRow, snap: RequirementsSnapshot, viewerId: string, canManage: boolean) {
+  return {
+    ...r,
+    // Recipients only see their own share row; the full audience is a manager concern.
+    shares: canManage ? r.shares : r.shares.filter((s) => s.recipientId === viewerId),
+    sharedWithMe: r.shares.some((s) => s.recipientId === viewerId),
+    stale: r.requirementsUpdatedAt.getTime() < snap.updatedAt.getTime() || r.answerCount !== snap.answerCount,
+  };
+}
+
+/** Insert the next version number for a project, retrying if two managers generate at once. */
+async function createReportVersion(data: Omit<Prisma.TechnicalReportUncheckedCreateInput, 'version'>) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const last = await prisma.technicalReport.aggregate({ where: { projectId: data.projectId }, _max: { version: true } });
+    try {
+      return await prisma.technicalReport.create({ data: { ...data, version: (last._max.version ?? 0) + 1 }, include: technicalReportInclude });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002' && attempt < 2) continue;
+      throw err;
+    }
+  }
+  throw new AppError(409, 'CONFLICT', 'Another report was generated at the same time. Please try again.');
+}
+
+function reportFacts(project: ReportProject): ReportFacts {
+  const cp = project.client.clientProfile;
+  return {
+    code: project.code,
+    title: project.title,
+    status: STATUS_LABELS[project.status as keyof typeof STATUS_LABELS] ?? project.status,
+    priority: project.priority.charAt(0) + project.priority.slice(1).toLowerCase(),
+    projectType: project.projectType,
+    progress: project.progress,
+    dueDate: project.dueDate?.toISOString() ?? null,
+    client: {
+      name: project.client.name,
+      company: cp?.companyName ?? '',
+      industry: cp?.industry ?? '',
+      country: cp?.country ?? '',
+      website: cp?.website ?? '',
+    },
+    team: project.members.map((m) => ({ name: m.user.name, role: m.role, title: m.user.developerProfile?.title ?? null })),
+  };
+}
+
+async function loadReportSources(projectId: string) {
+  const project = await projectsRepository.findDetail(projectId);
+  if (!project) throw notFound('Project');
+  const [answers, files] = await Promise.all([
+    projectsRepository.answerMap(projectId),
+    prisma.file.findMany({ where: { projectId }, select: { id: true, originalName: true, category: true, visibility: true } }),
+  ]);
+  const def = project.workflowSnapshot as unknown as WorkflowDefinition;
+  return { project, def, answers, files, fileNames: new Map(files.map((f) => [f.id, f.originalName])) };
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
 
 /** Keep only suggestions that reference real option questions and valid values. */
 function sanitizeSuggestions(def: WorkflowDefinition, raw: ChatResult['suggestions']) {
@@ -320,6 +490,246 @@ export const aiService = {
     });
     await auditService.log(req, { action: 'ai.brief_generated', entityType: 'Project', entityId: projectId, meta: { locale } });
     return { locale, briefs };
+  },
+
+  // ── Technical reports ──────────────────────────────────────────────────────
+  /** Version history for a project. Managers see every version; developers only those shared with them. */
+  async technicalReports(user: AuthUser, projectId: string) {
+    const access = await loadProjectAccess(user, projectId);
+    assertWork(access);
+    const canManage = access.canManage;
+    const [rows, snap] = await Promise.all([
+      prisma.technicalReport.findMany({
+        where: { projectId, ...(canManage ? {} : { shares: { some: { recipientId: user.id } } }) },
+        orderBy: { version: 'desc' },
+        include: technicalReportInclude,
+        omit: { content: true },
+      }),
+      requirementsSnapshot(projectId, access.project.createdAt),
+    ]);
+    return {
+      canGenerate: canManage,
+      canShare: canManage,
+      current: { requirementsUpdatedAt: snap.updatedAt, answerCount: snap.answerCount },
+      reports: rows.map((r) => serializeReport(r, snap, user.id, canManage)),
+    };
+  },
+
+  /** One report with its full content, for a manager of the project or a colleague it was shared with. */
+  async technicalReport(user: AuthUser, reportId: string) {
+    const report = await prisma.technicalReport.findUnique({
+      where: { id: reportId },
+      include: { ...technicalReportInclude, project: { select: { id: true, code: true, title: true, createdAt: true } } },
+    });
+    if (!report) throw notFound('Report');
+    let canManage = false;
+    try {
+      const access = await loadProjectAccess(user, report.projectId);
+      canManage = access.canManage && access.canWork;
+    } catch {
+      /* not on the project — a share is the only way in */
+    }
+    if (!canManage && !report.shares.some((s) => s.recipientId === user.id)) throw notFound('Report');
+    const { project, ...row } = report;
+    const snap = await requirementsSnapshot(project.id, project.createdAt);
+    return { ...serializeReport(row, snap, user.id, canManage), project: { id: project.id, code: project.code, title: project.title }, canManage };
+  },
+
+  /** Reports other people shared with the signed-in user (their inbox). */
+  async sharedTechnicalReports(user: AuthUser) {
+    const rows = await prisma.technicalReportShare.findMany({
+      where: { recipientId: user.id },
+      orderBy: { sharedAt: 'desc' },
+      take: 50,
+      include: {
+        sharedBy: { select: briefUserSelect },
+        report: {
+          omit: { content: true },
+          include: { createdBy: { select: briefUserSelect }, project: { select: { id: true, code: true, title: true } } },
+        },
+      },
+    });
+    return rows.map((s) => ({ shareId: s.id, sharedAt: s.sharedAt, sharedBy: s.sharedBy, report: s.report }));
+  },
+
+  async generateTechnicalReport(req: Request, user: AuthUser, projectId: string, requested?: string) {
+    const s = await ensureEnabled();
+    const access = await loadProjectAccess(user, projectId);
+    assertManage(access);
+    await assertQuota(s, user.id);
+    const locale: BriefLocale = isBriefLocale(requested) ? requested : isBriefLocale(user.locale) ? user.locale : 'en';
+    const { project, def, answers, files, fileNames } = await loadReportSources(projectId);
+    const snap = await requirementsSnapshot(projectId, project.createdAt);
+    const apiKey = effectiveApiKey(s);
+    const ar = locale === 'ar';
+
+    let content: string;
+    let model: string | null = null;
+    let mock = false;
+    if (!apiKey) {
+      content = mockTechnicalReport({ facts: reportFacts(project), def, answers, files: fileNames, locale });
+      mock = true;
+      await recordUsage(user.id, projectId, 'TECHNICAL_REPORT', 0, 0, true);
+    } else {
+      const sections = ar
+        ? '1. الملخص التنفيذي، 2. سياق المشروع والعميل، 3. المتطلبات الوظيفية (بمعرّفات FR-01… وأولوية MoSCoW)، 4. المتطلبات غير الوظيفية، 5. المعمارية والتقنيات المقترحة، 6. التكاملات والملفات، 7. خطة التنفيذ (مراحل مع تقدير ساعات)، 8. المخاطر والافتراضات، 9. الأسئلة المفتوحة، 10. تعريف الاكتمال'
+        : '1. Executive summary, 2. Project & client context, 3. Functional requirements (IDs FR-01…, MoSCoW priority), 4. Non-functional requirements, 5. Recommended architecture & stack, 6. Integrations & assets, 7. Delivery plan (phases with hour estimates), 8. Risks & assumptions, 9. Open questions, 10. Definition of done';
+      const gen = await generateWithFallback(s, apiKey, {
+        system: [
+          'You are a senior technical lead writing an engineering report that the delivery team will build from.',
+          `Output GitHub markdown: one "# " title, then these numbered "## " sections in this exact order: ${sections}. Use "### " for sub-groups, bullet lists and **bold** labels; do not use tables or HTML.`,
+          'Separate facts from opinions: everything derived from the supplied client data is a fact; anything you add (architecture, stack, estimates, risks) must be clearly a recommendation or assumption, and section 5 must open with an italic line saying it is an AI recommendation.',
+          'Never invent client requirements, brands, numbers or integrations. Put every gap or ambiguity under "Open questions" instead of guessing. Be concrete and concise — a developer should be able to start from it.',
+          'The output language is only the reader preference and says nothing about the product (it does not mean the product needs that language).',
+          ar
+            ? 'Write the ENTIRE report — headings included — in clear Modern Standard Arabic even though the data is in English. Keep product/brand names, URLs and technical terms (API, CRM, SEO, React…) in Latin script.'
+            : 'Write the entire report in English, translating any Arabic client answers.',
+        ].join('\n'),
+        history: [],
+        prompt: technicalReportContext(project, def, answers, files, locale),
+        temperature: 0.3,
+        maxOutputTokens: Math.max(s.maxOutputTokens, 8192),
+        timeoutMs: 120_000,
+      });
+      if (!gen.text.trim()) throw new AppError(502, 'AI_EMPTY', 'The AI returned an empty report. Please try again.');
+      content = gen.text.trim();
+      model = gen.model;
+      await recordUsage(user.id, projectId, 'TECHNICAL_REPORT', gen.inputTokens, gen.outputTokens, false);
+    }
+
+    const created = await createReportVersion({
+      projectId,
+      locale,
+      content,
+      model,
+      mock,
+      requirementsUpdatedAt: snap.updatedAt,
+      answerCount: snap.answerCount,
+      createdById: user.id,
+    });
+    await projectsRepository.addEvent(projectId, {
+      type: 'technical_report',
+      title: `Technical report v${created.version} generated (${ar ? 'Arabic' : 'English'})`,
+      actorId: user.id,
+      visibility: 'INTERNAL',
+      meta: { reportId: created.id, version: created.version, locale },
+    });
+    await auditService.log(req, {
+      action: 'ai.technical_report_generated',
+      entityType: 'TechnicalReport',
+      entityId: created.id,
+      meta: { projectId, version: created.version, locale, mock },
+    });
+    return serializeReport(created, snap, user.id, true);
+  },
+
+  /** Send a report to team members: they get a notification and it appears in their dashboard inbox. */
+  async shareTechnicalReport(req: Request, user: AuthUser, projectId: string, reportId: string, userIds: string[]) {
+    const access = await loadProjectAccess(user, projectId);
+    assertManage(access);
+    const report = await prisma.technicalReport.findFirst({ where: { id: reportId, projectId }, select: { id: true, version: true } });
+    if (!report) throw notFound('Report');
+
+    const ids = [...new Set(userIds)];
+    const recipients = await prisma.user.findMany({ where: { id: { in: ids }, isActive: true, role: 'DEVELOPER' }, select: { id: true } });
+    if (recipients.length !== ids.length) throw badRequest('Reports can only be shared with active developers');
+
+    const existing = await prisma.technicalReportShare.findMany({ where: { reportId, recipientId: { in: ids } }, select: { recipientId: true } });
+    const already = new Set(existing.map((e) => e.recipientId));
+    const fresh = ids.filter((id) => !already.has(id) && id !== user.id);
+    if (fresh.length) {
+      await prisma.technicalReportShare.createMany({ data: fresh.map((recipientId) => ({ reportId, recipientId, sharedById: user.id })) });
+      await notificationsService.notify(fresh, {
+        type: 'report.shared',
+        title: `Technical report v${report.version} · ${access.project.code}`,
+        body: `${user.name} shared the technical report for “${access.project.title}” with you.`,
+        link: `/app/reports/${reportId}`,
+        email: true,
+      });
+      await projectsRepository.addEvent(projectId, {
+        type: 'technical_report',
+        title: `Technical report v${report.version} shared with ${fresh.length} team member(s)`,
+        actorId: user.id,
+        visibility: 'INTERNAL',
+        meta: { reportId, version: report.version, recipients: fresh },
+      });
+      await auditService.log(req, { action: 'ai.technical_report_shared', entityType: 'TechnicalReport', entityId: reportId, meta: { projectId, recipients: fresh } });
+    }
+    return this.technicalReport(user, reportId);
+  },
+
+  async unshareTechnicalReport(req: Request, user: AuthUser, projectId: string, reportId: string, recipientId: string) {
+    assertManage(await loadProjectAccess(user, projectId));
+    const share = await prisma.technicalReportShare.findFirst({ where: { reportId, recipientId, report: { projectId } } });
+    if (!share) throw notFound('Share');
+    await prisma.technicalReportShare.delete({ where: { id: share.id } });
+    await auditService.log(req, { action: 'ai.technical_report_unshared', entityType: 'TechnicalReport', entityId: reportId, meta: { projectId, recipientId } });
+    return this.technicalReport(user, reportId);
+  },
+
+  // ── Requirements → tickets ─────────────────────────────────────────────────
+  /** Propose implementation tickets from the requirements (and optionally a report). Nothing is saved until a manager approves. */
+  async taskPlan(user: AuthUser, projectId: string, input: { reportId?: string; locale?: string }) {
+    const s = await ensureEnabled();
+    const access = await loadProjectAccess(user, projectId);
+    assertManage(access);
+    await assertQuota(s, user.id);
+    const locale: BriefLocale = isBriefLocale(input.locale) ? input.locale : isBriefLocale(user.locale) ? user.locale : 'en';
+    const { project, def, answers, files, fileNames } = await loadReportSources(projectId);
+    const stepKeys = new Set(def.steps.map((st) => st.key));
+
+    let reportText = '';
+    if (input.reportId) {
+      const report = await prisma.technicalReport.findFirst({ where: { id: input.reportId, projectId }, select: { content: true } });
+      if (!report) throw notFound('Report');
+      reportText = report.content;
+    }
+
+    const apiKey = effectiveApiKey(s);
+    let planned: PlannedTask[];
+    let mock = false;
+    if (!apiKey) {
+      planned = mockTaskPlan({ def, answers, files: fileNames, locale });
+      mock = true;
+      await recordUsage(user.id, projectId, 'TASK_PLAN', 0, 0, true);
+    } else {
+      const gen = await generateWithFallback(s, apiKey, {
+        system: [
+          'You are a technical project lead turning client requirements into implementation tickets for developers.',
+          'Each ticket is one deliverable a developer can finish in roughly 2-16 hours, specific and testable. Put acceptance criteria as bullet points in the description.',
+          'Cover real requirements only — never invent features. Add the foundational tickets every project needs (setup, QA, deployment) and no more than 40 tickets in total.',
+          `stepKey must be one of: ${[...stepKeys].join(', ')} — or omitted for cross-cutting work.`,
+          locale === 'ar' ? 'Write titles and descriptions in clear Modern Standard Arabic (keep technical terms in Latin script).' : 'Write titles and descriptions in English.',
+        ].join('\n'),
+        history: [],
+        prompt: `${technicalReportContext(project, def, answers, files, locale)}${reportText ? `\n\n# Approved technical report (use it for scope and priorities)\n${reportText.slice(0, 14000)}` : ''}`,
+        temperature: 0.3,
+        maxOutputTokens: Math.max(s.maxOutputTokens, 8192),
+        responseSchema: TASK_PLAN_SCHEMA,
+        timeoutMs: 120_000,
+      });
+      await recordUsage(user.id, projectId, 'TASK_PLAN', gen.inputTokens, gen.outputTokens, false);
+      let raw: { tasks?: Partial<PlannedTask>[] };
+      try {
+        raw = JSON.parse(gen.text);
+      } catch {
+        throw new AppError(502, 'AI_BAD_OUTPUT', 'The AI returned an unreadable plan. Please try again.');
+      }
+      planned = (raw.tasks ?? [])
+        .filter((t) => typeof t.title === 'string' && t.title.trim())
+        .slice(0, 40)
+        .map((t) => ({
+          title: String(t.title).trim().slice(0, 200),
+          description: String(t.description ?? '').slice(0, 2000),
+          priority: (['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const).find((p) => p === t.priority) ?? 'MEDIUM',
+          stepKey: t.stepKey && stepKeys.has(t.stepKey) ? t.stepKey : null,
+          estimateHours: Number.isFinite(t.estimateHours) ? Math.min(2000, Math.max(0, Math.round(Number(t.estimateHours)))) : null,
+        }));
+    }
+
+    const existing = await prisma.task.findMany({ where: { projectId, source: 'REQUIREMENT' }, select: { title: true } });
+    const taken = new Set(existing.map((t) => norm(t.title)));
+    return { mock, items: planned.map((p) => ({ ...p, duplicate: taken.has(norm(p.title)) })) };
   },
 
   // ── Admin ──────────────────────────────────────────────────────────────────

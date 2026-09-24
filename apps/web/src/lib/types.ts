@@ -40,6 +40,11 @@ export interface User extends BriefUser {
   createdAt: string;
   clientProfile: ClientProfile | null;
   developerProfile: DeveloperProfile | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  altEmail?: string | null;
+  emergencyName?: string | null;
+  emergencyPhone?: string | null;
 }
 
 export interface Member {
@@ -157,6 +162,72 @@ export interface Task {
   assignee: BriefUser | null;
   createdBy: BriefUser;
   project?: { id: string; code: string; title: string };
+  /** Per-project ticket number; 0 for tasks created before numbering. */
+  number: number;
+  source: 'MANUAL' | 'REQUIREMENT';
+  /** Requirement group (journey step) the ticket traces back to. */
+  stepKey: string | null;
+  reportId: string | null;
+  estimateHours: number | null;
+  blockedReason: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlannedTicket {
+  title: string;
+  description: string;
+  priority: Priority;
+  stepKey: string | null;
+  estimateHours: number | null;
+  duplicate: boolean;
+}
+
+export interface TechnicalReportShare {
+  id: string;
+  sharedAt: string;
+  recipient: BriefUser;
+  sharedBy: BriefUser;
+}
+
+export interface TechnicalReport {
+  id: string;
+  projectId: string;
+  version: number;
+  locale: 'en' | 'ar';
+  model: string | null;
+  mock: boolean;
+  requirementsUpdatedAt: string;
+  answerCount: number;
+  createdAt: string;
+  createdBy: BriefUser;
+  shares: TechnicalReportShare[];
+  sharedWithMe: boolean;
+  /** The client's requirements changed after this version was written. */
+  stale: boolean;
+  content?: string;
+}
+
+export interface TechnicalReportsResponse {
+  canGenerate: boolean;
+  canShare: boolean;
+  current: { requirementsUpdatedAt: string; answerCount: number };
+  reports: TechnicalReport[];
+}
+
+export interface TechnicalReportDetail extends TechnicalReport {
+  content: string;
+  canManage: boolean;
+  project: { id: string; code: string; title: string };
+}
+
+export interface SharedReportItem {
+  shareId: string;
+  sharedAt: string;
+  sharedBy: BriefUser;
+  report: Omit<TechnicalReport, 'shares' | 'sharedWithMe' | 'stale'> & { project: { id: string; code: string; title: string } };
 }
 
 export interface Note {
@@ -229,4 +300,48 @@ export interface WorkflowFull extends WorkflowDefinition {
 export interface AssignableUser extends BriefUser {
   developerProfile: { title?: string | null; skills: string[]; capacity: number } | null;
   activeProjects: number;
+}
+
+export type ContactUser = BriefUser & {
+  phone: string | null;
+  whatsapp: string | null;
+  altEmail: string | null;
+  emergencyName: string | null;
+  emergencyPhone: string | null;
+};
+
+export interface TimeOffRequest {
+  id: string;
+  userId: string;
+  type: 'LEAVE' | 'PERMISSION';
+  leaveKind: 'ANNUAL' | 'SICK' | 'UNPAID' | 'OTHER' | null;
+  startDate: string;
+  endDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  approver: BriefUser | null;
+  assignedBy: BriefUser | null;
+  assignedAt: string | null;
+  decidedBy: BriefUser | null;
+  decidedAt: string | null;
+  decisionNote: string | null;
+  createdAt: string;
+  user: ContactUser;
+}
+
+export interface TimeOffSummary {
+  mine: number;
+  review: number;
+  unassigned: number;
+  canReview: boolean;
+}
+
+export interface AwayItem {
+  id: string;
+  startDate: string;
+  endDate: string;
+  leaveKind: TimeOffRequest['leaveKind'];
+  user: BriefUser;
 }

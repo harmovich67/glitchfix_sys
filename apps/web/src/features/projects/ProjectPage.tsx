@@ -4,7 +4,7 @@ import { Link, useParams, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import {
   ArrowLeft, ArrowRight, Building2, CalendarClock, CircleHelp, ClipboardList, FolderOpen, Languages, LayoutGrid, Lock, Mail, MessagesSquare, Phone,
-  Settings2, Sparkles, Wrench,
+  ScrollText, Settings2, Sparkles, Wrench,
 } from 'lucide-react';
 import { formatAnswer, allQuestions } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
@@ -25,6 +25,7 @@ import { FilesPanel } from './FilesPanel';
 import { WorkspacePanel } from './WorkspacePanel';
 import { ManagePanel } from './ManagePanel';
 import { RequirementsView } from './RequirementsView';
+import { TechnicalReportsPanel } from '../reports/TechnicalReportsPanel';
 import { Timeline } from './Timeline';
 
 type Tab = 'overview' | 'requirements' | 'conversation' | 'files' | 'workspace' | 'manage';
@@ -221,6 +222,36 @@ function Overview({ project, threads, onTab }: { project: ProjectDetail; threads
   );
 }
 
+/** Requirements tab: the client's dossier, plus (for the team) the AI technical reports and their version log. */
+function RequirementsTab({ project }: { project: ProjectDetail }) {
+  const { t } = useI18n();
+  const [params, setParams] = useSearchParams();
+  const view: 'dossier' | 'reports' = params.get('view') === 'reports' && project.access.canWork ? 'reports' : 'dossier';
+  const setView = (v: 'dossier' | 'reports') =>
+    setParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (v === 'reports') next.set('view', 'reports');
+      else next.delete('view');
+      return next;
+    }, { replace: true });
+
+  return (
+    <div className="space-y-5">
+      {project.access.canWork && (
+        <SegmentedControl
+          value={view}
+          onChange={setView}
+          options={[
+            { value: 'dossier', label: <span className="inline-flex items-center gap-2"><ClipboardList className="size-4" />{t('report.tabDossier')}</span> },
+            { value: 'reports', label: <span className="inline-flex items-center gap-2"><ScrollText className="size-4" />{t('report.tabReports')}</span> },
+          ]}
+        />
+      )}
+      {view === 'reports' ? <TechnicalReportsPanel project={project} /> : <RequirementsView project={project} />}
+    </div>
+  );
+}
+
 export default function ProjectPage() {
   const { id = '' } = useParams();
   const { t } = useI18n();
@@ -286,7 +317,7 @@ export default function ProjectPage() {
       <Tabs items={tabs} value={tab} onChange={setTab} className="mb-6" />
 
       {tab === 'overview' && <Overview project={project} threads={threads.data} onTab={setTab} />}
-      {tab === 'requirements' && <RequirementsView project={project} />}
+      {tab === 'requirements' && <RequirementsTab project={project} />}
       {tab === 'conversation' && (
         <Card className="overflow-hidden">
           {clientThread ? (

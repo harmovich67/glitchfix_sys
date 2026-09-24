@@ -129,19 +129,29 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100vw;
     width: 100%;
+    scrollbar-gutter: stable;
   }
   html[lang='ar'] body { font-family: var(--font-arabic); }
   body {
     @apply bg-bg text-fg font-sans;
     font-feature-settings: 'cv11', 'ss01';
     -webkit-tap-highlight-color: transparent;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100vw;
     width: 100%;
   }
+  /* Prevent horizontal layout shifts from Radix scroll-lock on modals/dropdowns */
+  body[data-scroll-locked],
+  html[data-scroll-locked] {
+    margin-right: 0px !important;
+    margin-left: 0px !important;
+    padding-right: 0px !important;
+    padding-left: 0px !important;
+  }
+  #root { min-width: 0; width: 100%; max-width: 100%; }
   ::selection { background: var(--ring); }
   *:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
   h1, h2, h3, h4 { letter-spacing: -0.018em; }
@@ -206,4 +216,43 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ── Printing: only the technical report is printed, always on a light page ── */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #report-print,
+  #report-print * {
+    visibility: visible !important;
+  }
+  #report-print {
+    --bg: #fff;
+    --surface: #fff;
+    --surface-2: #f4f4f7;
+    --surface-3: #ebebf0;
+    --border: #d9d9e2;
+    --border-strong: #c4c4d0;
+    --fg: #0c0c16;
+    --fg-2: #2a2a3c;
+    --muted: #5f5f73;
+    --brand: #4b49e3;
+    --brand-soft: #eeeeff;
+    position: absolute !important;
+    inset-inline: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    color: #0c0c16 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  #report-print .report-cover {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 }

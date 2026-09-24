@@ -1,150 +1,108 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
-import { MoreHorizontal, NotebookPen, Pin, PinOff, Plus, Trash2, UserRound } from 'lucide-react';
-import { TASK_STATUSES, type TaskStatus } from '@welco/shared';
+import { NotebookPen, Pin, PinOff, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
 import type { Note, ProjectDetail, Task, ThreadsResponse } from '../../lib/types';
 import { cn, timeAgo } from '../../lib/utils';
-import { TASK_STYLE } from '../../lib/meta';
 import { Button } from '../../components/ui/button';
-import { Input, Textarea } from '../../components/ui/form';
-import { Card, CardHeader, PriorityBadge } from '../../components/ui/surfaces';
-import { Avatar, EmptyState } from '../../components/ui/feedback';
-import { Menu } from '../../components/ui/overlay';
+import { Input, SegmentedControl, Textarea } from '../../components/ui/form';
+import { Card, CardHeader } from '../../components/ui/surfaces';
+import { Avatar, EmptyState, Progress } from '../../components/ui/feedback';
 import { Markdown } from '../../components/ui/markdown';
-import { DueLabel } from './components';
 import { ThreadView } from './ThreadView';
+import { TaskPlanDialog } from '../tickets/TaskPlanDialog';
+import { AssigneeBoard, TicketBoard } from '../tickets/TicketBoard';
+import { TicketDrawer } from '../tickets/TicketDrawer';
+import { ticketStats, useUpdateTicket } from '../tickets/useTickets';
 
 function TaskBoard({ project }: { project: ProjectDetail }) {
   const { t } = useI18n();
   const qc = useQueryClient();
   const [draft, setDraft] = useState('');
+  const [planOpen, setPlanOpen] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [view, setView] = useState<'status' | 'developer'>('status');
   const tasks = useQuery({ queryKey: ['tasks', project.id], queryFn: () => api.get<Task[]>(`/projects/${project.id}/tasks`) });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['tasks', project.id] });
+  const update = useUpdateTicket();
 
   const create = useMutation({
     mutationFn: () => api.post(`/projects/${project.id}/tasks`, { title: draft }),
     onSuccess: () => {
       setDraft('');
-      invalidate();
+      qc.invalidateQueries({ queryKey: ['tasks', project.id] });
     },
     onError: (e) => toast.error(errorMessage(e)),
   });
-  const update = useMutation({
-    mutationFn: ({ id, ...body }: { id: string; status?: TaskStatus; assigneeId?: string | null }) => api.patch(`/tasks/${id}`, body),
-    onMutate: async ({ id, status }) => {
-      if (!status) return;
-      qc.setQueryData<Task[]>(['tasks', project.id], (old) => old?.map((x) => (x.id === id ? { ...x, status } : x)));
-    },
-    onSettled: invalidate,
-  });
-  const remove = useMutation({ mutationFn: (id: string) => api.del(`/tasks/${id}`), onSuccess: invalidate });
-  const team = project.members.map((m) => m.user);
+
+  const list = tasks.data ?? [];
+  const stats = ticketStats(list);
+  const opened = list.find((x) => x.id === openId) ?? null;
 
   return (
     <Card>
       <CardHeader
         title={t('workspace.tasks')}
+        description={list.length ? t('tickets.progress', { done: stats.done, total: stats.total }) : undefined}
         icon={<NotebookPen className="size-4" />}
         action={
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (draft.trim()) create.mutate();
-            }}
-            className="flex w-full max-w-sm gap-2"
-          >
-            <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('workspace.taskTitle')} className="h-8 text-[13px]" />
-            <Button type="submit" size="sm" loading={create.isPending} leftIcon={<Plus className="size-4" />}>
-              {t('common.add')}
+          project.access.canManage ? (
+            <Button size="sm" variant="soft" leftIcon={<Sparkles className="size-4" />} onClick={() => setPlanOpen(true)}>
+              {t('tickets.fromRequirements')}
             </Button>
-          </form>
+          ) : undefined
         }
       />
-      <div className="grid gap-3 px-5 pb-5 md:grid-cols-2 xl:grid-cols-4">
-        {TASK_STATUSES.map((status) => {
-          const items = tasks.data?.filter((x) => x.status === status) ?? [];
-          return (
-            <div
-              key={status}
-              className="min-h-40 rounded-2xl bg-surface-2/60 p-2 ring-1 ring-border"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                const id = e.dataTransfer.getData('text/task');
-                if (id) update.mutate({ id, status });
-              }}
-            >
-              <div className="mb-2 flex items-center gap-2 px-1.5 pt-1">
-                <span className={cn('size-2 rounded-full', TASK_STYLE[status])} />
-                <span className="text-xs font-semibold">{t(`taskStatus.${status}`)}</span>
-                <span className="text-xs text-muted">{items.length}</span>
-              </div>
-              <div className="space-y-2">
-                <AnimatePresence>
-                  {items.map((task) => (
-                    <motion.div
-                      key={task.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.97 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                    >
-                      <div
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/task', task.id)}
-                        className="cursor-grab rounded-xl bg-surface p-3 shadow-xs ring-1 ring-border active:cursor-grabbing"
-                      >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className={cn('text-[13px] font-medium', task.status === 'DONE' && 'text-muted line-through')}>{task.title}</p>
-                        <Menu.Root>
-                          <Menu.Trigger asChild>
-                            <button className="rounded p-0.5 text-muted hover:bg-surface-2 hover:text-fg" aria-label={t('common.actions')}>
-                              <MoreHorizontal className="size-4" />
-                            </button>
-                          </Menu.Trigger>
-                          <Menu.Content>
-                            <Menu.Label>{t('common.status')}</Menu.Label>
-                            {TASK_STATUSES.map((s) => (
-                              <Menu.Item key={s} onSelect={() => update.mutate({ id: task.id, status: s })}>
-                                <span className={cn('size-2 rounded-full', TASK_STYLE[s])} /> {t(`taskStatus.${s}`)}
-                              </Menu.Item>
-                            ))}
-                            <Menu.Separator />
-                            <Menu.Label>{t('workspace.assignee')}</Menu.Label>
-                            {team.map((u) => (
-                              <Menu.Item key={u.id} icon={<UserRound />} onSelect={() => update.mutate({ id: task.id, assigneeId: u.id })}>
-                                {u.name}
-                              </Menu.Item>
-                            ))}
-                            <Menu.Item onSelect={() => update.mutate({ id: task.id, assigneeId: null })}>{t('common.unassigned')}</Menu.Item>
-                            <Menu.Separator />
-                            <Menu.Item danger icon={<Trash2 />} onSelect={() => remove.mutate(task.id)}>
-                              {t('common.delete')}
-                            </Menu.Item>
-                          </Menu.Content>
-                        </Menu.Root>
-                      </div>
-                      <div className="mt-2.5 flex items-center justify-between gap-2">
-                        <PriorityBadge priority={task.priority} />
-                        <div className="flex items-center gap-2">
-                          {task.status !== 'DONE' && <DueLabel date={task.dueDate} />}
-                          {task.assignee && <Avatar name={task.assignee.name} size="xs" />}
-                        </div>
-                      </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {!items.length && <p className="px-2 py-4 text-center text-[11px] text-muted">{t('workspace.emptyTasks')}</p>}
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-4 px-5 pb-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (draft.trim()) create.mutate();
+          }}
+          className="flex w-full max-w-md gap-2"
+        >
+          <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('workspace.taskTitle')} className="h-8 text-[13px]" />
+          <Button type="submit" size="sm" loading={create.isPending} leftIcon={<Plus className="size-4" />}>
+            {t('common.add')}
+          </Button>
+        </form>
+        {list.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
+            <div className="w-full max-w-xs flex-1"><Progress value={stats.percent} tone="success" /></div>
+            <span className="tabular-nums">{stats.percent}%</span>
+            {stats.blocked > 0 && <span className="font-medium text-danger">{t('tickets.blockedCount', { n: stats.blocked })}</span>}
+            {stats.overdue > 0 && <span className="font-medium text-warning">{t('tickets.overdue', { n: stats.overdue })}</span>}
+            {stats.hours > 0 && <span>{t('tickets.hours', { n: stats.hours })}</span>}
+          </div>
+        )}
+        {project.access.canManage && (
+          <SegmentedControl
+            size="sm"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'status', label: t('tickets.byStatus') },
+              { value: 'developer', label: t('tickets.byDeveloper') },
+            ]}
+          />
+        )}
+        {view === 'developer' && project.access.canManage ? (
+          <AssigneeBoard
+            tasks={list}
+            members={project.members.map((m) => m.user)}
+            projectCode={project.code}
+            onOpen={(x) => setOpenId(x.id)}
+            onMove={(id, status) => update.mutate({ id, status })}
+            onAssign={(id, assigneeId) => update.mutate({ id, assigneeId })}
+          />
+        ) : (
+          <TicketBoard tasks={list} projectCode={project.code} onOpen={(x) => setOpenId(x.id)} onMove={(id, status) => update.mutate({ id, status })} />
+        )}
       </div>
+      <TicketDrawer task={opened} onClose={() => setOpenId(null)} />
+      {project.access.canManage && <TaskPlanDialog project={project} open={planOpen} onOpenChange={setPlanOpen} />}
     </Card>
   );
 }

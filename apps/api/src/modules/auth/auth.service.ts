@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import type { Request } from 'express';
+import type { Prisma } from '@prisma/client';
 import type { LoginInput, RegisterInput } from '@welco/shared';
 import { prisma } from '../../core/prisma';
 import { badRequest, conflict, forbidden, unauthorized } from '../../core/errors';
@@ -52,20 +53,35 @@ export const authService = {
   async updateMe(
     req: Request,
     userId: string,
-    input: { name?: string; locale?: string; currentPassword?: string; newPassword?: string },
+    input: {
+      name?: string;
+      locale?: string;
+      currentPassword?: string;
+      newPassword?: string;
+      phone?: string;
+      whatsapp?: string;
+      altEmail?: string;
+      emergencyName?: string;
+      emergencyPhone?: string;
+    },
   ) {
     const user = await usersRepository.findRawById(userId);
     if (!user) throw unauthorized();
     let newToken: string | null = null;
-    const data: { name?: string; locale?: string; passwordHash?: string; tokenVersion?: number } = {};
+    const data: Prisma.UserUpdateInput = {};
     if (input.name) data.name = input.name;
     if (input.locale) data.locale = input.locale;
+    // Contact details are staff-only; an empty string clears the field.
+    if (user.role !== 'CLIENT')
+      for (const k of ['phone', 'whatsapp', 'altEmail', 'emergencyName', 'emergencyPhone'] as const)
+        if (input[k] !== undefined) data[k] = input[k] || null;
     if (input.newPassword) {
       if (!input.currentPassword || !(await bcrypt.compare(input.currentPassword, user.passwordHash)))
         throw badRequest('Current password is incorrect');
       data.passwordHash = await this.hash(input.newPassword);
-      data.tokenVersion = user.tokenVersion + 1; // sign out every other session
-      newToken = signToken(user.id, data.tokenVersion);
+      const nextVersion = user.tokenVersion + 1;
+      data.tokenVersion = nextVersion; // sign out every other session
+      newToken = signToken(user.id, nextVersion);
       await auditService.log(req, { action: 'auth.password_changed', entityType: 'User', entityId: user.id });
     }
     const updated = await usersRepository.update(userId, data);

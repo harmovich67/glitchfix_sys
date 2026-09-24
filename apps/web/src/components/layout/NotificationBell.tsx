@@ -36,12 +36,12 @@ export function NotificationItem({ n, onOpen }: { n: Notification; onOpen?: () =
         onOpen?.();
         if (n.link) navigate(n.link);
       }}
-      className="group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-surface-2"
+      className="group flex min-w-0 w-full max-w-full items-start gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-surface-2"
     >
       <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', n.readAt ? 'bg-transparent' : 'bg-brand shadow-[0_0_0_3px_var(--brand-soft)]')} />
-      <span className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap scroll-smooth pb-0.5">
-        <span className={cn('block text-[13px] leading-snug', n.readAt ? 'text-fg-2' : 'font-medium text-fg')}>{n.title}</span>
-        {n.body && <span className="mt-0.5 block text-xs text-muted">{n.body}</span>}
+      <span className="min-w-0 max-w-full flex-1 [overflow-wrap:anywhere]">
+        <span className={cn('block max-w-full text-[13px] leading-snug', n.readAt ? 'text-fg-2' : 'font-medium text-fg')}>{n.title}</span>
+        {n.body && <span className="mt-0.5 block max-w-full text-xs leading-relaxed text-muted">{n.body}</span>}
         <span className="mt-1 block text-[11px] text-muted">{timeAgo(n.createdAt, locale)}</span>
       </span>
     </button>
@@ -54,7 +54,7 @@ export function NotificationBell() {
   const markRead = useMarkRead();
   const unread = data?.unread ?? 0;
   return (
-    <Popover.Root>
+    <Popover.Root modal={false}>
       <Popover.Trigger asChild>
         <Button variant="ghost" size="icon-sm" aria-label={t('nav.notifications')} className="relative">
           <Bell className="size-4" />

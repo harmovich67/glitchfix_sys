@@ -15,6 +15,7 @@ import { messagesRoutes, moderationRoutes, projectThreadsRoutes, threadsRoutes }
 import { notificationsRoutes } from './modules/notifications/notifications.routes';
 import { projectsRoutes } from './modules/projects/projects.routes';
 import { settingsRoutes } from './modules/settings/settings.routes';
+import { timeOffRoutes } from './modules/timeoff/timeoff.routes';
 import { notesRoutes, projectNotesRoutes, projectTasksRoutes, tasksRoutes } from './modules/tasks/tasks.routes';
 import { clientsRoutes, usersRoutes } from './modules/users/users.routes';
 import { workflowsRoutes } from './modules/workflows/workflows.routes';
@@ -52,6 +53,7 @@ export function createApp() {
   app.use('/api/analytics', analyticsRoutes);
   app.use('/api/audit', auditRoutes);
   app.use('/api/settings', settingsRoutes);
+  app.use('/api/time-off', timeOffRoutes);
 
   app.use('/api', notFoundHandler);
   app.use(errorHandler);
