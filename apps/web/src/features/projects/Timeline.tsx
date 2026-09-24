@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { CheckCircle2, Eye, FileText, Flag, History, ListChecks, Lock, PlayCircle, Send, Sparkles, UserPlus } from 'lucide-react';
+import { CheckCircle2, Eye, FileSignature, FileText, Flag, History, LayoutTemplate, ListChecks, Lock, PlayCircle, Send, Sparkles, UserPlus } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useI18n } from '../../lib/i18n';
 import type { ProjectEvent } from '../../lib/types';
@@ -18,6 +18,8 @@ const ICON: Record<string, React.ReactNode> = {
   preview: <Eye />,
   brief: <Sparkles />,
   technical_report: <FileText />,
+  proposal: <FileSignature />,
+  wireframe: <LayoutTemplate />,
   task: <ListChecks />,
 };
 

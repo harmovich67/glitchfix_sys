@@ -109,7 +109,7 @@ const DEFAULT_STACK: Bilingual = {
   ],
 };
 
-function answeredRows(def: WorkflowDefinition, answers: AnswerMap, files: Map<string, string>, locale: string) {
+export function answeredRows(def: WorkflowDefinition, answers: AnswerMap, files: Map<string, string>, locale: string) {
   return visibleSteps(def, answers).map((step) => ({
     step,
     rows: visibleQuestions(step, answers)

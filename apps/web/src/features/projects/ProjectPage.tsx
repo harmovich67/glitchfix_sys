@@ -4,14 +4,14 @@ import { Link, useParams, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import {
   ArrowLeft, ArrowRight, Building2, CalendarClock, CircleHelp, ClipboardList, FolderOpen, Languages, LayoutGrid, Lock, Mail, MessagesSquare, Phone,
-  ScrollText, Settings2, Sparkles, Wrench,
+  ScrollText, Settings2, Sparkles, Wrench, FileSignature, LayoutTemplate,
 } from 'lucide-react';
 import { formatAnswer, allQuestions } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
 import { useI18n } from '../../lib/i18n';
 import { useAuth } from '../../lib/auth';
 import { useProjectRoom } from '../../lib/realtime';
-import type { ProjectDetail, ThreadsResponse } from '../../lib/types';
+import type { ProjectDetail, ProposalsResponse, ThreadsResponse, WireframesResponse } from '../../lib/types';
 import { countryName, flag, formatDate, timeAgo } from '../../lib/utils';
 import { Button } from '../../components/ui/button';
 import { Badge, Card, CardHeader, PriorityBadge, StatusBadge } from '../../components/ui/surfaces';
@@ -26,9 +26,11 @@ import { WorkspacePanel } from './WorkspacePanel';
 import { ManagePanel } from './ManagePanel';
 import { RequirementsView } from './RequirementsView';
 import { TechnicalReportsPanel } from '../reports/TechnicalReportsPanel';
+import { ProposalPanel } from '../proposals/ProposalPanel';
+import { WireframePanel } from '../wireframes/WireframePanel';
 import { Timeline } from './Timeline';
 
-type Tab = 'overview' | 'requirements' | 'conversation' | 'files' | 'workspace' | 'manage';
+type Tab = 'overview' | 'requirements' | 'proposal' | 'design' | 'conversation' | 'files' | 'workspace' | 'manage';
 
 type BriefLang = 'en' | 'ar';
 
@@ -119,10 +121,24 @@ function Overview({ project, threads, onTab }: { project: ProjectDetail; threads
   const openClarifications =
     threads?.threads.find((th) => th.type === 'CLIENT')?.messages.filter((m) => m.kind === 'CLARIFICATION' && !m.resolvedAt && m.status === 'VISIBLE') ?? [];
   const cp = project.client.clientProfile;
+  const proposals = useQuery({ queryKey: ['proposals', project.id], queryFn: () => api.get<ProposalsResponse>(`/projects/${project.id}/proposals`), enabled: isClient });
+  const waiting = proposals.data?.proposals.find((p) => p.status === 'SENT' && !p.expired);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <div className="space-y-6">
+        {waiting && (
+          <Card className="overflow-hidden bg-gradient-to-br from-brand-soft via-surface to-surface p-5 ring-brand/25">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand text-white"><FileSignature className="size-5" /></span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-semibold">{t('proposal.feed.awaitingYou')}</p>
+                <p className="text-[13px] text-muted">{t('proposal.feed.validFor', { date: formatDate(waiting.validUntil, locale) })}</p>
+              </div>
+              <Button onClick={() => onTab('proposal')} rightIcon={<ArrowRight className="rtl-flip size-4" />}>{t('proposal.feed.reviewApprove')}</Button>
+            </div>
+          </Card>
+        )}
         <Card className="p-6">
           <p className="mb-5 text-sm font-semibold">{t('status_tracker.title')}</p>
           <StatusTracker status={project.status} />
@@ -262,6 +278,17 @@ export default function ProjectPage() {
   const projectQ = useQuery({ queryKey: ['project', id], queryFn: () => api.get<ProjectDetail>(`/projects/${id}`) });
   const threads = useQuery({ queryKey: ['threads', id], queryFn: () => api.get<ThreadsResponse>(`/projects/${id}/threads`), enabled: !!projectQ.data });
   const project = projectQ.data;
+  const proposalsQ = useQuery({
+    queryKey: ['proposals', id],
+    queryFn: () => api.get<ProposalsResponse>(`/projects/${id}/proposals`),
+    // Offers carry prices: the client, and the people cleared for finances, are the only ones who load them.
+    enabled: !!project && (project.access.canViewFinance || isClient),
+  });
+  const wireframesQ = useQuery({
+    queryKey: ['wireframes', id],
+    queryFn: () => api.get<WireframesResponse>(`/projects/${id}/wireframes`),
+    enabled: !!project && (isClient || project.access.canWork),
+  });
 
   if (projectQ.isLoading) return <PageLoader />;
   if (!project)
@@ -270,6 +297,22 @@ export default function ProjectPage() {
   const tabs: { value: Tab; label: string; icon: React.ReactNode; badge?: React.ReactNode }[] = [
     { value: 'overview', label: t('hub.overview'), icon: <LayoutGrid /> },
     { value: 'requirements', label: t('hub.requirements'), icon: <ClipboardList /> },
+    ...(project.access.canViewFinance || (isClient && proposalsQ.data?.proposals.length)
+      ? [{
+          value: 'proposal' as Tab,
+          label: t('proposal.tab'),
+          icon: <FileSignature />,
+          badge: isClient && proposalsQ.data?.proposals.some((p) => p.status === 'SENT' && !p.expired) ? <span className="size-2 rounded-full bg-warning" /> : undefined,
+        }]
+      : []),
+    ...(project.access.canManage || (wireframesQ.data?.wireframes.length ?? 0) > 0
+      ? [{
+          value: 'design' as Tab,
+          label: t('wireframe.tab'),
+          icon: <LayoutTemplate />,
+          badge: isClient && wireframesQ.data?.wireframes.some((w) => w.status === 'SHARED') ? <span className="size-2 rounded-full bg-warning" /> : undefined,
+        }]
+      : []),
     { value: 'conversation', label: t('hub.conversation'), icon: <MessagesSquare /> },
     { value: 'files', label: t('hub.files'), icon: <FolderOpen /> },
   ];
@@ -318,6 +361,8 @@ export default function ProjectPage() {
 
       {tab === 'overview' && <Overview project={project} threads={threads.data} onTab={setTab} />}
       {tab === 'requirements' && <RequirementsTab project={project} />}
+      {tab === 'proposal' && <ProposalPanel project={project} />}
+      {tab === 'design' && <WireframePanel project={project} />}
       {tab === 'conversation' && (
         <Card className="overflow-hidden">
           {clientThread ? (

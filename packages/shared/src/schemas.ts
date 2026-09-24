@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ROLES } from './roles';
+import { CURRENCIES } from './proposal';
 import {
   LEAVE_KINDS,
   TIMEOFF_TYPES,
@@ -68,6 +69,8 @@ export const updateUserSchema = z.object({
   title: z.string().max(80).optional(),
   skills: z.array(z.string().max(40)).max(30).optional(),
   capacity: z.number().int().min(0).max(50).optional(),
+  /** Only a Super Admin may change this: lets a staff member see prices, offers and the client's budget. */
+  financeAccess: z.boolean().optional(),
 });
 export const updateClientSchema = z.object({
   companyName: z.string().max(120).optional(),
@@ -296,6 +299,62 @@ export const decideTimeOffSchema = z.object({
   note: z.string().trim().max(500).optional(),
 });
 
+// ─── Proposals ─────────────────────────────────────────────────────────────────
+export const paymentMilestoneSchema = z.object({
+  label: z.string().trim().min(1).max(80),
+  percent: z.number().min(1).max(100),
+});
+const paymentsSchema = z
+  .array(paymentMilestoneSchema)
+  .min(1)
+  .max(6)
+  .refine((p) => Math.abs(p.reduce((n, m) => n + m.percent, 0) - 100) < 0.01, 'Payment percentages must add up to 100');
+
+const proposalTerms = {
+  title: z.string().trim().max(200).optional(),
+  currency: z.enum(CURRENCIES),
+  amount: z.number().positive().max(1_000_000_000),
+  taxPercent: z.number().min(0).max(100).default(0),
+  durationWeeks: z.number().int().min(1).max(260).nullish(),
+  validDays: z.number().int().min(1).max(180).default(14),
+  payments: paymentsSchema,
+};
+export const createProposalSchema = z.object({
+  ...proposalTerms,
+  locale: z.enum(['en', 'ar']).default('en'),
+  /** Private guidance for the AI writer (never shown to the client). */
+  notes: z.string().trim().max(2000).optional(),
+});
+export const updateProposalSchema = z
+  .object({
+    ...proposalTerms,
+    notes: z.string().trim().max(2000).nullish(),
+    content: z.string().trim().min(20).max(60000),
+    terms: z.string().trim().max(8000),
+  })
+  .partial();
+export const regenerateProposalSchema = z.object({
+  notes: z.string().trim().max(2000).nullish(),
+  locale: z.enum(['en', 'ar']).optional(),
+});
+export const acceptProposalSchema = z.object({
+  signerName: z.string().trim().min(2).max(80),
+  agree: z.literal(true),
+});
+export const respondProposalSchema = z
+  .object({ action: z.enum(['DECLINE', 'REQUEST_CHANGES']), note: z.string().trim().max(1000).default('') })
+  .refine((v) => v.action === 'DECLINE' || v.note.length >= 3, { message: 'Tell us what you would like changed', path: ['note'] });
+
+// ─── Wireframes ────────────────────────────────────────────────────────────────
+export const generateWireframeSchema = z.object({
+  locale: z.enum(['en', 'ar']).optional(),
+  /** Private guidance for the AI (e.g. "focus on the booking flow"); never shown to the client. */
+  notes: z.string().trim().max(2000).optional(),
+});
+export const respondWireframeSchema = z
+  .object({ action: z.enum(['APPROVE', 'REQUEST_CHANGES']), note: z.string().trim().max(1000).default('') })
+  .refine((v) => v.action === 'APPROVE' || v.note.length >= 3, { message: 'Tell us what you would like changed', path: ['note'] });
+
 // ─── Notifications ─────────────────────────────────────────────────────────────
 export const markReadSchema = z.object({ ids: z.array(z.string()).max(200).optional(), all: z.boolean().optional() });
 
@@ -383,6 +442,16 @@ export const seoSchema = z.object({
 });
 export type SeoSettings = z.infer<typeof seoSchema>;
 
+/** Defaults used when writing a proposal; the standard terms are copied into each proposal when it is drafted. */
+export const proposalSettingsSchema = z.object({
+  defaultCurrency: z.enum(CURRENCIES).default('USD'),
+  defaultValidDays: z.number().int().min(1).max(180).default(14),
+  defaultTaxPercent: z.number().min(0).max(100).default(0),
+  termsEn: z.string().trim().max(8000).default(''),
+  termsAr: z.string().trim().max(8000).default(''),
+});
+export type ProposalSettings = z.infer<typeof proposalSettingsSchema>;
+
 export const platformSettingsSchema = z.object({
   developerClientMode: z.enum(DEV_CLIENT_MODES),
   emailNotifications: z.boolean(),
@@ -390,5 +459,6 @@ export const platformSettingsSchema = z.object({
   contact: contactInfoSchema.default({}),
   brand: brandSchema.default({}),
   seo: seoSchema.default({}),
+  proposal: proposalSettingsSchema.default({}),
 });
 export type PlatformSettings = z.infer<typeof platformSettingsSchema>;

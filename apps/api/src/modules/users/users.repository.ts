@@ -10,6 +10,7 @@ export const publicUserSelect = {
   role: true,
   locale: true,
   isActive: true,
+  financeAccess: true,
   lastLoginAt: true,
   createdAt: true,
   clientProfile: true,

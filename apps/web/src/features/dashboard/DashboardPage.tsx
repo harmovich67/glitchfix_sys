@@ -17,6 +17,7 @@ import { useCreateProject } from '../projects/useCreateProject';
 import { DueLabel, ProjectCard, TypeTile } from '../projects/components';
 import { DeliveryBoard } from '../tickets/DeliveryBoard';
 import { SharedReportsCard } from '../reports/SharedReportsCard';
+import { ProposalsFeed } from '../proposals/ProposalsFeed';
 
 function useProjects() {
   return useQuery({ queryKey: ['projects', {}], queryFn: () => api.get<ProjectListItem[]>('/projects') });
@@ -102,6 +103,7 @@ function ClientDashboard() {
         subtitle={t('dashboard.clientSubtitle')}
         actions={<Button loading={create.isPending} onClick={() => create.mutate()} leftIcon={<Plus className="size-4" />}>{t('dashboard.startNew')}</Button>}
       />
+      <ProposalsFeed />
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <div className="grid content-start gap-4 md:grid-cols-2">
           {projects.data.map((p, i) => <ProjectCard key={p.id} p={p} index={i} clientView />)}
@@ -339,6 +341,7 @@ function StaffOverview() {
               ))}
             </div>
           </Card>
+          <ProposalsFeed />
           <SharedReportsCard />
           <RecentNotifications />
         </div>

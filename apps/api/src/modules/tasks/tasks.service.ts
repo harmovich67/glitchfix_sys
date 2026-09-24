@@ -18,10 +18,20 @@ const taskWithProject = { ...taskInclude, project: { select: { id: true, code: t
 /** Finished tickets stay on the cross-project board for this long, then drop off (they remain on the project). */
 const DONE_VISIBLE_DAYS = 30;
 
-async function assertAssignee(assigneeId: string | null | undefined) {
+/** Tickets go to people who are on the project, so a manager builds the team first and then hands out the work. */
+async function assertAssignee(projectId: string, assigneeId: string | null | undefined) {
   if (!assigneeId) return;
-  const member = await prisma.user.findUnique({ where: { id: assigneeId } });
-  if (!member || !member.isActive || member.role === 'CLIENT') throw badRequest('Tasks can only be assigned to team members');
+  const row = await prisma.projectMember.findUnique({
+    where: { projectId_userId: { projectId, userId: assigneeId } },
+    select: { user: { select: { isActive: true, role: true } } },
+  });
+  if (!row || !row.user.isActive || row.user.role === 'CLIENT')
+    throw badRequest('Tickets can only be assigned to people on this project. Add them to the team first.');
+}
+
+/** A project manager plans the work of the projects they belong to. */
+function assertCanPlan(user: AuthUser, access: Awaited<ReturnType<typeof loadProjectAccess>>) {
+  if (user.role === 'PROJECT_MANAGER' && !access.isMember) throw forbidden('You can only create and assign tickets on projects you are part of');
 }
 
 const lastNumber = async (tx: Prisma.TransactionClient, projectId: string) =>
@@ -66,8 +76,10 @@ export const tasksService = {
   },
 
   async create(req: Request, user: AuthUser, projectId: string, input: z.infer<typeof createTaskSchema>) {
-    assertWork(await loadProjectAccess(user, projectId));
-    await assertAssignee(input.assigneeId);
+    const access = await loadProjectAccess(user, projectId);
+    assertWork(access);
+    assertCanPlan(user, access);
+    await assertAssignee(projectId, input.assigneeId);
     const task = await prisma.$transaction(async (tx) =>
       tx.task.create({
         data: {
@@ -97,11 +109,12 @@ export const tasksService = {
   async bulkCreate(req: Request, user: AuthUser, projectId: string, input: z.infer<typeof bulkCreateTasksSchema>) {
     const access = await loadProjectAccess(user, projectId);
     assertManage(access);
+    assertCanPlan(user, access);
     if (input.reportId) {
       const report = await prisma.technicalReport.findFirst({ where: { id: input.reportId, projectId }, select: { id: true } });
       if (!report) throw notFound('Report');
     }
-    for (const id of new Set(input.tasks.map((t) => t.assigneeId).filter(Boolean))) await assertAssignee(id);
+    for (const id of new Set(input.tasks.map((t) => t.assigneeId).filter(Boolean))) await assertAssignee(projectId, id);
     const def = access.project.workflowSnapshot as unknown as WorkflowDefinition;
     const stepKeys = new Set(def.steps.map((s) => s.key));
 
@@ -157,13 +170,15 @@ export const tasksService = {
   async update(req: Request, user: AuthUser, taskId: string, input: z.infer<typeof updateTaskSchema>) {
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw notFound('Task');
-    assertWork(await loadProjectAccess(user, task.projectId));
+    const access = await loadProjectAccess(user, task.projectId);
+    assertWork(access);
+    if (input.assigneeId) assertCanPlan(user, access);
 
     // Developers move their own tickets (or claim unassigned ones); managers steer everything else.
     const isDeveloper = user.role === 'DEVELOPER';
     if (isDeveloper && task.assigneeId && task.assigneeId !== user.id) throw forbidden('This ticket is assigned to someone else');
     if (isDeveloper && input.assigneeId && input.assigneeId !== user.id) throw forbidden('You can only assign tickets to yourself');
-    if (input.assigneeId !== undefined) await assertAssignee(input.assigneeId);
+    if (input.assigneeId !== undefined) await assertAssignee(task.projectId, input.assigneeId);
 
     const moved = input.status !== undefined && input.status !== task.status;
     const next = input.status ?? task.status;

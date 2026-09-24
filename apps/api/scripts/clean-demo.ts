@@ -63,6 +63,8 @@ async function main() {
     messages: await prisma.message.count(),
     tickets: await prisma.task.count(),
     'technical reports': await prisma.technicalReport.count(),
+    proposals: await prisma.proposal.count(),
+    wireframes: await prisma.wireframe.count(),
     'time-off requests': await prisma.timeOffRequest.count(),
     notifications: await prisma.notification.count(),
     'AI usage + chat rows': (await prisma.aIUsage.count()) + (await prisma.aIMessage.count()),
@@ -102,6 +104,8 @@ async function main() {
   await prisma.$transaction([
     prisma.technicalReportShare.deleteMany(),
     prisma.technicalReport.deleteMany(),
+    prisma.proposal.deleteMany(),
+    prisma.wireframe.deleteMany(),
     prisma.timeOffRequest.deleteMany(),
     prisma.aIMessage.deleteMany(),
     prisma.aIUsage.deleteMany(),

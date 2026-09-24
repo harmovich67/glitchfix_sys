@@ -1,4 +1,4 @@
-import { can } from '@welco/shared';
+import { can, hasFinanceAccess } from '@welco/shared';
 import { forbidden, notFound } from '../../core/errors';
 import type { AuthUser } from '../../types/express';
 import { projectsRepository } from './projects.repository';
@@ -32,6 +32,8 @@ export async function loadProjectAccess(user: AuthUser, projectId: string) {
     canManage: can(user.role, 'projects.manage'),
     canAssign: can(user.role, 'projects.assign'),
     canModerate: can(user.role, 'messages.moderate'),
+    /** Prices, offers and the client's budget: Super Admin, or staff the Super Admin granted it to. */
+    canViewFinance: hasFinanceAccess(user),
     /** Client owner (or a manager) can edit answers until requirements are approved. */
     canEditAnswers: !project.approvedAt && (isOwner || can(user.role, 'projects.manage')),
   };
@@ -43,4 +45,8 @@ export function assertWork(access: ProjectAccess) {
 
 export function assertManage(access: ProjectAccess) {
   if (!access.canManage) throw forbidden();
+}
+
+export function assertFinance(access: ProjectAccess) {
+  if (!access.canViewFinance) throw forbidden();
 }

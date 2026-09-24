@@ -7,6 +7,8 @@ import type {
   ProjectStatus,
   Role,
   TaskStatus,
+  WireframeSpec,
+  WireframeStatus,
   WorkflowDefinition,
   WorkflowStep,
 } from '@welco/shared';
@@ -36,6 +38,8 @@ export interface DeveloperProfile {
 export interface User extends BriefUser {
   locale: 'en' | 'ar';
   isActive: boolean;
+  /** Staff only: may see prices, offers and the client's budget. */
+  financeAccess?: boolean;
   lastLoginAt: string | null;
   createdAt: string;
   clientProfile: ClientProfile | null;
@@ -86,6 +90,7 @@ export interface ProjectAccess {
   canManage: boolean;
   canAssign: boolean;
   canModerate: boolean;
+  canViewFinance: boolean;
   isOwner: boolean;
 }
 
@@ -344,4 +349,87 @@ export interface AwayItem {
   endDate: string;
   leaveKind: TimeOffRequest['leaveKind'];
   user: BriefUser;
+}
+
+export interface ProposalTotals {
+  subtotal: number;
+  tax: number;
+  total: number;
+  schedule: { label: string; percent: number; amount: number }[];
+}
+
+export interface ProposalItem {
+  id: string;
+  projectId: string;
+  version: number;
+  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'REVISION_REQUESTED' | 'WITHDRAWN' | 'SUPERSEDED';
+  locale: 'en' | 'ar';
+  title: string;
+  currency: string;
+  amount: number;
+  taxPercent: number;
+  durationWeeks: number | null;
+  validDays: number;
+  validUntil: string | null;
+  payments: { label: string; percent: number }[];
+  totals: ProposalTotals;
+  terms: string;
+  sentAt: string | null;
+  viewedAt: string | null;
+  respondedAt: string | null;
+  responseNote: string | null;
+  acceptedByName: string | null;
+  expired: boolean;
+  createdAt: string;
+  updatedAt: string;
+  /** Manager-only. */
+  notes?: string | null;
+  model?: string | null;
+  mock?: boolean;
+  createdBy?: BriefUser | null;
+}
+
+export interface ProposalDetail extends ProposalItem {
+  content: string;
+  project: { id: string; code: string; title: string };
+}
+
+export interface ProposalsResponse {
+  canManage: boolean;
+  submitted: boolean;
+  hasAccepted: boolean;
+  defaults: { currency: string; validDays: number; taxPercent: number } | null;
+  proposals: ProposalItem[];
+}
+
+export interface PendingProposals {
+  audience: 'client' | 'manager' | 'none';
+  items: (ProposalItem & { project: { id: string; code: string; title: string } })[];
+}
+
+export interface WireframeItem {
+  id: string;
+  projectId: string;
+  version: number;
+  status: WireframeStatus;
+  locale: 'en' | 'ar';
+  title: string;
+  spec: WireframeSpec;
+  sharedAt: string | null;
+  viewedAt: string | null;
+  respondedAt: string | null;
+  responseNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Team-only. */
+  notes?: string | null;
+  model?: string | null;
+  mock?: boolean;
+  createdBy?: BriefUser | null;
+}
+
+export interface WireframesResponse {
+  canManage: boolean;
+  submitted: boolean;
+  wireframes: WireframeItem[];
 }

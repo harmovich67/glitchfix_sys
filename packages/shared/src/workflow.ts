@@ -4,6 +4,8 @@
  * the server (submission validation), so both always agree.
  */
 
+import { FINANCIAL_QUESTION_KEYS } from './constants';
+
 export const QUESTION_TYPES = [
   'text',
   'textarea',
@@ -232,4 +234,21 @@ export function formatAnswer(q: WorkflowQuestion, value: AnswerValue, locale = '
     const opt = q.options!.find((o) => o.value === v);
     return opt ? tr(opt, 'label', locale) : v;
   });
+}
+
+/**
+ * Remove the questions (and answers) that hold the client's budget, for anyone who may not see finances.
+ * Steps left without questions simply disappear from the journey.
+ */
+export function stripFinancials<D extends Pick<WorkflowDefinition, 'steps'>>(def: D, answers: AnswerMap): { def: D; answers: AnswerMap } {
+  const hidden = new Set(FINANCIAL_QUESTION_KEYS);
+  return {
+    def: {
+      ...def,
+      steps: def.steps
+        .map((s) => ({ ...s, questions: s.questions.filter((q) => !hidden.has(q.key)) }))
+        .filter((s) => s.questions.length > 0),
+    },
+    answers: Object.fromEntries(Object.entries(answers).filter(([k]) => !hidden.has(k))),
+  };
 }

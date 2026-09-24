@@ -19,6 +19,8 @@ model User {
   locale       String    @default("en")
   isActive     Boolean   @default(true)
   tokenVersion Int       @default(0)
+  /// Staff only: may see prices, offers and the client's budget. Granted by the Super Admin (who always can).
+  financeAccess Boolean  @default(false)
   /// Staff contact details (visible to admins and to whoever reviews their time-off requests).
   phone          String?
   whatsapp       String?
@@ -49,6 +51,8 @@ model User {
   timeOffToReview  TimeOffRequest[]       @relation("TimeOffApprover")
   timeOffAssigned  TimeOffRequest[]       @relation("TimeOffAssigner")
   timeOffDecided   TimeOffRequest[]       @relation("TimeOffDecider")
+  proposalsCreated Proposal[]             @relation("ProposalCreator")
+  wireframesCreated Wireframe[]           @relation("WireframeCreator")
   auditLogs        AuditLog[]
   events           ProjectEvent[]
 
@@ -164,6 +168,8 @@ model Project {
   aiMessages AIMessage[]
   aiUsage    AIUsage[]
   technicalReports TechnicalReport[]
+  proposals  Proposal[]
+  wireframes Wireframe[]
 
   @@index([clientId])
   @@index([status])
@@ -415,6 +421,81 @@ model TechnicalReportShare {
 
   @@unique([reportId, recipientId])
   @@index([recipientId, sharedAt])
+}
+
+/// The commercial offer the client reads and approves in their dashboard before work starts.
+model Proposal {
+  id            String    @id @default(cuid())
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version       Int
+  /// DRAFT → SENT → ACCEPTED | DECLINED | REVISION_REQUESTED; older sent versions become SUPERSEDED, a pulled one WITHDRAWN.
+  status        String    @default("DRAFT")
+  locale        String    @default("en")
+  title         String
+  currency      String    @default("USD")
+  /// Price before tax, in whole currency units with two decimals.
+  amount        Float
+  taxPercent    Float     @default(0)
+  durationWeeks Int?
+  validDays     Int       @default(14)
+  /// Set when the proposal is sent: the client can accept until this moment.
+  validUntil    DateTime?
+  /// [{ label, percent }] adding up to 100.
+  payments      Json
+  /// The client-facing document (markdown), written by the AI and edited by the manager.
+  content       String
+  /// Standard terms, copied from the platform settings when drafted so later edits never change a sent offer.
+  terms         String    @default("")
+  /// Private guidance the manager gave the AI; never shown to the client.
+  notes         String?
+  model         String?
+  mock          Boolean   @default(false)
+  createdById   String?
+  createdBy     User?     @relation("ProposalCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  sentAt        DateTime?
+  /// First time the client opened it.
+  viewedAt      DateTime?
+  respondedAt   DateTime?
+  responseNote  String?
+  /// The typed name the client signed with.
+  acceptedByName String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([projectId, version])
+  @@index([projectId, status])
+  @@index([status, sentAt])
+}
+
+/// An AI-drafted low-fidelity layout of the product, shown to the client as a first design direction.
+model Wireframe {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version      Int
+  /// DRAFT → SHARED → APPROVED | CHANGES_REQUESTED; a pulled one is WITHDRAWN, replaced ones are SUPERSEDED.
+  status       String    @default("DRAFT")
+  locale       String    @default("en")
+  title        String
+  /// Screens made of blocks (see @welco/shared wireframe.ts) — data, never HTML.
+  spec         Json
+  /// Private guidance the manager gave the AI; never shown to the client.
+  notes        String?
+  model        String?
+  mock         Boolean   @default(false)
+  createdById  String?
+  createdBy    User?     @relation("WireframeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  sharedAt     DateTime?
+  /// First time the client opened it.
+  viewedAt     DateTime?
+  respondedAt  DateTime?
+  responseNote String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([projectId, version])
+  @@index([projectId, status])
 }
 
 model TimeOffRequest {

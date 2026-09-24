@@ -15,7 +15,9 @@ import { messagesRoutes, moderationRoutes, projectThreadsRoutes, threadsRoutes }
 import { notificationsRoutes } from './modules/notifications/notifications.routes';
 import { projectsRoutes } from './modules/projects/projects.routes';
 import { settingsRoutes } from './modules/settings/settings.routes';
+import { projectProposalsRoutes, proposalsRoutes } from './modules/proposals/proposals.routes';
 import { seoRoutes } from './modules/settings/seo.routes';
+import { projectWireframesRoutes } from './modules/wireframes/wireframes.routes';
 import { timeOffRoutes } from './modules/timeoff/timeoff.routes';
 import { notesRoutes, projectNotesRoutes, projectTasksRoutes, tasksRoutes } from './modules/tasks/tasks.routes';
 import { clientsRoutes, usersRoutes } from './modules/users/users.routes';
@@ -42,6 +44,8 @@ export function createApp() {
   app.use('/api/projects/:id/threads', projectThreadsRoutes);
   app.use('/api/projects/:id/tasks', projectTasksRoutes);
   app.use('/api/projects/:id/notes', projectNotesRoutes);
+  app.use('/api/projects/:id/proposals', projectProposalsRoutes);
+  app.use('/api/projects/:id/wireframes', projectWireframesRoutes);
   app.use('/api/projects', projectsRoutes);
   app.use('/api/files', filesRoutes);
   app.use('/api/threads', threadsRoutes);
@@ -55,6 +59,7 @@ export function createApp() {
   app.use('/api/audit', auditRoutes);
   app.use('/api/settings', settingsRoutes);
   app.use('/api/time-off', timeOffRoutes);
+  app.use('/api/proposals', proposalsRoutes);
   app.use('/api/seo', seoRoutes);
 
   app.use('/api', notFoundHandler);

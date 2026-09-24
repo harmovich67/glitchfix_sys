@@ -13,8 +13,8 @@ usersRoutes.get('/', requirePermission('users.manage'), async (req, res) => {
   res.json(await usersService.listTeam(q(req.query.q)));
 });
 
-usersRoutes.get('/assignable', requirePermission('projects.assign'), async (_req, res) => {
-  res.json(await usersService.assignable());
+usersRoutes.get('/assignable', requirePermission('projects.assign'), async (req, res) => {
+  res.json(await usersService.assignable(currentUser(req)));
 });
 
 usersRoutes.post('/', requirePermission('users.manage'), validate(createUserSchema), async (req, res) => {

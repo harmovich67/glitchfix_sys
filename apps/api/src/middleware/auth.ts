@@ -42,7 +42,7 @@ export async function userFromToken(token: string | undefined): Promise<AuthUser
     const payload = jwt.verify(token, env.APP_SECRET, { issuer: 'welco' }) as unknown as TokenPayload;
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
     if (!user || !user.isActive || user.tokenVersion !== payload.v) return null;
-    return { id: user.id, email: user.email, name: user.name, role: user.role as Role, locale: user.locale };
+    return { id: user.id, email: user.email, name: user.name, role: user.role as Role, locale: user.locale, financeAccess: user.financeAccess };
   } catch {
     return null;
   }

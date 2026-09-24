@@ -56,6 +56,15 @@ export function isStaff(role: Role | undefined | null): boolean {
   return !!role && role !== 'CLIENT';
 }
 
+/**
+ * Prices, offers and the client's budget are visible to the Super Admin only, plus the staff members the
+ * Super Admin explicitly granted `financeAccess` to. This is a per-person grant, not a role permission.
+ */
+export function hasFinanceAccess(user: { role?: Role | null; financeAccess?: boolean | null } | null | undefined): boolean {
+  if (!user?.role) return false;
+  return user.role === 'SUPER_ADMIN' || (isStaff(user.role) && !!user.financeAccess);
+}
+
 export const ROLE_LABELS: Record<Role, string> = {
   SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Admin',

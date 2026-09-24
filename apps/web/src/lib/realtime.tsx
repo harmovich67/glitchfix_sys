@@ -30,6 +30,8 @@ export function RealtimeBridge({ userId, children }: { userId: string; children:
       qc.invalidateQueries({ queryKey: ['timeline', projectId] });
       qc.invalidateQueries({ queryKey: ['tasks'] });
       qc.invalidateQueries({ queryKey: ['reports', projectId] });
+      qc.invalidateQueries({ queryKey: ['proposals'] });
+      qc.invalidateQueries({ queryKey: ['wireframes'] });
       qc.invalidateQueries({ queryKey: ['notes', projectId] });
       qc.invalidateQueries({ queryKey: ['projects'] });
       qc.invalidateQueries({ queryKey: ['moderation'] });

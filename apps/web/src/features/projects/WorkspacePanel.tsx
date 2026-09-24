@@ -8,7 +8,7 @@ import { useI18n } from '../../lib/i18n';
 import type { Note, ProjectDetail, Task, ThreadsResponse } from '../../lib/types';
 import { cn, timeAgo } from '../../lib/utils';
 import { Button } from '../../components/ui/button';
-import { Input, SegmentedControl, Textarea } from '../../components/ui/form';
+import { Input, SegmentedControl, Select, Textarea } from '../../components/ui/form';
 import { Card, CardHeader } from '../../components/ui/surfaces';
 import { Avatar, EmptyState, Progress } from '../../components/ui/feedback';
 import { Markdown } from '../../components/ui/markdown';
@@ -22,6 +22,7 @@ function TaskBoard({ project }: { project: ProjectDetail }) {
   const { t } = useI18n();
   const qc = useQueryClient();
   const [draft, setDraft] = useState('');
+  const [assignee, setAssignee] = useState('');
   const [planOpen, setPlanOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [view, setView] = useState<'status' | 'developer'>('status');
@@ -29,7 +30,7 @@ function TaskBoard({ project }: { project: ProjectDetail }) {
   const update = useUpdateTicket();
 
   const create = useMutation({
-    mutationFn: () => api.post(`/projects/${project.id}/tasks`, { title: draft }),
+    mutationFn: () => api.post(`/projects/${project.id}/tasks`, { title: draft, assigneeId: assignee || null }),
     onSuccess: () => {
       setDraft('');
       qc.invalidateQueries({ queryKey: ['tasks', project.id] });
@@ -61,9 +62,17 @@ function TaskBoard({ project }: { project: ProjectDetail }) {
             e.preventDefault();
             if (draft.trim()) create.mutate();
           }}
-          className="flex w-full max-w-md gap-2"
+          className="flex w-full max-w-2xl flex-wrap gap-2"
         >
-          <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('workspace.taskTitle')} className="h-8 text-[13px]" />
+          <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('workspace.taskTitle')} className="h-8 min-w-48 flex-1 text-[13px]" />
+          {project.access.canManage && (
+            <Select value={assignee} onChange={(e) => setAssignee(e.target.value)} aria-label={t('workspace.assignee')} className="h-8 w-44 text-[13px]">
+              <option value="">{t('common.unassigned')}</option>
+              {project.members.map((m) => (
+                <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
+              ))}
+            </Select>
+          )}
           <Button type="submit" size="sm" loading={create.isPending} leftIcon={<Plus className="size-4" />}>
             {t('common.add')}
           </Button>

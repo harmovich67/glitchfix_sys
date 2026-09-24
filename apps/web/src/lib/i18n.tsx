@@ -33,6 +33,8 @@ interface I18nValue {
   brand: ResolvedBrand;
   /** Swap the built-in product name inside a literal string for the configured one. */
   b: (text: string) => string;
+  /** Translate into a specific language regardless of the UI language — for documents written in the client's language. */
+  tIn: (locale: Locale, key: string, vars?: Vars) => string;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -59,8 +61,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     [locale, brand.name],
   );
   const b = useCallback((text: string) => brandify(text, brand.name), [brand.name]);
+  const tIn = useCallback(
+    (loc: Locale, key: string, vars?: Vars) => brandify(interpolate(lookup(dictionaries[loc], key) ?? lookup(en, key) ?? key, vars), resolveBrand(pub.data?.brand, loc).name),
+    [pub.data?.brand],
+  );
 
-  const value = useMemo(() => ({ locale, dir, setLocale, t, brand, b }), [locale, dir, setLocale, t, brand, b]) as I18nValue;
+  const value = useMemo(() => ({ locale, dir, setLocale, t, brand, b, tIn }), [locale, dir, setLocale, t, brand, b, tIn]) as I18nValue;
   return (
     <I18nContext.Provider value={value}>
       <Direction.Provider dir={dir}>{children}</Direction.Provider>

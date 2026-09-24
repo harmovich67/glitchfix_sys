@@ -2,9 +2,12 @@ import type { Request } from 'express';
 import { Prisma, type AISettings } from '@prisma/client';
 import {
   OPTION_TYPES,
+  WIREFRAME_BLOCKS,
   allQuestions,
   formatAnswer,
   isEmptyValue,
+  normalizeWireframeSpec,
+  stripFinancials,
   tr,
   visibleQuestions,
   visibleSteps,
@@ -26,6 +29,8 @@ import { briefUserSelect } from '../users/users.repository';
 import { PERSONAS, effectiveApiKey, getAISettings, publicSettings, updateAISettings } from './ai.settings';
 import { geminiGenerate, type GenerateRequest } from './providers/gemini';
 import { mockBrief, mockChat, mockImprove } from './providers/mock';
+import { mockProposal } from './providers/mock-proposal';
+import { mockWireframe } from './providers/mock-wireframe';
 import { mockTaskPlan, mockTechnicalReport, type PlannedTask, type ReportFacts } from './providers/mock-report';
 import { isBriefLocale, parseBriefs, serializeBriefs, type BriefLocale, type BriefMap, type StoredBrief } from './brief-store';
 
@@ -303,15 +308,107 @@ function reportFacts(project: ReportProject): ReportFacts {
   };
 }
 
-async function loadReportSources(projectId: string) {
+/**
+ * Everything the AI writes from. Documents the delivery team reads (reports, tickets) never contain the client's
+ * budget; only the proposal writer, which is a finance tool, is allowed to see it.
+ */
+async function loadReportSources(projectId: string, opts: { withBudget?: boolean } = {}) {
   const project = await projectsRepository.findDetail(projectId);
   if (!project) throw notFound('Project');
-  const [answers, files] = await Promise.all([
+  const [rawAnswers, files] = await Promise.all([
     projectsRepository.answerMap(projectId),
     prisma.file.findMany({ where: { projectId }, select: { id: true, originalName: true, category: true, visibility: true } }),
   ]);
-  const def = project.workflowSnapshot as unknown as WorkflowDefinition;
+  const full = project.workflowSnapshot as unknown as WorkflowDefinition;
+  const { def, answers } = opts.withBudget ? { def: full, answers: rawAnswers } : stripFinancials(full, rawAnswers);
   return { project, def, answers, files, fileNames: new Map(files.map((f) => [f.id, f.originalName])) };
+}
+
+/** Client-safe source pack for a proposal: no internal status, priority, team notes or engineering estimates. */
+function proposalContext(project: ReportProject, def: WorkflowDefinition, answers: AnswerMap, files: ReportFile[], locale: BriefLocale, durationWeeks: number | null, brand: string) {
+  const fileNames = new Map(files.map((f) => [f.id, f.originalName]));
+  const cp = project.client.clientProfile;
+  const lines: string[] = [
+    '# Source of truth (what the client told us)',
+    `- Our company: ${brand}`,
+    `- Project name: ${project.title}`,
+    `- Client contact: ${project.client.name}`,
+    `- Client company: ${cp?.companyName || '(not specified)'}`,
+    `- Industry: ${cp?.industry || '(not specified)'}`,
+    `- Country: ${cp?.country || '(not specified)'}`,
+    `- Agreed delivery time to present: ${durationWeeks ? `${durationWeeks} weeks` : '(not decided — say the schedule is confirmed at kickoff)'}`,
+    '',
+    '## Client requirements',
+  ];
+  for (const step of visibleSteps(def, answers)) {
+    const rows = visibleQuestions(step, answers).filter((q) => !isEmptyValue(answers[q.key]));
+    if (!rows.length) continue;
+    lines.push(`### ${tr(step, 'title', locale)}`);
+    for (const q of rows) {
+      const value = answers[q.key];
+      const shown =
+        q.type === 'file'
+          ? (Array.isArray(value) ? value : []).map((id) => fileNames.get(String(id)) ?? String(id)).join(', ')
+          : formatAnswer(q, value, locale).join(', ');
+      lines.push(`- ${tr(q, 'label', locale)}: ${shown.slice(0, 1500)}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+const WIREFRAME_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    title: { type: 'STRING', description: 'The product name.' },
+    summary: { type: 'STRING', description: 'Two sentences telling the client what this first layout shows.' },
+    screens: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING', description: 'Short screen name, e.g. "Home" or "Checkout".' },
+          purpose: { type: 'STRING', description: 'One line: what the visitor does on this screen.' },
+          blocks: {
+            type: 'ARRAY',
+            description: 'Top-to-bottom sections of the screen.',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                type: { type: 'STRING', enum: [...WIREFRAME_BLOCKS] },
+                title: { type: 'STRING' },
+                text: { type: 'STRING', description: 'One short placeholder sentence, only when useful.' },
+                items: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Short labels: menu entries, feature names, form fields, table columns, plan names.' },
+              },
+              required: ['type'],
+            },
+          },
+        },
+        required: ['name', 'blocks'],
+      },
+    },
+  },
+  required: ['title', 'screens'],
+};
+
+/** Client-safe source pack for a wireframe: what they asked for, without budget, internal status or team notes. */
+function wireframeContext(project: ReportProject, def: WorkflowDefinition, answers: AnswerMap, locale: BriefLocale) {
+  const cp = project.client.clientProfile;
+  const lines: string[] = [
+    '# What the client told us',
+    `- Product name: ${project.title}`,
+    `- Product type key: ${project.projectType ?? '(not specified)'}`,
+    `- Industry: ${cp?.industry || '(not specified)'}`,
+    `- Country: ${cp?.country || '(not specified)'}`,
+    '',
+    '## Requirements',
+  ];
+  for (const step of visibleSteps(def, answers)) {
+    const rows = visibleQuestions(step, answers).filter((q) => q.type !== 'file' && !isEmptyValue(answers[q.key]));
+    if (!rows.length) continue;
+    lines.push(`### ${tr(step, 'title', locale)}`);
+    for (const q of rows) lines.push(`- ${tr(q, 'label', locale)}: ${formatAnswer(q, answers[q.key], locale).join(', ').slice(0, 800)}`);
+  }
+  return lines.join('\n');
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -362,8 +459,10 @@ export const aiService = {
     if (!access.isOwner && !access.canWork) throw forbidden();
     await assertQuota(s, user.id);
 
-    const def = access.project.workflowSnapshot as unknown as WorkflowDefinition;
-    const answers = await projectsRepository.answerMap(input.projectId);
+    // Staff never get the client's budget in front of the assistant; the client's own conversation is untouched.
+    const rawDef = access.project.workflowSnapshot as unknown as WorkflowDefinition;
+    const rawAnswers = await projectsRepository.answerMap(input.projectId);
+    const { def, answers } = access.isOwner ? { def: rawDef, answers: rawAnswers } : stripFinancials(rawDef, rawAnswers);
     const history = await prisma.aIMessage.findMany({ where: { projectId: input.projectId }, orderBy: { createdAt: 'desc' }, take: 10 });
     const apiKey = effectiveApiKey(s);
 
@@ -446,8 +545,7 @@ export const aiService = {
     const access = await loadProjectAccess(user, projectId);
     assertWork(access);
     const locale: BriefLocale = isBriefLocale(requested) ? requested : isBriefLocale(user.locale) ? user.locale : 'en';
-    const def = access.project.workflowSnapshot as unknown as WorkflowDefinition;
-    const answers = await projectsRepository.answerMap(projectId);
+    const { def, answers } = stripFinancials(access.project.workflowSnapshot as unknown as WorkflowDefinition, await projectsRepository.answerMap(projectId));
     const files = new Map(
       (await prisma.file.findMany({ where: { projectId }, select: { id: true, originalName: true } })).map((f) => [f.id, f.originalName]),
     );
@@ -731,6 +829,112 @@ export const aiService = {
     const existing = await prisma.task.findMany({ where: { projectId, source: 'REQUIREMENT' }, select: { title: true } });
     const taken = new Set(existing.map((t) => norm(t.title)));
     return { mock, items: planned.map((p) => ({ ...p, duplicate: taken.has(norm(p.title)) })) };
+  },
+
+  // ── Commercial proposals ───────────────────────────────────────────────────
+  /** Writes the client-facing proposal text. Falls back to an offline template when there is no key or the AI is off. */
+  async draftProposal(user: AuthUser, projectId: string, input: { locale: BriefLocale; durationWeeks: number | null; notes?: string | null }) {
+    const s = await getAISettings();
+    const { project, def, answers, files, fileNames } = await loadReportSources(projectId, { withBudget: true });
+    const { brand } = await settingsService.get();
+    const brandName = input.locale === 'ar' ? brand.nameAr : brand.nameEn;
+    const cp = project.client.clientProfile;
+    const apiKey = effectiveApiKey(s);
+
+    if (!s.enabled || !apiKey) {
+      const content = mockProposal({
+        facts: { brand: brandName, projectTitle: project.title, projectType: project.projectType, client: { name: project.client.name, company: cp?.companyName ?? '' }, durationWeeks: input.durationWeeks },
+        def,
+        answers,
+        files: fileNames,
+        locale: input.locale,
+      });
+      if (s.enabled) await recordUsage(user.id, projectId, 'PROPOSAL', 0, 0, true);
+      return { content, model: null as string | null, mock: true };
+    }
+
+    await assertQuota(s, user.id);
+    const ar = input.locale === 'ar';
+    const sections = ar
+      ? '1. الملخص التنفيذي، 2. فهمنا لاحتياجاتكم، 3. الحل المقترح والنطاق (مجمّع حسب المجال)، 4. المخرجات، 5. الجدول الزمني والمراحل، 6. ما نحتاجه منكم، 7. غير مشمول، 8. الخطوات التالية'
+      : '1. Executive summary, 2. Our understanding of your needs, 3. Proposed solution & scope (grouped by area), 4. Deliverables, 5. Timeline & phases, 6. What we need from you, 7. Not included, 8. Next steps';
+    const gen = await generateWithFallback(s, apiKey, {
+      system: [
+        `You are a senior consultant at ${brandName} writing a commercial proposal that the CLIENT will read and approve. Address the client directly ("you"), be professional, warm, clear and confident, and focus on outcomes and benefits rather than jargon.`,
+        `Output GitHub markdown made only of these numbered "## " sections in this exact order: ${sections}. Use bullet lists and **bold** labels; no tables, no HTML, no top-level "# " title (the document already has a cover).`,
+        'Use ONLY the supplied client data. Never invent features, integrations, guarantees, legal terms, named people, certifications or technologies the client did not ask for. Group the requested features by area in the scope section.',
+        'Never mention prices, fees, currency, costs, discounts or payment amounts anywhere — the price and payment schedule are shown separately from the sender\'s own figures. You may say "the investment is detailed in the pricing section".',
+        'Never expose internal notes, risk registers or engineering estimates. Frame anything unknown as an assumption or as something confirmed at kickoff, never as a problem.',
+        input.durationWeeks ? `In the timeline use exactly ${input.durationWeeks} weeks in total, split across sensible phases whose weeks add up to ${input.durationWeeks}.` : 'Do not state a duration; say the detailed schedule is confirmed at kickoff.',
+        ar
+          ? 'Write the ENTIRE proposal — headings included — in polished, business-level Modern Standard Arabic, even though the data may be in English. Keep product/brand names, URLs and technical terms in Latin script.'
+          : 'Write the entire proposal in English, translating any Arabic client answers.',
+        input.notes ? `Private guidance from the sender (follow it, but never mention it or quote it): ${input.notes}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      history: [],
+      prompt: proposalContext(project, def, answers, files, input.locale, input.durationWeeks, brandName),
+      temperature: 0.4,
+      maxOutputTokens: Math.max(s.maxOutputTokens, 6144),
+      timeoutMs: 120_000,
+    });
+    if (!gen.text.trim()) throw new AppError(502, 'AI_EMPTY', 'The AI returned an empty proposal. Please try again.');
+    await recordUsage(user.id, projectId, 'PROPOSAL', gen.inputTokens, gen.outputTokens, false);
+    return { content: gen.text.trim(), model: gen.model as string | null, mock: false };
+  },
+
+  // ── Wireframes ─────────────────────────────────────────────────────────────
+  /** Drafts a low-fidelity layout (screens made of blocks) to show the client. Offline template when there is no key. */
+  async draftWireframe(user: AuthUser, projectId: string, input: { locale: BriefLocale; notes?: string | null }) {
+    const s = await getAISettings();
+    const { project, def, answers } = await loadReportSources(projectId);
+    const apiKey = effectiveApiKey(s);
+    const offline = () => ({
+      spec: mockWireframe({ title: project.title, projectType: project.projectType, def, answers, locale: input.locale }),
+      model: null as string | null,
+      mock: true,
+    });
+
+    if (!s.enabled || !apiKey) {
+      const out = offline();
+      if (s.enabled) await recordUsage(user.id, projectId, 'WIREFRAME', 0, 0, true);
+      return out;
+    }
+
+    await assertQuota(s, user.id);
+    const ar = input.locale === 'ar';
+    const gen = await generateWithFallback(s, apiKey, {
+      system: [
+        'You are a senior product designer sketching a low-fidelity wireframe that the CLIENT will look at to confirm the direction before any visual design starts.',
+        'Return JSON only. Describe 3 to 6 screens, each a top-to-bottom list of blocks. Allowed block types: ' + WIREFRAME_BLOCKS.join(', ') + '.',
+        'Pick the screens a visitor or user of THIS product really needs, in the order they meet them (e.g. home, listing, detail, checkout, dashboard). Base everything on the supplied requirements; never invent features the client did not ask for.',
+        'Use short, realistic placeholder labels (menu entries, form fields, plan names, table columns) instead of lorem ipsum. Keep every text under 12 words. Never mention prices, budgets or currency.',
+        'Put the requested features where a user would meet them (for example a "features" block on the home screen, or a "form" block for sign-up).',
+        ar
+          ? 'Write ALL labels, titles and text in clear Modern Standard Arabic, even though the data may be in English. Keep product/brand names in Latin script.'
+          : 'Write all labels in English, translating any Arabic client answers.',
+        input.notes ? `Private guidance from the team (follow it, never quote it): ${input.notes}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      history: [],
+      prompt: wireframeContext(project, def, answers, input.locale),
+      temperature: 0.5,
+      maxOutputTokens: Math.max(s.maxOutputTokens, 6144),
+      responseSchema: WIREFRAME_SCHEMA,
+      timeoutMs: 120_000,
+    });
+    await recordUsage(user.id, projectId, 'WIREFRAME', gen.inputTokens, gen.outputTokens, false);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(gen.text);
+    } catch {
+      throw new AppError(502, 'AI_BAD_OUTPUT', 'The AI returned an unreadable wireframe. Please try again.');
+    }
+    const spec = normalizeWireframeSpec(parsed);
+    if (!spec) throw new AppError(502, 'AI_EMPTY', 'The AI returned an empty wireframe. Please try again.');
+    return { spec, model: gen.model as string | null, mock: false };
   },
 
   // ── Admin ──────────────────────────────────────────────────────────────────

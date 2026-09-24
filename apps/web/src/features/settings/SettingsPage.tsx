@@ -18,6 +18,7 @@ import { Avatar } from '../../components/ui/feedback';
 import { ContactSettingsCard } from './ContactSettingsCard';
 import { StaffContactCard } from './StaffContactCard';
 import { BrandSeoCard } from './BrandSeoCard';
+import { ProposalSettingsCard } from './ProposalSettingsCard';
 
 export default function SettingsPage() {
   const { t, locale } = useI18n();
@@ -138,6 +139,10 @@ export default function SettingsPage() {
 
         {can('settings.manage') && platform.data && (
           <BrandSeoCard settings={platform.data} onSave={(updated) => savePlatform.mutate(updated)} isPending={savePlatform.isPending} />
+        )}
+
+        {can('settings.manage') && platform.data && (
+          <ProposalSettingsCard settings={platform.data} onSave={(updated) => savePlatform.mutate(updated)} isPending={savePlatform.isPending} />
         )}
 
         {can('settings.manage') && platform.data && (

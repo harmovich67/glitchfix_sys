@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { can, isStaff, type Permission } from '@welco/shared';
+import { can, hasFinanceAccess, isStaff, type Permission } from '@welco/shared';
 import { api } from './api';
 import type { User } from './types';
 import { useI18n, type Locale } from './i18n';
@@ -26,6 +26,8 @@ export function useAuth() {
     loading: me.isLoading,
     can: (p: Permission) => can(user?.role, p),
     isStaff: isStaff(user?.role),
+    /** Prices, offers and budgets: Super Admin, or staff they granted it to. */
+    canViewFinance: hasFinanceAccess(user),
     isClient: user?.role === 'CLIENT',
     logout: () => logout.mutateAsync(),
     setUser: (u: User | null) => qc.setQueryData(['me'], u),

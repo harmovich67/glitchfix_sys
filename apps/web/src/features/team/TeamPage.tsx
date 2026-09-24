@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Check, Contact, MoreHorizontal, Power, Shield, UserPlus, X } from 'lucide-react';
+import { Check, Contact, MoreHorizontal, Power, Shield, UserPlus, Wallet, X } from 'lucide-react';
 import { PERMISSIONS, ROLES, STAFF_ROLES, can, type Role } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -42,7 +42,7 @@ export default function TeamPage() {
     onError: (e) => toast.error(errorMessage(e)),
   });
   const update = useMutation({
-    mutationFn: ({ id, ...body }: { id: string; role?: Role; isActive?: boolean }) => api.patch(`/users/${id}`, body),
+    mutationFn: ({ id, ...body }: { id: string; role?: Role; isActive?: boolean; financeAccess?: boolean }) => api.patch(`/users/${id}`, body),
     onSuccess: refresh,
     onError: (e) => toast.error(errorMessage(e)),
   });
@@ -52,6 +52,10 @@ export default function TeamPage() {
   return (
     <>
       <PageHeader title={t('team.title')} subtitle={t('team.subtitle')} actions={<Button onClick={() => setOpen(true)} leftIcon={<UserPlus className="size-4" />}>{t('team.invite')}</Button>} />
+      <p className="mb-3 flex items-start gap-2 rounded-xl bg-info-soft/60 px-3.5 py-2.5 text-[13px] text-fg-2 ring-1 ring-info/15">
+        <Wallet className="mt-0.5 size-4 shrink-0 text-info" />
+        {t('team.financeHint')}
+      </p>
       <Card className="mb-6 overflow-hidden">
         {team.isLoading ? (
           <div className="space-y-2 p-5">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-12" />)}</div>
@@ -80,7 +84,14 @@ export default function TeamPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-3"><Badge className={u.role === 'SUPER_ADMIN' ? 'bg-brand-soft text-brand ring-brand/20' : undefined}>{t(`roles.${u.role}`)}</Badge></td>
+                    <td className="px-3 py-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge className={u.role === 'SUPER_ADMIN' ? 'bg-brand-soft text-brand ring-brand/20' : undefined}>{t(`roles.${u.role}`)}</Badge>
+                        {(u.role === 'SUPER_ADMIN' || u.financeAccess) && (
+                          <Badge className="bg-success-soft text-success ring-success/20"><Wallet className="size-3" />{t('team.financeBadge')}</Badge>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-3 py-3 tabular-nums">{u._count.memberships}</td>
                     <td className="px-3 py-3 text-[13px] text-muted">{u.lastLoginAt ? timeAgo(u.lastLoginAt, locale) : t('team.never')}</td>
                     <td className="px-3 py-3">
@@ -101,6 +112,14 @@ export default function TeamPage() {
                             {assignableRoles.map((r) => (
                               <Menu.Item key={r} icon={u.role === r ? <Check /> : <Shield />} onSelect={() => update.mutate({ id: u.id, role: r })}>{t(`roles.${r}`)}</Menu.Item>
                             ))}
+                            {me?.role === 'SUPER_ADMIN' && u.role !== 'SUPER_ADMIN' && (
+                              <>
+                                <Menu.Separator />
+                                <Menu.Item icon={<Wallet />} onSelect={() => update.mutate({ id: u.id, financeAccess: !u.financeAccess })}>
+                                  {u.financeAccess ? t('team.financeRevoke') : t('team.financeGrant')}
+                                </Menu.Item>
+                              </>
+                            )}
                             <Menu.Separator />
                             <Menu.Item icon={<Power />} danger={u.isActive} onSelect={() => update.mutate({ id: u.id, isActive: !u.isActive })}>
                               {u.isActive ? t('team.deactivate') : t('team.activate')}

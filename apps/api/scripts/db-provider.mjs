@@ -61,6 +61,14 @@ const NATIVE = {
   'TimeOffRequest.reason': 'VarChar(1000)',
   'TimeOffRequest.decisionNote': 'Text',
   'AuditLog.userAgent': 'Text',
+  'Proposal.title': 'VarChar(255)',
+  'Proposal.content': 'LongText',
+  'Proposal.terms': 'VarChar(8000)',
+  'Proposal.notes': 'Text',
+  'Proposal.responseNote': 'VarChar(1000)',
+  'Wireframe.title': 'VarChar(255)',
+  'Wireframe.notes': 'Text',
+  'Wireframe.responseNote': 'VarChar(1000)',
 };
 
 /** Field names that usually hold prose: if one is left as VARCHAR(191) on MySQL, warn so it gets a mapping. */

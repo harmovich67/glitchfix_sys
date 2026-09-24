@@ -58,8 +58,11 @@ export type DevClientMode = (typeof DEV_CLIENT_MODES)[number];
 export const AI_PERSONAS = ['consultant', 'friendly', 'concise', 'technical'] as const;
 export type AIPersona = (typeof AI_PERSONAS)[number];
 
-export const AI_USAGE_KINDS = ['CHAT', 'IMPROVE', 'BRIEF', 'TECHNICAL_REPORT', 'TASK_PLAN', 'TEST'] as const;
+export const AI_USAGE_KINDS = ['CHAT', 'IMPROVE', 'BRIEF', 'TECHNICAL_REPORT', 'TASK_PLAN', 'PROPOSAL', 'WIREFRAME', 'TEST'] as const;
 export type AIUsageKind = (typeof AI_USAGE_KINDS)[number];
+
+/** Requirement questions that hold the client's price or budget: hidden from staff without finance access. */
+export const FINANCIAL_QUESTION_KEYS: readonly string[] = ['budget'];
 
 export const UPLOAD_LIMITS = {
   maxBytes: 15 * 1024 * 1024,

@@ -19,10 +19,11 @@ function assertCanManage(actor: AuthUser, targetRole: Role) {
 export const usersService = {
   listTeam: (q?: string) => usersRepository.list({ roles: STAFF_ROLES, q }),
 
-  /** Staff that can be assigned to projects, with their current workload. */
-  async assignable() {
+  /** Staff that can be assigned to projects, with their current workload. Project managers only get to pick developers. */
+  async assignable(actor: AuthUser) {
+    const roles: Role[] = actor.role === 'PROJECT_MANAGER' ? ['DEVELOPER'] : ['PROJECT_MANAGER', 'DEVELOPER', 'ADMIN', 'SUPER_ADMIN'];
     const users = await prisma.user.findMany({
-      where: { role: { in: ['PROJECT_MANAGER', 'DEVELOPER', 'ADMIN', 'SUPER_ADMIN'] }, isActive: true },
+      where: { role: { in: roles }, isActive: true },
       select: {
         ...briefUserSelect,
         developerProfile: { select: { title: true, skills: true, capacity: true } },
@@ -59,9 +60,12 @@ export const usersService = {
     if (id === actor.id && (input.isActive === false || (input.role && input.role !== actor.role)))
       throw badRequest('You cannot deactivate yourself or change your own role');
 
+    if (input.financeAccess !== undefined && actor.role !== 'SUPER_ADMIN') throw forbidden('Only a Super Admin can grant access to finances');
+
     const data: Prisma.UserUpdateInput = {};
     if (input.name) data.name = input.name;
     if (input.role) data.role = input.role;
+    if (input.financeAccess !== undefined) data.financeAccess = input.financeAccess;
     if (input.isActive !== undefined) {
       data.isActive = input.isActive;
       if (!input.isActive) data.tokenVersion = { increment: 1 }; // kill sessions
@@ -80,7 +84,12 @@ export const usersService = {
       };
     }
     const user = await usersRepository.update(id, data);
-    await auditService.log(req, { action: 'user.updated', entityType: 'User', entityId: id, meta: input as Record<string, unknown> });
+    await auditService.log(req, {
+      action: input.financeAccess !== undefined && input.financeAccess !== target.financeAccess ? 'user.finance_access_changed' : 'user.updated',
+      entityType: 'User',
+      entityId: id,
+      meta: input as Record<string, unknown>,
+    });
     return user;
   },
 

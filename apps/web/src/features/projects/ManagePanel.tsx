@@ -36,7 +36,8 @@ function useProjectMutation<T>(projectId: string, fn: (v: T) => Promise<ProjectD
 
 export function ManagePanel({ project }: { project: ProjectDetail }) {
   const { t, locale } = useI18n();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
+  const isPm = user?.role === 'PROJECT_MANAGER';
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [addUser, setAddUser] = useState('');
@@ -157,9 +158,11 @@ export function ManagePanel({ project }: { project: ProjectDetail }) {
                   <p className="truncate text-[13px] font-medium">{m.user.name}</p>
                   <p className="text-[11px] text-muted">{m.role === 'MANAGER' ? t('manage.asManager') : m.user.developerProfile?.title ?? t('manage.asDeveloper')}</p>
                 </div>
-                <Button size="icon-sm" variant="ghost" onClick={() => removeMember.mutate(m.user.id)} aria-label={t('common.remove')}>
-                  <X className="size-4" />
-                </Button>
+                {!(isPm && m.role === 'MANAGER') && (
+                  <Button size="icon-sm" variant="ghost" onClick={() => removeMember.mutate(m.user.id)} aria-label={t('common.remove')}>
+                    <X className="size-4" />
+                  </Button>
+                )}
               </div>
             ))}
             {!project.members.length && <p className="py-3 text-sm text-muted">{t('common.unassigned')}</p>}
@@ -175,16 +178,19 @@ export function ManagePanel({ project }: { project: ProjectDetail }) {
                   </option>
                 ))}
             </Select>
+            {isPm && <p className="text-[12px] text-muted">{t('manage.pmHint')}</p>}
             <div className="flex gap-2">
-              <SegmentedControl
-                size="sm"
-                value={addRole}
-                onChange={setAddRole}
-                options={[
-                  { value: 'DEVELOPER', label: t('manage.asDeveloper') },
-                  { value: 'MANAGER', label: t('manage.asManager') },
-                ]}
-              />
+              {!isPm && (
+                <SegmentedControl
+                  size="sm"
+                  value={addRole}
+                  onChange={setAddRole}
+                  options={[
+                    { value: 'DEVELOPER', label: t('manage.asDeveloper') },
+                    { value: 'MANAGER', label: t('manage.asManager') },
+                  ]}
+                />
+              )}
               <Button className="flex-1" size="sm" disabled={!addUser} loading={addMember.isPending} onClick={() => addMember.mutate(undefined, { onSuccess: () => setAddUser('') })} leftIcon={<UserPlus className="size-4" />}>
                 {t('common.add')}
               </Button>

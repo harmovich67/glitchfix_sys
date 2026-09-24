@@ -3,9 +3,11 @@ import { Prisma } from '@prisma/client';
 import type { z } from 'zod';
 import {
   DRAFT_STATUSES,
+  FINANCIAL_QUESTION_KEYS,
   allQuestions,
   can,
   journeyProgress,
+  stripFinancials,
   validateJourney,
   visibleSteps,
   type AnswerMap,
@@ -37,6 +39,15 @@ export const STATUS_LABELS: Record<ProjectStatus, string> = {
 };
 
 const snapshotOf = (p: { workflowSnapshot: Prisma.JsonValue }) => p.workflowSnapshot as unknown as WorkflowDefinition;
+
+/**
+ * Admins staff every project. A project manager builds the team of the projects they belong to, and only with
+ * developers — they cannot pull in other managers or admins.
+ */
+function assertCanStaff(user: AuthUser, access: Awaited<ReturnType<typeof loadProjectAccess>>) {
+  if (!access.canAssign) throw forbidden();
+  if (user.role === 'PROJECT_MANAGER' && !access.isMember) throw forbidden('You can only manage the team of projects you are part of');
+}
 
 export const projectsService = {
   async list(user: AuthUser, filter: z.infer<typeof projectListQuery>) {
@@ -79,12 +90,15 @@ export const projectsService = {
     const access = await loadProjectAccess(user, id);
     const p = await projectsRepository.findDetail(id);
     if (!p) throw notFound('Project');
-    const answers: AnswerMap = Object.fromEntries(p.answers.map((a) => [a.questionKey, a.value as AnswerMap[string]]));
-    const { answers: _a, workflowSnapshot, aiBrief, ...rest } = p;
+    let answers: AnswerMap = Object.fromEntries(p.answers.map((a) => [a.questionKey, a.value as AnswerMap[string]]));
+    let workflow = p.workflowSnapshot as unknown as WorkflowDefinition;
+    // The client's budget is a price: only the client and people cleared for finances get to read it.
+    if (!access.isOwner && !access.canViewFinance) ({ def: workflow, answers } = stripFinancials(workflow, answers));
+    const { answers: _a, workflowSnapshot: _w, aiBrief, ...rest } = p;
     return {
       ...rest,
       aiBriefs: access.isClient ? null : parseBriefs(aiBrief, p.updatedAt),
-      workflow: workflowSnapshot as unknown as WorkflowDefinition,
+      workflow,
       answers,
       access: {
         canEditAnswers: access.canEditAnswers,
@@ -92,6 +106,7 @@ export const projectsService = {
         canManage: access.canManage,
         canAssign: access.canAssign,
         canModerate: access.canModerate,
+        canViewFinance: access.canViewFinance,
         isOwner: access.isOwner,
       },
     };
@@ -101,6 +116,8 @@ export const projectsService = {
     const access = await loadProjectAccess(user, id);
     if (!access.canEditAnswers)
       throw forbidden(access.project.approvedAt ? 'Requirements are approved and locked' : 'You cannot edit this project');
+    if (!access.isOwner && !access.canViewFinance && Object.keys(input.answers).some((k) => FINANCIAL_QUESTION_KEYS.includes(k)))
+      throw forbidden('You are not allowed to see or change the budget');
     const project = access.project;
     const def = snapshotOf(project);
     const questionStep = new Map(allQuestions(def).map((q) => [q.key, q.stepKey]));
@@ -247,9 +264,11 @@ export const projectsService = {
 
   async addMember(req: Request, user: AuthUser, id: string, input: z.infer<typeof addMemberSchema>) {
     const access = await loadProjectAccess(user, id);
-    if (!access.canAssign) throw forbidden();
+    assertCanStaff(user, access);
     const member = await prisma.user.findUnique({ where: { id: input.userId } });
     if (!member || member.role === 'CLIENT' || !member.isActive) throw badRequest('Choose an active team member');
+    if (user.role === 'PROJECT_MANAGER' && (member.role !== 'DEVELOPER' || input.role !== 'DEVELOPER'))
+      throw forbidden('Project managers can add developers to their project');
     await prisma.projectMember.upsert({
       where: { projectId_userId: { projectId: id, userId: input.userId } },
       create: { projectId: id, userId: input.userId, role: input.role },
@@ -268,7 +287,11 @@ export const projectsService = {
 
   async removeMember(req: Request, user: AuthUser, id: string, userId: string) {
     const access = await loadProjectAccess(user, id);
-    if (!access.canAssign) throw forbidden();
+    assertCanStaff(user, access);
+    if (user.role === 'PROJECT_MANAGER') {
+      const target = access.project.members.find((m) => m.userId === userId);
+      if (target?.role === 'MANAGER') throw forbidden('Project managers can only remove developers');
+    }
     await prisma.projectMember.deleteMany({ where: { projectId: id, userId } });
     await projectsRepository.addEvent(id, { type: 'unassigned', title: 'Team member removed', actorId: user.id, visibility: 'INTERNAL', meta: { userId } });
     await auditService.log(req, { action: 'project.member_removed', entityType: 'Project', entityId: id, meta: { userId } });
@@ -278,7 +301,9 @@ export const projectsService = {
 
   async timeline(user: AuthUser, id: string) {
     const access = await loadProjectAccess(user, id);
-    return projectsRepository.events(id, !access.isClient);
+    const events = await projectsRepository.events(id, !access.isClient);
+    // Offers are finance: staff without finance access never see that a proposal was drafted or sent.
+    return access.isClient || access.canViewFinance ? events : events.filter((e) => e.type !== 'proposal');
   },
 
   async remove(req: Request, user: AuthUser, id: string) {
