@@ -167,7 +167,7 @@ export function LandingHeroInteractive() {
           </div>
 
           {/* Interactive Preset Chips */}
-          <div className="no-scrollbar flex w-full items-center gap-1.5 overflow-x-auto py-1 touch-pan-x sm:w-auto">
+          <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-auto py-1 touch-pan-x sm:w-auto">
             {PRESETS.map((p) => {
               const active = p.id === activePresetId;
               const Icon = p.icon;
@@ -175,14 +175,14 @@ export function LandingHeroInteractive() {
                 <button
                   key={p.id}
                   onClick={() => handleSelectPreset(p)}
-                  className={`group relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-medium transition-all ${
                     active
                       ? 'bg-surface text-fg shadow-sm ring-1 ring-border font-semibold'
                       : 'text-muted hover:text-fg hover:bg-surface/50'
                   }`}
                 >
                   <Icon className={`size-3.5 ${active ? 'text-brand' : 'text-muted group-hover:text-fg'}`} />
-                  <span>{isAr ? p.name.ar : p.name.en}</span>
+                  <span className="whitespace-nowrap">{isAr ? p.name.ar : p.name.en}</span>
                   {active && (
                     <motion.span
                       layoutId="preset-pill-indicator"
@@ -199,25 +199,25 @@ export function LandingHeroInteractive() {
         {/* Workspace Body: 2 Columns */}
         <div className="grid gap-0 lg:grid-cols-[1fr_340px]">
           {/* Left / Main Workspace Interactive Area */}
-          <div className="p-6 sm:p-8 border-b lg:border-b-0 lg:border-e border-border">
+          <div className="p-4 sm:p-8 border-b lg:border-b-0 lg:border-e border-border">
             {/* Step navigation tabs */}
-            <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-4">
-              <div className="flex items-center gap-2">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-brand-soft text-brand">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
                   <SlidersHorizontal className="size-4" />
                 </span>
-                <div>
-                  <h3 className="text-sm font-semibold text-fg">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-fg">
                     {isAr ? 'مُحاكي استكشاف المتطلبات التفاعلي' : 'Interactive Discovery Sandbox'}
                   </h3>
-                  <p className="text-xs text-muted">
+                  <p className="text-xs text-muted leading-tight">
                     {isAr ? 'جرّب تخصيص مشروعك وشاهد النتائج تتحدث لحظياً' : 'Customize your brief and watch specs update live'}
                   </p>
                 </div>
               </div>
 
               {/* Sub-tabs inside playground */}
-              <div className="flex rounded-lg bg-surface-2 p-1 text-xs">
+              <div className="flex w-full sm:w-auto rounded-xl bg-surface-2 p-1 text-xs">
                 {(
                   [
                     { key: 'features', label: isAr ? 'الميزات' : 'Features' },
@@ -228,8 +228,8 @@ export function LandingHeroInteractive() {
                   <button
                     key={tab.key}
                     onClick={() => setActiveStepTab(tab.key)}
-                    className={`rounded-md px-3 py-1 font-medium transition-all ${
-                      activeStepTab === tab.key ? 'bg-surface text-brand shadow-sm font-semibold' : 'text-muted hover:text-fg'
+                    className={`flex-1 sm:flex-none rounded-lg px-3.5 py-1.5 font-medium transition-all text-center cursor-pointer ${
+                      activeStepTab === tab.key ? 'bg-surface text-brand shadow-sm font-bold' : 'text-muted hover:text-fg'
                     }`}
                   >
                     {tab.label}

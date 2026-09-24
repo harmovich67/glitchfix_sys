@@ -61,13 +61,13 @@ export function PriorityBadge({ priority }: { priority: Priority }) {
 
 export function PageHeader({ title, subtitle, actions, eyebrow }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-5 sm:mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <div className="mb-2 text-xs font-semibold tracking-wide text-brand uppercase">{eyebrow}</div>}
-        <h1 className="text-2xl font-semibold text-fg sm:text-[28px]">{title}</h1>
-        {subtitle && <p className="mt-1.5 max-w-2xl text-sm text-muted">{subtitle}</p>}
+        {eyebrow && <div className="mb-1.5 text-xs font-semibold tracking-wide text-brand uppercase">{eyebrow}</div>}
+        <h1 className="text-xl font-bold text-fg sm:text-[28px] tracking-tight">{title}</h1>
+        {subtitle && <p className="mt-1 max-w-2xl text-xs sm:text-sm text-muted leading-relaxed">{subtitle}</p>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2 w-full sm:w-auto">{actions}</div>}
     </div>
   );
 }
@@ -93,13 +93,13 @@ export function StatCard({
     danger: 'bg-danger-soft text-danger',
   };
   return (
-    <Card className="relative overflow-hidden p-5">
+    <Card className="relative overflow-hidden p-4 sm:p-5">
       <div className="flex items-start justify-between">
-        <p className="text-[13px] font-medium text-muted">{label}</p>
-        {icon && <div className={cn('flex size-8 items-center justify-center rounded-lg', tones[tone])}>{icon}</div>}
+        <p className="text-xs sm:text-[13px] font-medium text-muted">{label}</p>
+        {icon && <div className={cn('flex size-7 sm:size-8 items-center justify-center rounded-lg', tones[tone])}>{icon}</div>}
       </div>
-      <p className="mt-3 text-[28px] leading-none font-semibold tracking-tight text-fg tabular-nums">{value}</p>
-      {hint && <p className="mt-2 text-xs text-muted">{hint}</p>}
+      <p className="mt-2.5 sm:mt-3 text-2xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{value}</p>
+      {hint && <p className="mt-2 text-[11px] sm:text-xs text-muted">{hint}</p>}
     </Card>
   );
 }

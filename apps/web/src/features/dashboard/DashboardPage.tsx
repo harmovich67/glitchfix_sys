@@ -96,7 +96,7 @@ function DeveloperDashboard() {
   return (
     <>
       <Greeting subtitle={t('dashboard.devSubtitle')} />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
         <StatCard label={t('dashboard.assigned')} value={projects.data?.length ?? '—'} icon={<FolderKanban className="size-4" />} />
         <StatCard label={t('dashboard.myTasks')} value={tasks.data?.length ?? '—'} icon={<ListTodo className="size-4" />} tone="info" />
         <StatCard
@@ -184,10 +184,10 @@ function StaffDashboard() {
           </Button>
         }
       />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-5">
-          <p className="text-[13px] font-medium text-muted">{t('dashboard.newRequests')}</p>
-          <p className="mt-3 text-[28px] leading-none font-semibold tabular-nums">{k?.requests ?? '—'}</p>
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4">
+        <Card className="p-4 sm:p-5">
+          <p className="text-xs sm:text-[13px] font-medium text-muted">{t('dashboard.newRequests')}</p>
+          <p className="mt-2.5 sm:mt-3 text-2xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{k?.requests ?? '—'}</p>
           <div className="mt-2">{overview.data && <Sparkline data={overview.data.weekly.map((w) => w.started)} />}</div>
         </Card>
         <StatCard label={t('dashboard.awaitingReview')} value={k?.awaitingReview ?? '—'} icon={<Clock className="size-4" />} tone="warning" />

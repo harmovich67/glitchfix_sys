@@ -175,6 +175,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { t, locale } = useI18n();
+  const isAr = locale === 'ar';
+  const { isClient } = useAuth();
+  const createProject = useCreateProject();
+
   return (
     <div className="flex min-h-screen bg-bg">
       <aside className="sticky top-0 hidden h-screen w-[260px] shrink-0 border-e border-border bg-bg lg:block">
@@ -184,8 +189,8 @@ export function AppShell() {
         <SidebarContent onNavigate={() => setMobileOpen(false)} />
       </Drawer>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="glass sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border px-4 sm:px-6 lg:px-8">
+      <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
+        <header className="glass sticky top-0 z-30 flex h-14 sm:h-16 items-center gap-3 border-b border-border px-4 sm:px-6 lg:px-8">
           <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Menu">
             <MenuIcon className="size-5" />
           </Button>
@@ -197,7 +202,8 @@ export function AppShell() {
           <ThemeToggle />
           <NotificationBell />
         </header>
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+
+        <main className="flex-1 px-3 py-5 sm:px-6 lg:px-10 lg:py-8">
           {/* Enter-only transition: an exit animation around <Outlet> would render the *new* route twice. */}
           <motion.div
             key={location.pathname}
@@ -211,6 +217,87 @@ export function AppShell() {
             </Suspense>
           </motion.div>
         </main>
+
+        {/* Mobile & Tablet Native App Bottom Dock */}
+        <nav
+          aria-label="Mobile Navigation Dock"
+          className="glass fixed bottom-0 inset-x-0 z-40 border-t border-border/80 lg:hidden px-3 pt-1 pb-safe shadow-2xl backdrop-blur-xl"
+        >
+          <div className="flex items-center justify-around max-w-lg mx-auto">
+            <NavLink
+              to="/app"
+              end
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[10px] font-medium transition-colors',
+                  isActive ? 'text-brand font-bold' : 'text-muted hover:text-fg',
+                )
+              }
+            >
+              <LayoutDashboard className="size-4 sm:size-5" />
+              <span className="mt-0.5">{t('nav.dashboard')}</span>
+            </NavLink>
+
+            <NavLink
+              to="/app/projects"
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[10px] font-medium transition-colors',
+                  isActive ? 'text-brand font-bold' : 'text-muted hover:text-fg',
+                )
+              }
+            >
+              <FolderKanban className="size-4 sm:size-5" />
+              <span className="mt-0.5">{isClient ? t('nav.myProjects') : t('nav.projects')}</span>
+            </NavLink>
+
+            {isClient ? (
+              <button
+                type="button"
+                onClick={() => createProject.mutate()}
+                className="flex flex-col items-center justify-center -mt-5 size-11 rounded-full bg-brand text-white shadow-lg shadow-brand/40 ring-4 ring-bg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                title={t('nav.newProject')}
+              >
+                <Plus className="size-5" />
+              </button>
+            ) : (
+              <NavLink
+                to="/app/notifications"
+                className={({ isActive }) =>
+                  cn(
+                    'flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[10px] font-medium transition-colors',
+                    isActive ? 'text-brand font-bold' : 'text-muted hover:text-fg',
+                  )
+                }
+              >
+                <NotificationBell />
+                <span className="mt-0.5">{t('nav.notifications')}</span>
+              </NavLink>
+            )}
+
+            <NavLink
+              to="/app/settings"
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[10px] font-medium transition-colors',
+                  isActive ? 'text-brand font-bold' : 'text-muted hover:text-fg',
+                )
+              }
+            >
+              <Settings className="size-4 sm:size-5" />
+              <span className="mt-0.5">{t('nav.settings')}</span>
+            </NavLink>
+
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[10px] font-medium text-muted hover:text-fg transition-colors cursor-pointer"
+            >
+              <MenuIcon className="size-4 sm:size-5" />
+              <span className="mt-0.5">{isAr ? 'المزيد' : 'More'}</span>
+            </button>
+          </div>
+        </nav>
       </div>
     </div>
   );
