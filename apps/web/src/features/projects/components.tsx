@@ -97,11 +97,11 @@ export function ProjectCard({ p, index = 0, clientView }: { p: ProjectListItem; 
           <TypeTile type={p.projectType} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <Link to={`/app/projects/${p.id}`} className="truncate text-[15px] font-semibold text-fg after:absolute after:inset-0">
+              <Link to={`/app/projects/${p.id}`} className="text-[14.5px] sm:text-[15px] font-semibold text-fg after:absolute after:inset-0 break-words leading-snug">
                 {p.title}
               </Link>
             </div>
-            <p className="mt-0.5 font-mono text-[11px] text-muted">
+            <p className="mt-0.5 font-mono text-[11px] text-muted break-words">
               {p.code}
               {!clientView && ` · ${p.client.clientProfile?.companyName || p.client.name}`}
             </p>

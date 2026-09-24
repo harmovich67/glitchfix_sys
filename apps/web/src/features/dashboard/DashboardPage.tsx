@@ -185,9 +185,11 @@ function StaffDashboard() {
         }
       />
       <div className="grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4">
-        <Card className="p-3.5 sm:p-5">
-          <p className="text-xs sm:text-[13px] font-medium text-muted truncate">{t('dashboard.newRequests')}</p>
-          <p className="mt-2.5 sm:mt-3 text-xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{k?.requests ?? '—'}</p>
+        <Card className="p-3.5 sm:p-5 flex flex-col justify-between min-h-[105px] sm:min-h-[120px]">
+          <div>
+            <p className="text-xs sm:text-[13px] font-medium text-muted leading-snug break-words">{t('dashboard.newRequests')}</p>
+            <p className="mt-2 sm:mt-2.5 text-xl sm:text-[28px] leading-none font-bold tracking-tight text-fg tabular-nums">{k?.requests ?? '—'}</p>
+          </div>
           <div className="mt-2">{overview.data && <Sparkline data={overview.data.weekly.map((w) => w.started)} />}</div>
         </Card>
         <StatCard label={t('dashboard.awaitingReview')} value={k?.awaitingReview ?? '—'} icon={<Clock className="size-4" />} tone="warning" />
@@ -199,9 +201,9 @@ function StaffDashboard() {
           tone="success"
           hint={
             k && can('messages.moderate') && k.pendingMessages ? (
-              <Link to="/app/moderation" className="inline-flex items-center gap-1 font-medium text-warning truncate max-w-full">
+              <Link to="/app/moderation" className="inline-flex items-center gap-1 font-medium text-warning break-words leading-tight">
                 <MessageSquareWarning className="size-3.5 shrink-0" />
-                <span className="truncate">
+                <span>
                   {k.pendingMessages} {t('dashboard.pendingMessages')}
                 </span>
               </Link>
@@ -214,25 +216,29 @@ function StaffDashboard() {
         <div className="space-y-6">
           <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.needsAttention')} description={t('dashboard.unassignedProjects')} icon={<Inbox className="size-4" />} />
-            <div className="px-2 pb-2">
+            <div className="p-2 sm:p-3 space-y-1.5">
               {unassigned.length ? (
                 unassigned.map((p) => (
                   <Link
                     key={p.id}
                     to={`/app/projects/${p.id}?tab=manage`}
-                    className="flex items-center gap-2.5 sm:gap-3 rounded-xl px-2.5 sm:px-3 py-2.5 sm:py-3 hover:bg-surface-2 transition-colors min-w-0"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 rounded-xl p-2.5 sm:p-3 hover:bg-surface-2 transition-colors border border-border/40 sm:border-transparent"
                   >
-                    <TypeTile type={p.projectType} size="sm" className="shrink-0" />
-                    <div className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap scroll-smooth pb-0.5">
-                      <p className="text-[13px] sm:text-[13.5px] font-medium text-fg">{p.title}</p>
-                      <p className="text-[11px] sm:text-xs text-muted">
-                        {p.client.clientProfile?.companyName || p.client.name} · {timeAgo(p.submittedAt!, locale)}
-                      </p>
+                    <div className="flex items-start gap-3 min-w-0">
+                      <TypeTile type={p.projectType} size="sm" className="shrink-0 mt-0.5 sm:mt-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] sm:text-[13.5px] font-semibold text-fg leading-snug break-words">
+                          {p.title}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted break-words">
+                          <span className="font-medium text-fg-2">{p.client.clientProfile?.companyName || p.client.name}</span>
+                          <span className="mx-1.5 opacity-60">·</span>
+                          <span>{timeAgo(p.submittedAt!, locale)}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <span className="hidden sm:inline-flex">
-                        <PriorityBadge priority={p.priority} />
-                      </span>
+                    <div className="flex items-center gap-2 self-start sm:self-center shrink-0 ps-11 sm:ps-0">
+                      <PriorityBadge priority={p.priority} />
                       <StatusBadge status={p.status} short />
                     </div>
                   </Link>
@@ -244,20 +250,26 @@ function StaffDashboard() {
           </Card>
           <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.recentActivity')} icon={<Activity className="size-4" />} />
-            <div className="chic-scrollbar overflow-x-auto max-w-full px-3 sm:px-5 pb-4 sm:pb-5">
-              <ol className="relative min-w-0">
+            <div className="px-3 sm:px-5 pb-4 sm:pb-5">
+              <ol className="relative min-w-0 space-y-4">
                 {overview.data?.recent.map((e, i) => (
-                  <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex items-start gap-2.5 sm:gap-3 pb-4 last:pb-0">
+                  <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex items-start gap-3">
                     <div className="relative flex shrink-0 flex-col items-center">
                       {e.actor ? <Avatar name={e.actor.name} size="sm" /> : <div className="size-7 rounded-full bg-surface-3" />}
-                      {i < overview.data!.recent.length - 1 && <span className="mt-1 w-px flex-1 bg-border" />}
+                      {i < overview.data!.recent.length - 1 && <span className="mt-1.5 w-px h-full min-h-[24px] bg-border" />}
                     </div>
-                    <div className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap scroll-smooth pb-0.5">
-                      <p className="text-[12.5px] sm:text-[13px] text-fg">
-                        <span className="font-semibold text-fg">{e.actor?.name ?? t('chat.system')}</span> · {e.title}
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-[13px] text-fg leading-snug break-words">
+                        <span className="font-semibold text-fg">{e.actor?.name ?? t('chat.system')}</span>
+                        <span className="mx-1 text-muted">·</span>
+                        <span>{e.title}</span>
                       </p>
-                      <Link to={`/app/projects/${e.project.id}`} className="block text-[11px] sm:text-xs text-muted hover:text-brand transition-colors">
-                        {e.project.code} — {e.project.title} · {timeAgo(e.createdAt, locale)}
+                      <Link to={`/app/projects/${e.project.id}`} className="mt-1 block text-xs text-muted hover:text-brand leading-relaxed break-words">
+                        <span className="font-mono text-fg-2 font-medium">{e.project.code}</span>
+                        <span className="mx-1.5 text-muted/60">—</span>
+                        <span>{e.project.title}</span>
+                        <span className="mx-1.5 text-muted/60">·</span>
+                        <span className="text-muted/80">{timeAgo(e.createdAt, locale)}</span>
                       </Link>
                     </div>
                   </motion.li>
@@ -271,15 +283,17 @@ function StaffDashboard() {
             <CardHeader title={t('dashboard.workload')} icon={<Users className="size-4" />} />
             <div className="space-y-4 px-3 sm:px-5 pb-4 sm:pb-5">
               {overview.data?.workload.map((w) => (
-                <div key={w.id}>
-                  <div className="mb-1.5 flex items-center gap-2 sm:gap-2.5">
-                    <Avatar name={w.name} size="sm" />
-                    <div className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap pb-0.5">
-                      <p className="text-[12.5px] sm:text-[13px] font-medium">{w.name}</p>
-                      <p className="text-[10.5px] sm:text-[11px] text-muted">{w.title ?? t(`roles.${w.role}`)}</p>
+                <div key={w.id} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Avatar name={w.name} size="sm" className="shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-fg break-words">{w.name}</p>
+                        <p className="text-[11px] text-muted break-words">{w.title ?? t(`roles.${w.role}`)}</p>
+                      </div>
                     </div>
-                    <span className="shrink-0 text-xs tabular-nums text-muted">
-                      {w.activeProjects}/{w.capacity}
+                    <span className="shrink-0 text-xs font-semibold tabular-nums text-fg-2 bg-surface-2 px-2 py-0.5 rounded-md">
+                      {w.activeProjects}/{w.capacity} {t('nav.projects')}
                     </span>
                   </div>
                   <Progress value={(w.activeProjects / Math.max(1, w.capacity)) * 100} />
