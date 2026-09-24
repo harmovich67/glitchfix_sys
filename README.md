@@ -5,7 +5,7 @@ with an AI consultant alongside, a Super Admin control plane, and a delivery wor
 
 - **Planning docs:** [`docs/`](docs) — architecture, database schema, user flows, UI structure, roadmap
 - **Stack:** React 19 · Vite · Tailwind v4 · Motion · TanStack Query · React Hook Form + Zod · Recharts · Radix ·
-  Express 5 · Prisma (SQLite locally / PostgreSQL in prod) · Socket.IO · Nodemailer · Google Gemini (REST)
+  Express 5 · Prisma (SQLite locally / MySQL or PostgreSQL in prod) · Socket.IO · Nodemailer · Google Gemini (REST)
 
 ## Quick start
 
@@ -42,6 +42,32 @@ buttons for each role.
 - **Email:** set `SMTP_*`. Without it, emails are printed to the API console (`✉️ [email:dev] …`).
 - **PostgreSQL:** change `provider` in `apps/api/prisma/schema.prisma` to `postgresql`, point `DATABASE_URL` at your
   database, then run `npm run setup`.
+- **MySQL:** see [Using MySQL](#using-mysql) below.
+
+## Using MySQL
+
+SQLite stays the default for local development. To run the same app on MySQL 8 (or MariaDB 10.5+):
+
+```bash
+# 1. Create an empty database with utf8mb4, e.g.  CREATE DATABASE welco CHARACTER SET utf8mb4;
+# 2. In apps/api/.env
+DATABASE_URL="mysql://user:password@localhost:3306/welco"
+
+# 3. Generate the MySQL schema + client, create the tables and (optionally) seed the demo organisation
+npm run db:mysql:setup -w @welco/api      # use db:mysql instead to skip the demo data
+npm run dev
+```
+
+How it works: Prisma needs the provider inside the schema, so `apps/api/prisma/schema.prisma` (SQLite) remains the single
+source of truth and `apps/api/scripts/db-provider.mjs` derives the git-ignored `schema.mysql.prisma` from it — same models,
+with MySQL column types (`TEXT`/`LONGTEXT`/`VARCHAR(255)`) for long fields such as reports, briefs and messages. Re-run
+`npm run db:mysql -w @welco/api` after changing `schema.prisma`; the script stops if a type mapping no longer matches.
+
+- `npm run db:mysql:sql -w @welco/api` prints the MySQL DDL without touching any database.
+- `npm run db:sqlite -w @welco/api` switches the generated client back to SQLite (set `DATABASE_URL="file:./dev.db"`).
+- The generated Prisma client is shared, so the API talks to one database at a time: the one you last generated for.
+- Data is not migrated between databases; MySQL starts empty (or seeded).
+- Production: use `prisma migrate` against the MySQL schema instead of `db push` if you need versioned migrations.
 
 ## Project layout
 

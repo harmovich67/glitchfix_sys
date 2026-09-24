@@ -1,7 +1,7 @@
 # 02 · Database Schema
 
 Source of truth: [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma). SQLite in
-development, PostgreSQL in production (change `provider`). Enum-like columns are strings validated by
+development; PostgreSQL (change `provider`) or MySQL (`npm run db:mysql -w @welco/api`, see the README) in production. Enum-like columns are strings validated by
 the shared zod schemas so both databases behave identically.
 
 ## Entity map

@@ -17,6 +17,7 @@ build/
 *.db
 *.db-journal
 *.sqlite
+apps/api/prisma/schema.mysql.prisma
 apps/api/storage/
 
 # Logs
