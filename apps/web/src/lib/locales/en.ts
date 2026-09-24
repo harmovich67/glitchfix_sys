@@ -95,6 +95,7 @@ langEn: 'English', langAr: 'Arabic', generateIn: 'Generate {lang} version', brie
     upload: 'Upload files', internal: 'Internal', shared: 'Shared with client', category: 'Category', uploadedBy: 'Uploaded by {name}',
     categories: { BRAND: 'Brand', REFERENCE: 'Reference', ATTACHMENT: 'Attachment', SCREENSHOT: 'Screenshot', PREVIEW: 'Preview' },
     asPreview: 'Share as preview', internalOnly: 'Internal only', previews: 'Previews',
+    noPreview: 'No preview available for this file type — download it to open.', previewFailed: 'Could not load the file for preview.',
   },
   chat: {
     clientThread: 'Client conversation', internalThread: 'Internal team', placeholder: 'Write a message…', clarification: 'Clarification request',

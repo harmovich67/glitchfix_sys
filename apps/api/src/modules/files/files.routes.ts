@@ -34,7 +34,13 @@ filesRoutes.get('/:id/download', async (req, res) => {
   const { file, abs, inline } = await filesService.resolveDownload(currentUser(req), param(req, 'id'));
   const wantsInline = inline && req.query.inline === '1';
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'; sandbox");
+  // Browsers' built-in PDF viewer does not run inside a CSP sandbox, so an inline PDF gets a sandbox-free policy
+  // (it is still same-origin-framed only and cannot load anything).
+  const inlinePdf = wantsInline && file.mimeType === 'application/pdf';
+  res.setHeader(
+    'Content-Security-Policy',
+    inlinePdf ? "default-src 'none'; frame-ancestors 'self'" : "default-src 'none'; img-src 'self'; sandbox",
+  );
   res.setHeader('Cache-Control', 'private, max-age=300');
   res.setHeader('Content-Type', file.mimeType);
   res.setHeader(

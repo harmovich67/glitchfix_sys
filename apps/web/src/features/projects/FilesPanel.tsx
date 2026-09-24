@@ -10,6 +10,7 @@ import { useI18n } from '../../lib/i18n';
 import type { FileItem, ProjectDetail } from '../../lib/types';
 import { cn, formatBytes, timeAgo } from '../../lib/utils';
 import { Button } from '../../components/ui/button';
+import { FilePreviewTrigger } from '../../components/ui/file-preview';
 import { Select, Switch } from '../../components/ui/form';
 import { Badge, Card, CardHeader } from '../../components/ui/surfaces';
 import { EmptyState, Progress } from '../../components/ui/feedback';
@@ -19,7 +20,7 @@ function FileCard({ f, canDelete, onDelete }: { f: FileItem; canDelete: boolean;
   const image = /^image\/(png|jpe?g|webp|gif)$/.test(f.mimeType);
   return (
     <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="group overflow-hidden rounded-2xl bg-surface ring-1 ring-border transition-shadow hover:shadow-md">
-      <a href={fileUrl(f.id, image)} target={image ? '_blank' : undefined} rel="noreferrer" className="relative block aspect-[16/10] overflow-hidden bg-surface-2">
+      <FilePreviewTrigger file={f} className="relative block aspect-[16/10] w-full cursor-pointer overflow-hidden bg-surface-2">
         {image ? (
           <img src={fileUrl(f.id, true)} alt={f.originalName} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
         ) : (
@@ -32,7 +33,7 @@ function FileCard({ f, canDelete, onDelete }: { f: FileItem; canDelete: boolean;
           {f.category === 'PREVIEW' && <Badge className="bg-brand text-white ring-brand">{t('files.categories.PREVIEW')}</Badge>}
           {f.visibility === 'INTERNAL' && <Badge className="bg-fg/80 text-bg ring-transparent"><Lock className="size-3" />{t('files.internal')}</Badge>}
         </div>
-      </a>
+      </FilePreviewTrigger>
       <div className="flex items-center gap-2 p-3">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium text-fg" title={f.originalName}>{f.originalName}</p>
@@ -41,7 +42,7 @@ function FileCard({ f, canDelete, onDelete }: { f: FileItem; canDelete: boolean;
           </p>
         </div>
         <Button asChild size="icon-sm" variant="ghost" aria-label={t('common.download')}>
-          <a href={fileUrl(f.id)}><Download className="size-4" /></a>
+          <a href={fileUrl(f.id)} download={f.originalName}><Download className="size-4" /></a>
         </Button>
         {canDelete && (
           <Button size="icon-sm" variant="ghost" onClick={onDelete} aria-label={t('common.delete')} className="text-muted hover:text-danger">

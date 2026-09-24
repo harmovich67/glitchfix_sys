@@ -99,6 +99,7 @@ langEn: 'الإنجليزية', langAr: 'العربية', generateIn: 'إنشا�
     upload: 'رفع ملفات', internal: 'داخلي', shared: 'مشترك مع العميل', category: 'التصنيف', uploadedBy: 'رفعه {name}',
     categories: { BRAND: 'هوية', REFERENCE: 'مرجع', ATTACHMENT: 'مرفق', SCREENSHOT: 'لقطة شاشة', PREVIEW: 'معاينة' },
     asPreview: 'مشاركة كمعاينة', internalOnly: 'داخلي فقط', previews: 'المعاينات',
+    noPreview: 'لا تتوفر معاينة لهذا النوع من الملفات — يمكنك تنزيله لفتحه.', previewFailed: 'تعذر تحميل الملف للمعاينة.',
   },
   chat: {
     clientThread: 'محادثة العميل', internalThread: 'الفريق الداخلي', placeholder: 'اكتب رسالة…', clarification: 'طلب توضيح',

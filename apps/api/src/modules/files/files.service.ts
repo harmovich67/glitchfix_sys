@@ -16,7 +16,7 @@ import { briefUserSelect } from '../users/users.repository';
 export const STORAGE_DIR = path.resolve(process.cwd(), 'storage');
 fs.mkdirSync(STORAGE_DIR, { recursive: true });
 
-const INLINE_SAFE = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+const INLINE_SAFE = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf']);
 
 export const upload = multer({
   storage: multer.diskStorage({

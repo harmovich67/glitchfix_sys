@@ -10,6 +10,7 @@ import { cn, countryName, flag, formatBytes } from '../../lib/utils';
 import { DynamicIcon } from '../../lib/icons';
 import { TYPE_GRADIENT } from '../../lib/meta';
 import { Button } from '../../components/ui/button';
+import { FilePreviewTrigger } from '../../components/ui/file-preview';
 import { Input, Select, Textarea } from '../../components/ui/form';
 import { OptionPreview } from './previews';
 import { COUNTRY_CODES, PRIORITY_COUNTRIES } from './countries';
@@ -444,13 +445,19 @@ function FileUpload({ q, value, onChange, projectId, files, onFilesChanged, disa
             const isImage = f?.mimeType.startsWith('image/') && f.mimeType !== 'image/svg+xml';
             return (
               <motion.div key={id} layout initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-3 rounded-xl bg-surface p-2.5 ring-1 ring-border">
-                <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2 text-muted">
-                  {isImage ? <img src={fileUrl(id, true)} alt="" className="size-full object-cover" /> : f?.mimeType.startsWith('image/') ? <ImageIcon className="size-5" /> : <FileText className="size-5" />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-fg">{f?.originalName ?? '…'}</p>
-                  <p className="text-[11px] text-muted">{f ? formatBytes(f.size) : ''}</p>
-                </div>
+                {f ? (
+                  <FilePreviewTrigger file={f} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-start">
+                    <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2 text-muted">
+                      {isImage ? <img src={fileUrl(id, true)} alt="" className="size-full object-cover" /> : f.mimeType.startsWith('image/') ? <ImageIcon className="size-5" /> : <FileText className="size-5" />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-medium text-fg">{f.originalName}</span>
+                      <span className="block text-[11px] text-muted">{formatBytes(f.size)}</span>
+                    </span>
+                  </FilePreviewTrigger>
+                ) : (
+                  <div className="min-w-0 flex-1 text-[13px] text-muted">…</div>
+                )}
                 <button type="button" onClick={() => remove(id)} className="rounded-lg p-1.5 text-muted hover:bg-danger-soft hover:text-danger" aria-label="Remove">
                   <X className="size-4" />
                 </button>

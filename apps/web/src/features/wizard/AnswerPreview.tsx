@@ -1,5 +1,5 @@
 import { MULTI_VALUE_TYPES, formatAnswer, isEmptyValue, type AnswerValue, type WorkflowQuestion } from '@welco/shared';
-import { fileUrl } from '../../lib/api';
+import { FilePreviewTrigger } from '../../components/ui/file-preview';
 import { useI18n } from '../../lib/i18n';
 import type { FileItem } from '../../lib/types';
 
@@ -19,11 +19,15 @@ export function AnswerPreview({ q, value, files }: { q: WorkflowQuestion; value:
     const byId = new Map(files.map((f) => [f.id, f]));
     return (
       <div className="flex flex-wrap gap-1.5">
-        {(value as string[]).map((id) => (
-          <a key={id} href={fileUrl(id)} className="rounded-lg bg-surface-2 px-2 py-1 text-xs text-fg-2 ring-1 ring-border hover:text-brand">
-            {byId.get(id)?.originalName ?? 'file'}
-          </a>
-        ))}
+        {(value as string[]).map((id) => {
+          const f = byId.get(id);
+          const file = { id, originalName: f?.originalName ?? 'file', mimeType: f?.mimeType ?? 'application/octet-stream', size: f?.size };
+          return (
+            <FilePreviewTrigger key={id} file={file} className="cursor-pointer rounded-lg bg-surface-2 px-2 py-1 text-xs text-fg-2 ring-1 ring-border hover:text-brand">
+              {file.originalName}
+            </FilePreviewTrigger>
+          );
+        })}
       </div>
     );
   }
