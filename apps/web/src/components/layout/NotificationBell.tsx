@@ -39,9 +39,9 @@ export function NotificationItem({ n, onOpen }: { n: Notification; onOpen?: () =
       className="group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-surface-2"
     >
       <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', n.readAt ? 'bg-transparent' : 'bg-brand shadow-[0_0_0_3px_var(--brand-soft)]')} />
-      <span className="min-w-0 flex-1">
+      <span className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap scroll-smooth pb-0.5">
         <span className={cn('block text-[13px] leading-snug', n.readAt ? 'text-fg-2' : 'font-medium text-fg')}>{n.title}</span>
-        {n.body && <span className="mt-0.5 block truncate text-xs text-muted">{n.body}</span>}
+        {n.body && <span className="mt-0.5 block text-xs text-muted">{n.body}</span>}
         <span className="mt-1 block text-[11px] text-muted">{timeAgo(n.createdAt, locale)}</span>
       </span>
     </button>

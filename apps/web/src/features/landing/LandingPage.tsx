@@ -218,7 +218,7 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 mx-auto max-w-7xl px-6 pt-12 pb-20 text-center sm:pt-16">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pt-6 pb-12 text-center sm:pt-14 sm:pb-16">
         {/* Animated Pill Badge */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -311,8 +311,8 @@ export function LandingPage() {
       </section>
 
       {/* How it Works / 3 Core Steps */}
-      <section id="how" className="relative z-10 mx-auto max-w-7xl px-6 py-20 border-t border-border/60">
-        <motion.div {...fadeUp} className="text-center space-y-2 mb-14">
+      <section id="how" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
+        <motion.div {...fadeUp} className="text-center space-y-2 mb-8 sm:mb-12">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
             <Compass className="size-3.5" />
             {isAr ? 'خطوات بسيطة ونتائج مبهرة' : 'Seamless 3-Step Journey'}
@@ -382,8 +382,8 @@ export function LandingPage() {
       </section>
 
       {/* Section: Project Types with Stats */}
-      <section id="types" className="relative z-10 mx-auto max-w-7xl px-6 py-20 border-t border-border/60">
-        <motion.div {...fadeUp} className="text-center space-y-2 mb-12">
+      <section id="types" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
+        <motion.div {...fadeUp} className="text-center space-y-2 mb-8 sm:mb-10">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
             <Zap className="size-3.5" />
             {isAr ? 'نغطي كل قطاعات البرمجيات' : 'Full Spectrum Coverage'}
@@ -418,8 +418,8 @@ export function LandingPage() {
       </section>
 
       {/* Interactive AI Consultant Section */}
-      <section id="ai" className="relative z-10 mx-auto max-w-7xl px-6 py-24 border-t border-border/60">
-        <motion.div {...fadeUp} className="text-center space-y-3 mb-12">
+      <section id="ai" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
+        <motion.div {...fadeUp} className="text-center space-y-3 mb-8 sm:mb-12">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-600">
             <Bot className="size-3.5" />
             {isAr ? 'الذكاء الاصطناعي في خدمتك' : 'Interactive Gemini Consultant'}
@@ -438,30 +438,30 @@ export function LandingPage() {
       </section>
 
       {/* Interactive Design Style Sandbox */}
-      <section id="styles" className="relative z-10 mx-auto max-w-7xl px-6 py-24 border-t border-border/60">
+      <section id="styles" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
         <InteractiveStyleSandbox />
       </section>
 
       {/* Interactive ROI Calculator */}
-      <section id="calculator" className="relative z-10 mx-auto max-w-7xl px-6 py-24 border-t border-border/60">
+      <section id="calculator" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
         <InteractiveRoiCalculator />
       </section>
 
       {/* 3 Perspectives: Client vs PM vs Developer */}
-      <section id="perspectives" className="relative z-10 mx-auto max-w-7xl px-6 py-24 border-t border-border/60">
+      <section id="perspectives" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
         <InteractivePerspectiveTabs />
       </section>
 
       {/* Interactive FAQ Section */}
-      <section id="faq" className="relative z-10 mx-auto max-w-7xl px-6 py-24 border-t border-border/60">
+      <section id="faq" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
         <InteractiveFaq />
       </section>
 
       {/* Final Call to Action */}
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-24">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20">
         <motion.div
           {...fadeUp}
-          className="relative overflow-hidden rounded-[36px] bg-gradient-to-br from-[#0c0c1e] via-[#141432] to-[#1e1b4b] p-10 text-center text-white shadow-2xl sm:p-16"
+          className="relative overflow-hidden rounded-[30px] sm:rounded-[36px] bg-gradient-to-br from-[#0c0c1e] via-[#141432] to-[#1e1b4b] p-6 sm:p-14 text-center text-white shadow-2xl"
         >
           <div className="absolute -top-24 -start-24 size-80 rounded-full bg-brand/30 blur-3xl" />
           <div className="absolute -bottom-24 -end-24 size-80 rounded-full bg-accent/25 blur-3xl" />

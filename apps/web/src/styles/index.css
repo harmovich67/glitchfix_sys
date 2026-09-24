@@ -181,6 +181,27 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+
+  /* Chic subtle horizontal/vertical scrollbar */
+  .chic-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chic-scrollbar::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+  .chic-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .chic-scrollbar::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--brand) 45%, var(--border-strong));
+    border-radius: 9999px;
+  }
+  .chic-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--brand);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

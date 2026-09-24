@@ -11,10 +11,10 @@ import { Card, PriorityBadge, StatusBadge } from '../../components/ui/surfaces';
 import { AvatarStack, Progress } from '../../components/ui/feedback';
 import { Button } from '../../components/ui/button';
 
-export function TypeTile({ type, size = 'md' }: { type: string | null; size?: 'sm' | 'md' | 'lg' }) {
+export function TypeTile({ type, size = 'md', className }: { type: string | null; size?: 'sm' | 'md' | 'lg'; className?: string }) {
   const sizes = { sm: 'size-8 rounded-lg [&>svg]:size-4', md: 'size-10 rounded-xl [&>svg]:size-5', lg: 'size-14 rounded-2xl [&>svg]:size-7' };
   return (
-    <div className={cn('flex shrink-0 items-center justify-center bg-gradient-to-br text-white shadow-md', TYPE_GRADIENT[type ?? 'other'] ?? TYPE_GRADIENT.other, sizes[size])}>
+    <div className={cn('flex shrink-0 items-center justify-center bg-gradient-to-br text-white shadow-md', TYPE_GRADIENT[type ?? 'other'] ?? TYPE_GRADIENT.other, sizes[size], className)}>
       <DynamicIcon name={TYPE_ICON[type ?? 'other'] ?? 'Sparkles'} />
     </div>
   );

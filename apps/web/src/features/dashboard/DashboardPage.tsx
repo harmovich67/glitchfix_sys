@@ -212,7 +212,7 @@ function StaffDashboard() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_400px]">
         <div className="space-y-6">
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.needsAttention')} description={t('dashboard.unassignedProjects')} icon={<Inbox className="size-4" />} />
             <div className="px-2 pb-2">
               {unassigned.length ? (
@@ -220,12 +220,12 @@ function StaffDashboard() {
                   <Link
                     key={p.id}
                     to={`/app/projects/${p.id}?tab=manage`}
-                    className="flex items-center gap-2.5 sm:gap-3 rounded-xl px-2.5 sm:px-3 py-2.5 sm:py-3 hover:bg-surface-2 transition-colors"
+                    className="flex items-center gap-2.5 sm:gap-3 rounded-xl px-2.5 sm:px-3 py-2.5 sm:py-3 hover:bg-surface-2 transition-colors min-w-0"
                   >
-                    <TypeTile type={p.projectType} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] sm:text-[13.5px] font-medium text-fg">{p.title}</p>
-                      <p className="truncate text-[11px] sm:text-xs text-muted">
+                    <TypeTile type={p.projectType} size="sm" className="shrink-0" />
+                    <div className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap scroll-smooth pb-0.5">
+                      <p className="text-[13px] sm:text-[13.5px] font-medium text-fg">{p.title}</p>
+                      <p className="text-[11px] sm:text-xs text-muted">
                         {p.client.clientProfile?.companyName || p.client.name} · {timeAgo(p.submittedAt!, locale)}
                       </p>
                     </div>
@@ -242,39 +242,41 @@ function StaffDashboard() {
               )}
             </div>
           </Card>
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.recentActivity')} icon={<Activity className="size-4" />} />
-            <ol className="relative px-3 sm:px-5 pb-4 sm:pb-5">
-              {overview.data?.recent.map((e, i) => (
-                <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex gap-2.5 sm:gap-3 pb-4 last:pb-0">
-                  <div className="relative flex shrink-0 flex-col items-center">
-                    {e.actor ? <Avatar name={e.actor.name} size="sm" /> : <div className="size-7 rounded-full bg-surface-3" />}
-                    {i < overview.data!.recent.length - 1 && <span className="mt-1 w-px flex-1 bg-border" />}
-                  </div>
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    <p className="truncate text-[12.5px] sm:text-[13px] text-fg">
-                      <span className="font-medium">{e.actor?.name ?? t('chat.system')}</span> · {e.title}
-                    </p>
-                    <Link to={`/app/projects/${e.project.id}`} className="block truncate text-[11px] sm:text-xs text-muted hover:text-brand">
-                      {e.project.code} — {e.project.title} · {timeAgo(e.createdAt, locale)}
-                    </Link>
-                  </div>
-                </motion.li>
-              ))}
-            </ol>
+            <div className="chic-scrollbar overflow-x-auto max-w-full px-3 sm:px-5 pb-4 sm:pb-5">
+              <ol className="relative min-w-0">
+                {overview.data?.recent.map((e, i) => (
+                  <motion.li key={e.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="relative flex items-start gap-2.5 sm:gap-3 pb-4 last:pb-0">
+                    <div className="relative flex shrink-0 flex-col items-center">
+                      {e.actor ? <Avatar name={e.actor.name} size="sm" /> : <div className="size-7 rounded-full bg-surface-3" />}
+                      {i < overview.data!.recent.length - 1 && <span className="mt-1 w-px flex-1 bg-border" />}
+                    </div>
+                    <div className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap scroll-smooth pb-0.5">
+                      <p className="text-[12.5px] sm:text-[13px] text-fg">
+                        <span className="font-semibold text-fg">{e.actor?.name ?? t('chat.system')}</span> · {e.title}
+                      </p>
+                      <Link to={`/app/projects/${e.project.id}`} className="block text-[11px] sm:text-xs text-muted hover:text-brand transition-colors">
+                        {e.project.code} — {e.project.title} · {timeAgo(e.createdAt, locale)}
+                      </Link>
+                    </div>
+                  </motion.li>
+                ))}
+              </ol>
+            </div>
           </Card>
         </div>
         <div className="space-y-6">
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader title={t('dashboard.workload')} icon={<Users className="size-4" />} />
             <div className="space-y-4 px-3 sm:px-5 pb-4 sm:pb-5">
               {overview.data?.workload.map((w) => (
                 <div key={w.id}>
                   <div className="mb-1.5 flex items-center gap-2 sm:gap-2.5">
                     <Avatar name={w.name} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12.5px] sm:text-[13px] font-medium">{w.name}</p>
-                      <p className="truncate text-[10.5px] sm:text-[11px] text-muted">{w.title ?? t(`roles.${w.role}`)}</p>
+                    <div className="min-w-0 flex-1 chic-scrollbar overflow-x-auto whitespace-nowrap pb-0.5">
+                      <p className="text-[12.5px] sm:text-[13px] font-medium">{w.name}</p>
+                      <p className="text-[10.5px] sm:text-[11px] text-muted">{w.title ?? t(`roles.${w.role}`)}</p>
                     </div>
                     <span className="shrink-0 text-xs tabular-nums text-muted">
                       {w.activeProjects}/{w.capacity}
