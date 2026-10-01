@@ -4,3 +4,15 @@ export * from './workflow';
 export * from './schemas';
 export * from './proposal';
 export * from './wireframe';
+
+export {
+  loginSchema,
+  registerSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  updateMeSchema,
+  createUserSchema,
+  updateUserSchema,
+  updateClientSchema,
+} from './schemas';
+

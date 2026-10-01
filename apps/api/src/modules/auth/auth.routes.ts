@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { loginSchema, registerSchema, updateMeSchema } from '@welco/shared';
+import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, updateMeSchema } from '@welco/shared';
 import { clearAuthCookie, requireAuth, setAuthCookie } from '../../middleware/auth';
 import { authLimiter } from '../../middleware/rateLimit';
 import { validate } from '../../middleware/validate';
@@ -19,6 +19,16 @@ authRoutes.post('/login', authLimiter, validate(loginSchema), async (req, res) =
   const { user, token } = await authService.login(req, req.body);
   setAuthCookie(res, token);
   res.json({ user });
+});
+
+authRoutes.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), async (req, res) => {
+  await authService.forgotPassword(req, req.body.email);
+  res.json({ ok: true, message: 'If this email is registered, reset instructions have been sent.' });
+});
+
+authRoutes.post('/reset-password', authLimiter, validate(resetPasswordSchema), async (req, res) => {
+  await authService.resetPassword(req, req.body.token, req.body.password);
+  res.json({ ok: true, message: 'Password has been reset successfully.' });
 });
 
 authRoutes.post('/logout', (_req, res) => {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Check, Contact, MoreHorizontal, Power, Shield, UserPlus, Wallet, X } from 'lucide-react';
+import { Check, Contact, Mail, MoreHorizontal, Power, Shield, Sparkles, UserPlus, Wallet, X } from 'lucide-react';
 import { PERMISSIONS, ROLES, STAFF_ROLES, can, type Role } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -198,21 +198,53 @@ export default function TeamPage() {
           </>
         }
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t('auth.name')}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-          <Field label={t('auth.email')}><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-          <Field label={t('team.role')}>
-            <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
-              {assignableRoles.map((r) => <option key={r} value={r}>{t(`roles.${r}`)}</option>)}
-            </Select>
-          </Field>
-          <Field label={t('team.tempPassword')} hint={t('auth.passwordHint')}><Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
-          {form.role === 'DEVELOPER' && (
-            <>
-              <Field label={t('team.jobTitle')}><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
-              <Field label={t('team.skills')}><Input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} /></Field>
-            </>
-          )}
+        <div className="space-y-4">
+          <div className="flex items-start gap-2.5 rounded-xl bg-brand-soft/60 px-3.5 py-2.5 text-[13px] text-fg-2 ring-1 ring-brand/20">
+            <Mail className="mt-0.5 size-4 shrink-0 text-brand" />
+            <p className="leading-relaxed">{t('team.credentialsEmailNotice')}</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t('auth.name')}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+            <Field label={t('auth.email')}><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+            <Field label={t('team.role')}>
+              <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
+                {assignableRoles.map((r) => <option key={r} value={r}>{t(`roles.${r}`)}</option>)}
+              </Select>
+            </Field>
+            <Field
+              label={t('team.tempPassword')}
+              hint={t('auth.passwordHint')}
+            >
+              <div className="relative">
+                <Input
+                  type="text"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="e.g. Welco987!@"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+                    const gen = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+                    setForm({ ...form, password: gen });
+                  }}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md bg-surface-2 px-2 py-1 text-[11px] font-medium text-muted hover:text-brand hover:bg-surface-3 transition"
+                  title="Generate secure password"
+                >
+                  <Sparkles className="size-3 inline-block me-1 text-brand" />
+                  Auto
+                </button>
+              </div>
+            </Field>
+            {form.role === 'DEVELOPER' && (
+              <>
+                <Field label={t('team.jobTitle')}><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
+                <Field label={t('team.skills')}><Input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} /></Field>
+              </>
+            )}
+          </div>
         </div>
       </Modal>
     </>

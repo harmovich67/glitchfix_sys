@@ -1,11 +1,14 @@
 import bcrypt from 'bcryptjs';
 import type { Request } from 'express';
 import type { Prisma } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import type { LoginInput, RegisterInput } from '@welco/shared';
+import { env } from '../../config/env';
 import { prisma } from '../../core/prisma';
 import { badRequest, conflict, forbidden, unauthorized } from '../../core/errors';
 import { signToken } from '../../middleware/auth';
 import { auditService } from '../audit/audit.service';
+import { sendEmail } from '../notifications/email';
 import { settingsService } from '../settings/settings.service';
 import { publicUserSelect, usersRepository } from '../users/users.repository';
 
@@ -90,5 +93,102 @@ export const authService = {
 
   async logoutEverywhere(userId: string) {
     await prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } });
+  },
+
+  async forgotPassword(req: Request, email: string) {
+    const normalized = email.trim().toLowerCase();
+    const user = await usersRepository.findByEmail(normalized);
+    if (!user || !user.isActive) {
+      return { ok: true };
+    }
+
+    const token = jwt.sign(
+      { sub: user.id, v: user.tokenVersion, type: 'reset' },
+      env.APP_SECRET,
+      { expiresIn: 3600 },
+    );
+
+    const resetPath = `/reset-password?token=${encodeURIComponent(token)}`;
+    const fullResetUrl = `${env.WEB_ORIGIN}${resetPath}`;
+    const brand = (await settingsService.get()).brand.nameEn;
+    const isAr = user.locale === 'ar';
+
+    const subject = isAr
+      ? `طلب إعادة تعيين كلمة المرور - ${brand}`
+      : `Password Reset Request - ${brand}`;
+
+    const body = isAr
+      ? `تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في ${brand}. انقر على الرابط التالي لتعيين كلمة مرور جديدة. هذا الرابط صالح لمدة ساعة واحدة فقط:`
+      : `We received a request to reset your password at ${brand}. Click the link below to set a new password. This link is valid for 1 hour:`;
+
+    sendEmail(
+      [user.email],
+      subject,
+      body,
+      resetPath,
+      {
+        'المستخدم / User': user.name,
+        'البريد الإلكتروني / Email': user.email,
+        'رابط التعيين / Reset URL': fullResetUrl,
+        'مدة الصلاحية / Expiration': isAr ? 'ساعة واحدة' : '1 hour',
+      },
+    ).catch((err) => console.error('[authService.forgotPassword] Failed to send reset email:', err));
+
+    await auditService.log(
+      req,
+      {
+        action: 'auth.forgot_password_requested',
+        entityType: 'User',
+        entityId: user.id,
+        meta: { email: user.email },
+      },
+      user.id,
+    );
+
+    return { ok: true };
+  },
+
+  async resetPassword(req: Request, token: string, newPassword: string) {
+    let payload: { sub?: string; v?: number; type?: string };
+    try {
+      payload = jwt.verify(token, env.APP_SECRET) as typeof payload;
+    } catch {
+      throw badRequest('Invalid or expired password reset link');
+    }
+
+    if (payload.type !== 'reset' || !payload.sub || typeof payload.v !== 'number') {
+      throw badRequest('Invalid reset token');
+    }
+
+    const user = await usersRepository.findRawById(payload.sub);
+    if (!user) throw badRequest('User not found');
+    if (!user.isActive) throw forbidden('This account has been deactivated');
+
+    if (user.tokenVersion !== payload.v) {
+      throw badRequest('This password reset link has already been used or expired');
+    }
+
+    const passwordHash = await this.hash(newPassword);
+    const nextVersion = user.tokenVersion + 1;
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        tokenVersion: nextVersion,
+      },
+    });
+
+    await auditService.log(
+      req,
+      {
+        action: 'auth.password_reset',
+        entityType: 'User',
+        entityId: user.id,
+      },
+      user.id,
+    );
+
+    return { ok: true };
   },
 };

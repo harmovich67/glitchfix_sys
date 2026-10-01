@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
-import { ArrowRight, Lock, Mail, Quote, UserRound, Building2 } from 'lucide-react';
-import { loginSchema, registerSchema, type LoginInput, type RegisterInput } from '@welco/shared';
+import { ArrowRight, CheckCircle2, KeyRound, Lock, Mail, Quote, UserRound, Building2 } from 'lucide-react';
+import { forgotPasswordSchema, loginSchema, registerSchema, type ForgotPasswordInput, type LoginInput, type RegisterInput } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
@@ -117,9 +117,18 @@ export function LoginPage() {
         <Field label={t('auth.email')} error={form.formState.errors.email?.message} htmlFor="email">
           <Input id="email" type="email" autoComplete="email" icon={<Mail className="size-4" />} {...form.register('email')} />
         </Field>
-        <Field label={t('auth.password')} error={form.formState.errors.password?.message} htmlFor="password">
+        <div>
+          <div className="mb-1.5 flex items-center justify-between text-xs">
+            <label htmlFor="password" className="font-medium text-fg-2">{t('auth.password')}</label>
+            <Link to="/forgot-password" className="font-medium text-brand hover:underline">
+              {t('auth.forgotPassword')}
+            </Link>
+          </div>
           <Input id="password" type="password" autoComplete="current-password" icon={<Lock className="size-4" />} {...form.register('password')} />
-        </Field>
+          {form.formState.errors.password?.message && (
+            <p className="mt-1 text-xs text-danger">{form.formState.errors.password.message}</p>
+          )}
+        </div>
         <Button type="submit" size="lg" className="w-full" loading={login.isPending} rightIcon={<ArrowRight className="rtl-flip size-4" />}>
           {t('auth.login')}
         </Button>
@@ -198,6 +207,160 @@ export function RegisterPage() {
           {t('auth.register')}
         </Button>
       </form>
+    </AuthLayout>
+  );
+}
+
+export function ForgotPasswordPage() {
+  const { t } = useI18n();
+  const [sent, setSent] = useState(false);
+  const form = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  });
+
+  const requestReset = useMutation({
+    mutationFn: (v: ForgotPasswordInput) => api.post('/auth/forgot-password', v),
+    onSuccess: () => {
+      setSent(true);
+      toast.success(t('auth.resetLinkSent'));
+    },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+
+  return (
+    <AuthLayout
+      title={t('auth.forgotPasswordTitle')}
+      subtitle={t('auth.forgotPasswordSubtitle')}
+      footer={
+        <Link to="/login" className="font-medium text-brand hover:underline inline-flex items-center gap-1.5">
+          <ArrowRight className="rtl-flip size-3.5 rotate-180" />
+          {t('auth.backToLogin')}
+        </Link>
+      }
+    >
+      {sent ? (
+        <div className="space-y-4 rounded-2xl bg-surface-2/60 p-6 text-center ring-1 ring-border">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success-soft text-success ring-1 ring-success/20">
+            <CheckCircle2 className="size-6" />
+          </div>
+          <p className="text-sm leading-relaxed text-fg-2">{t('auth.resetLinkSent')}</p>
+          <div className="pt-2">
+            <Button variant="secondary" className="w-full" asChild>
+              <Link to="/login">{t('auth.backToLogin')}</Link>
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={form.handleSubmit((v) => requestReset.mutate(v))} className="space-y-4" noValidate>
+          <Field label={t('auth.email')} error={form.formState.errors.email?.message} htmlFor="email">
+            <Input id="email" type="email" autoComplete="email" icon={<Mail className="size-4" />} {...form.register('email')} />
+          </Field>
+          <Button type="submit" size="lg" className="w-full" loading={requestReset.isPending} rightIcon={<ArrowRight className="rtl-flip size-4" />}>
+            {t('auth.sendResetLink')}
+          </Button>
+        </form>
+      )}
+    </AuthLayout>
+  );
+}
+
+export function ResetPasswordPage() {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const token = params.get('token') ?? '';
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  const reset = useMutation({
+    mutationFn: () => api.post('/auth/reset-password', { token, password }),
+    onSuccess: () => {
+      setDone(true);
+      toast.success(t('auth.resetSuccess'));
+    },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError(t('auth.passwordHint'));
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(t('auth.passwordsDontMatch'));
+      return;
+    }
+    setError('');
+    reset.mutate();
+  };
+
+  if (!token) {
+    return (
+      <AuthLayout
+        title={t('auth.resetPasswordTitle')}
+        subtitle={t('auth.invalidResetLink')}
+        footer={<Link to="/login" className="font-medium text-brand hover:underline">{t('auth.backToLogin')}</Link>}
+      >
+        <div className="space-y-4 rounded-2xl bg-danger-soft/40 p-6 text-center ring-1 ring-danger/20">
+          <p className="text-sm text-danger">{t('auth.invalidResetLink')}</p>
+          <Button variant="secondary" className="w-full" asChild>
+            <Link to="/forgot-password">{t('auth.sendResetLink')}</Link>
+          </Button>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  return (
+    <AuthLayout
+      title={t('auth.resetPasswordTitle')}
+      subtitle={t('auth.resetPasswordSubtitle')}
+      footer={<Link to="/login" className="font-medium text-brand hover:underline">{t('auth.backToLogin')}</Link>}
+    >
+      {done ? (
+        <div className="space-y-4 rounded-2xl bg-surface-2/60 p-6 text-center ring-1 ring-border">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success-soft text-success ring-1 ring-success/20">
+            <CheckCircle2 className="size-6" />
+          </div>
+          <p className="text-sm leading-relaxed text-fg-2">{t('auth.resetSuccess')}</p>
+          <div className="pt-2">
+            <Button className="w-full" onClick={() => navigate('/login')}>
+              {t('auth.login')}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <Field label={t('auth.newPassword')} hint={t('auth.passwordHint')} htmlFor="newPassword">
+            <Input
+              id="newPassword"
+              type="password"
+              autoComplete="new-password"
+              icon={<Lock className="size-4" />}
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(''); }}
+            />
+          </Field>
+          <Field label={t('auth.confirmPassword')} htmlFor="confirmPassword">
+            <Input
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              icon={<KeyRound className="size-4" />}
+              value={confirmPassword}
+              onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
+            />
+          </Field>
+          {error && <p className="text-xs text-danger">{error}</p>}
+          <Button type="submit" size="lg" className="w-full" loading={reset.isPending} rightIcon={<ArrowRight className="rtl-flip size-4" />}>
+            {t('auth.resetPasswordBtn')}
+          </Button>
+        </form>
+      )}
     </AuthLayout>
   );
 }

@@ -5,8 +5,11 @@ import { STAFF_ROLES, type Role, createUserSchema, updateClientSchema, updateUse
 import { prisma } from '../../core/prisma';
 import { badRequest, conflict, forbidden, notFound } from '../../core/errors';
 import type { AuthUser } from '../../types/express';
+import { env } from '../../config/env';
 import { auditService } from '../audit/audit.service';
 import { authService } from '../auth/auth.service';
+import { settingsService } from '../settings/settings.service';
+import { sendEmail } from '../notifications/email';
 import { briefUserSelect, publicUserSelect, usersRepository } from './users.repository';
 
 type CreateUser = z.infer<typeof createUserSchema>;
@@ -49,6 +52,39 @@ export const usersService = {
           : {}),
     });
     await auditService.log(req, { action: 'user.created', entityType: 'User', entityId: user.id, meta: { role: input.role } });
+
+    // Send welcome credentials email (async/non-blocking)
+    try {
+      const brand = (await settingsService.get()).brand.nameEn;
+      const isClient = user.role === 'CLIENT';
+      const roleLabel = isClient ? 'Client / عميل' : `${user.role} / عضو فريق`;
+      const subject = isClient
+        ? `بيانات حسابك في منصة ${brand} | Your Account Credentials`
+        : `تم تعيينك في فريق عمل ${brand} - بيانات حسابك | Welcome to the Team`;
+
+      const body = isClient
+        ? `مرحباً ${user.name}، تم إنشاء حساب لك في المنصة. يمكنك تسجيل الدخول باستخدام البيانات التالية:`
+        : `مرحباً ${user.name}، تم تعيينك رسمياً في فريق عمل ${brand}. يمكنك الآن تسجيل الدخول لمنظومة العمل بالبيانات التالية:`;
+
+      sendEmail(
+        [user.email],
+        subject,
+        body,
+        '/login',
+        {
+          'الاسم / Name': user.name,
+          'البريد الإلكتروني / Email': user.email,
+          'الدور الوظيفي / Role': roleLabel,
+          ...(input.title ? { 'المسمى الوظيفي / Job Title': input.title } : {}),
+          'كلمة المرور المؤقتة / Temporary Password': input.password,
+          'رابط تسجيل الدخول / Login URL': `${env.WEB_ORIGIN}/login`,
+          'تنبيه أمان / Security Note': 'يُرجى تسجيل الدخول وتغيير كلمة المرور المؤقتة من إعدادات حسابك. / Please log in and change your temporary password.',
+        },
+      ).catch((err) => console.error('[usersService.create] Failed to send credentials email:', err));
+    } catch (err) {
+      console.error('[usersService.create] Error preparing credentials email:', err);
+    }
+
     return user;
   },
 

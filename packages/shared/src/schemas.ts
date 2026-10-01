@@ -40,6 +40,17 @@ export const registerSchema = z.object({
 });
 export type RegisterInput = z.input<typeof registerSchema>;
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+  password: z.string().min(8, 'At least 8 characters').max(200),
+});
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
 export const updateMeSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   locale: z.enum(['en', 'ar']).optional(),

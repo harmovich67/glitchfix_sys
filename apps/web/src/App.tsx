@@ -12,7 +12,7 @@ import { AppShell } from './components/layout/AppShell';
 import { EmptyState, PageLoader } from './components/ui/feedback';
 import { Button } from './components/ui/button';
 import { LandingPage } from './features/landing/LandingPage';
-import { LoginPage, RegisterPage } from './features/auth/AuthPages';
+import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from './features/auth/AuthPages';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { ProjectsPage } from './features/projects/ProjectsPage';
 
@@ -92,6 +92,8 @@ const router = createBrowserRouter(
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
       <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
+      <Route path="/forgot-password" element={<GuestOnly><ForgotPasswordPage /></GuestOnly>} />
+      <Route path="/reset-password" element={<GuestOnly><ResetPasswordPage /></GuestOnly>} />
       <Route path="/app/projects/:id/journey" element={<RequireAuth><WizardPage /></RequireAuth>} />
       <Route path="/app" element={<RequireAuth><AppShell /></RequireAuth>}>
         <Route index element={<DashboardPage />} />

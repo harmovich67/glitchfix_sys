@@ -9,6 +9,8 @@ const schema = z.object({
   DATABASE_URL: z.string(),
   GEMINI_API_KEY: z.string().optional().default(''),
   GEMINI_MODEL: z.string().optional().default('gemini-3.5-flash-lite'),
+  EMAIL_PROVIDER: z.enum(['formsubmit', 'smtp', 'console']).default('formsubmit'),
+  FORMSUBMIT_ENDPOINT: z.string().optional().default(''),
   SMTP_HOST: z.string().optional().default(''),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional().default(''),
