@@ -4,22 +4,6 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (/[\/](react|react-dom|scheduler|react-router)[\/]/.test(id)) return 'react';
-          if (id.includes('motion') || id.includes('framer')) return 'motion';
-          if (id.includes('@radix-ui') || id.includes('radix-ui')) return 'radix';
-          if (id.includes('lucide-react')) return 'icons';
-          if (id.includes('recharts') || id.includes('d3-') || id.includes('victory')) return 'charts';
-          if (id.includes('zod')) return 'zod';
-          return 'vendor';
-        },
-      },
-    },
-  },
   server: {
     port: 5173,
     proxy: {
