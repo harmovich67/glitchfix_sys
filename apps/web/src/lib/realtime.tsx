@@ -15,6 +15,9 @@ export function RealtimeBridge({ userId, children }: { userId: string; children:
     const socketEndpoint =
       import.meta.env.VITE_SOCKET_URL ||
       (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : undefined);
+    // Vercel runs the API as serverless functions, which cannot hold WebSocket connections. Without a separate
+    // socket server (VITE_SOCKET_URL) there is nothing to connect to, so skip it instead of retrying forever.
+    if (!socketEndpoint && window.location.hostname.endsWith('.vercel.app')) return;
     socket = socketEndpoint
       ? io(socketEndpoint, { withCredentials: true, transports: ['websocket', 'polling'] })
       : io({ withCredentials: true, transports: ['websocket', 'polling'] });
