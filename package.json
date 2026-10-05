@@ -10,7 +10,7 @@
   "scripts": {
     "setup": "npm run db:setup -w @welco/api",
     "dev": "concurrently -k -n api,web -c magenta,cyan \"npm run dev -w @welco/api\" \"npm run dev -w @welco/web\"",
-    "build": "npm run build -w @welco/web",
+    "build": "node apps/api/scripts/db-provider.mjs mysql && npm run build -w @welco/web",
     "clean:demo": "npm run db:clean -w @welco/api --",
     "typecheck": "npm run typecheck -w @welco/shared && npm run typecheck -w @welco/api && npm run typecheck -w @welco/web"
   },
