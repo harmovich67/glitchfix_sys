@@ -1,4 +1,4 @@
-import { Suspense, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
@@ -152,7 +152,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-brand/5 to-transparent dark:from-brand/8" />
 
       {/* Header & Logo */}
-      <div className="relative flex h-16 items-center justify-between px-4 border-b border-border/50">
+      <div className="relative flex h-16 shrink-0 items-center justify-between px-4 border-b border-border/50">
         <Logo to="/app" />
         <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 dark:bg-brand/20 px-2.5 py-0.5 text-[10.5px] font-semibold text-brand ring-1 ring-brand/20 dark:ring-brand/30">
           <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -162,7 +162,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Client CTA Button */}
       {isClient && (
-        <div className="px-3 pt-3 pb-1">
+        <div className="px-3 pt-3 pb-1 shrink-0">
           <Button
             className="w-full justify-center shadow-md shadow-brand/20 hover:shadow-lg hover:shadow-brand/35 transition-all duration-300 font-semibold rounded-xl bg-gradient-to-r from-brand via-brand-600 to-indigo-600 hover:brightness-105 active:scale-[0.98]"
             leftIcon={<Plus className="size-4" />}
@@ -175,7 +175,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       )}
 
       {/* Navigation Links */}
-      <nav className="flex-1 min-h-0 space-y-4 overflow-y-auto px-3 py-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border/60 [&::-webkit-scrollbar-thumb]:rounded-full scrollbar-none">
+      <nav className="flex-1 min-h-0 space-y-4 overflow-y-auto px-3 py-3 chic-scrollbar">
         <NavList items={main} onNavigate={onNavigate} />
 
         {control.length > 0 && (
@@ -284,22 +284,31 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const mainRef = useRef<HTMLDivElement>(null);
   const { t, locale } = useI18n();
   const isAr = locale === 'ar';
   const { isClient } = useAuth();
   const createProject = useCreateProject();
 
+  // Reset scroll position on route changes
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
   return (
-    <div className="flex min-h-screen min-w-0 w-full max-w-full overflow-x-clip bg-bg">
-      <aside className="sticky top-0 hidden h-screen w-[268px] shrink-0 self-start border-e border-border/70 bg-surface/75 dark:bg-[#0c0c16]/80 backdrop-blur-2xl lg:block transition-all duration-300">
+    <div className="flex h-screen h-[100dvh] min-w-0 w-full max-w-full overflow-hidden bg-bg">
+      <aside className="hidden lg:flex flex-col h-full w-[268px] shrink-0 border-e border-border/70 bg-surface/75 dark:bg-[#0c0c16]/80 backdrop-blur-2xl transition-all duration-300 z-20">
         <SidebarContent />
       </aside>
       <Drawer open={mobileOpen} onOpenChange={setMobileOpen} title="Navigation" side="start" width="max-w-[280px]">
         <SidebarContent onNavigate={() => setMobileOpen(false)} />
       </Drawer>
 
-      <div className="flex min-w-0 max-w-full flex-1 flex-col overflow-x-clip pb-24 lg:pb-0">
-        <header className="glass sticky top-0 z-30 flex h-14 sm:h-16 w-full max-w-full items-center gap-2 sm:gap-3 border-b border-border px-3 sm:px-6 lg:px-8">
+      <div
+        ref={mainRef}
+        className="flex min-w-0 max-w-full flex-1 flex-col h-full overflow-y-auto overflow-x-hidden scroll-smooth pb-24 lg:pb-0 chic-scrollbar"
+      >
+        <header className="glass sticky top-0 z-30 flex h-14 sm:h-16 w-full max-w-full shrink-0 items-center gap-2 sm:gap-3 border-b border-border px-3 sm:px-6 lg:px-8">
           <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Menu">
             <MenuIcon className="size-5" />
           </Button>

@@ -9,8 +9,12 @@ export class ApiError extends Error {
   }
 }
 
+const rawBase = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+const API_BASE = rawBase ? (rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`) : '/api';
+
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
-  const res = await fetch(`/api${url}`, {
+  const fullUrl = `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`;
+  const res = await fetch(fullUrl, {
     method,
     credentials: 'include',
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
@@ -39,7 +43,7 @@ export const api = {
       Object.entries(fields).forEach(([k, v]) => form.append(k, v)); // fields before files
       files.forEach((f) => form.append('files', f));
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `/api${url}`);
+      xhr.open('POST', `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`);
       xhr.withCredentials = true;
       xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(Math.round((e.loaded / e.total) * 100));
       xhr.onload = () => {
@@ -58,7 +62,7 @@ export const api = {
   },
 };
 
-export const fileUrl = (id: string, inline = false) => `/api/files/${id}/download${inline ? '?inline=1' : ''}`;
+export const fileUrl = (id: string, inline = false) => `${API_BASE}/files/${id}/download${inline ? '?inline=1' : ''}`;
 
 export function errorMessage(err: unknown): string {
   if (err instanceof ApiError) return err.message;

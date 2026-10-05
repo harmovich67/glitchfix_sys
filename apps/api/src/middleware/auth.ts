@@ -24,7 +24,7 @@ export function signToken(userId: string, tokenVersion: number) {
 export function setAuthCookie(res: Response, token: string) {
   res.cookie(AUTH_COOKIE, token, {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: isProd ? 'none' : 'lax',
     secure: isProd,
     maxAge: TOKEN_TTL_SECONDS * 1000,
     path: '/',
@@ -32,7 +32,11 @@ export function setAuthCookie(res: Response, token: string) {
 }
 
 export function clearAuthCookie(res: Response) {
-  res.clearCookie(AUTH_COOKIE, { path: '/' });
+  res.clearCookie(AUTH_COOKIE, {
+    path: '/',
+    sameSite: isProd ? 'none' : 'lax',
+    secure: isProd,
+  });
 }
 
 /** Resolve a user from a raw JWT (shared by HTTP and socket auth). */
@@ -48,9 +52,10 @@ export async function userFromToken(token: string | undefined): Promise<AuthUser
   }
 }
 
-/** Attaches req.user when a valid session cookie is present. Never rejects. */
+/** Attaches req.user when a valid session cookie or Authorization header is present. Never rejects. */
 export async function authenticate(req: Request, _res: Response, next: NextFunction) {
-  req.user = (await userFromToken(req.cookies?.[AUTH_COOKIE])) ?? undefined;
+  const token = req.cookies?.[AUTH_COOKIE] || req.headers.authorization?.replace(/^Bearer\s+/i, '');
+  req.user = (await userFromToken(token)) ?? undefined;
   next();
 }
 

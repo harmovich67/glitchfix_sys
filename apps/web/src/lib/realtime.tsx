@@ -12,7 +12,12 @@ export function RealtimeBridge({ userId, children }: { userId: string; children:
   const qc = useQueryClient();
 
   useEffect(() => {
-    socket = io({ withCredentials: true, transports: ['websocket', 'polling'] });
+    const socketEndpoint =
+      import.meta.env.VITE_SOCKET_URL ||
+      (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : undefined);
+    socket = socketEndpoint
+      ? io(socketEndpoint, { withCredentials: true, transports: ['websocket', 'polling'] })
+      : io({ withCredentials: true, transports: ['websocket', 'polling'] });
     socket.on('connect', () => joined.forEach((id) => socket?.emit('project:join', id)));
     socket.on('notification:new', (n: Notification) => {
       qc.invalidateQueries({ queryKey: ['notifications'] });

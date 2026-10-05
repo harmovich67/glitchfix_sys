@@ -14,7 +14,13 @@ let io: Server | null = null;
  * browser re-fetches through the permission-checked REST API — internal data can't leak.
  */
 export function initRealtime(server: HttpServer) {
-  io = new Server(server, { cors: { origin: env.WEB_ORIGIN, credentials: true } });
+  const allowedOrigins = env.WEB_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
+  io = new Server(server, {
+    cors: {
+      origin: allowedOrigins.includes('*') ? '*' : (allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins),
+      credentials: true,
+    },
+  });
 
   io.use(async (socket, next) => {
     const cookies = parseCookie(socket.handshake.headers.cookie ?? '');
