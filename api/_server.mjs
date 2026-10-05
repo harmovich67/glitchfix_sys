@@ -96472,6 +96472,7 @@ var DEMO_EMAILS = ["superadmin@welco.dev", "admin@welco.dev", "pm@welco.dev", "d
 var DEMO_PASSWORD = "Welco123!";
 var cache2 = null;
 async function demoLogins() {
+  if (isProd) return [];
   if (cache2 && Date.now() - cache2.at < 6e4) return cache2.value;
   const users = await prisma.user.findMany({
     where: { email: { in: DEMO_EMAILS }, isActive: true },

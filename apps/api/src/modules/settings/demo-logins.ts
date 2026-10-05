@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import type { Role } from '@welco/shared';
 import { prisma } from '../../core/prisma';
+import { isProd } from '../../config/env';
 
 /** The one-click accounts of the demo organisation (password below). */
 const DEMO_EMAILS = ['superadmin@welco.dev', 'admin@welco.dev', 'pm@welco.dev', 'dev@welco.dev', 'client@welco.dev'];
@@ -19,6 +20,7 @@ let cache: { at: number; value: DemoLogin[] } | null = null;
  * buttons that work and never advertises a secured account.
  */
 export async function demoLogins(): Promise<DemoLogin[]> {
+  if (isProd) return []; // never advertise demo accounts on a live deployment
   if (cache && Date.now() - cache.at < 60_000) return cache.value;
   const users = await prisma.user.findMany({
     where: { email: { in: DEMO_EMAILS }, isActive: true },
