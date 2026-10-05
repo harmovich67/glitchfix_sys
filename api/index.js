@@ -1,3 +1,4 @@
+import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -97841,21 +97842,29 @@ function createApp() {
 }
 
 // apps/api/src/serverless.ts
-var app = createApp();
-registerNotificationListeners();
+var app = null;
+function getApp() {
+  if (!app) {
+    app = createApp();
+    registerNotificationListeners();
+  }
+  return app;
+}
 function handler(req, res) {
   try {
     if (req.url && !req.url.startsWith("/api")) {
       req.url = `/api${req.url.startsWith("/") ? req.url : `/${req.url}`}`;
     }
-    return app(req, res);
+    const a = getApp();
+    return a(req, res);
   } catch (err) {
     console.error("Vercel API Handler Error:", err);
     res.statusCode = 500;
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify({
       error: "SERVER_ERROR",
-      message: err.message || "Internal server error"
+      message: err.message || "Internal server error",
+      stack: err.stack
     }));
   }
 }
