@@ -519,7 +519,7 @@ var require_has_flag = __commonJS({
 var require_supports_color = __commonJS({
   "node_modules/supports-color/index.js"(exports, module) {
     "use strict";
-    var os3 = __require("os");
+    var os4 = __require("os");
     var tty = __require("tty");
     var hasFlag = require_has_flag();
     var { env: env2 } = process;
@@ -576,7 +576,7 @@ var require_supports_color = __commonJS({
         return min;
       }
       if (process.platform === "win32") {
-        const osRelease = os3.release().split(".");
+        const osRelease = os4.release().split(".");
         if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
           return Number(osRelease[2]) >= 14931 ? 3 : 2;
         }
@@ -24815,7 +24815,7 @@ var require_main = __commonJS({
   "node_modules/dotenv/lib/main.js"(exports, module) {
     var fs5 = __require("fs");
     var path4 = __require("path");
-    var os3 = __require("os");
+    var os4 = __require("os");
     var crypto11 = __require("crypto");
     var packageJson = require_package();
     var version2 = packageJson.version;
@@ -24938,7 +24938,7 @@ var require_main = __commonJS({
       return null;
     }
     function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path4.join(os3.homedir(), envPath.slice(1)) : envPath;
+      return envPath[0] === "~" ? path4.join(os4.homedir(), envPath.slice(1)) : envPath;
     }
     function _configVault(options) {
       const debug = Boolean(options && options.debug);
@@ -42175,7 +42175,7 @@ var require_make_middleware = __commonJS({
 var require_disk = __commonJS({
   "node_modules/multer/storage/disk.js"(exports, module) {
     var fs5 = __require("fs");
-    var os3 = __require("os");
+    var os4 = __require("os");
     var path4 = __require("path");
     var crypto11 = __require("crypto");
     var pipeline = __require("stream").pipeline;
@@ -42194,7 +42194,7 @@ var require_disk = __commonJS({
       });
     }
     function getDestination(req, file, cb) {
-      cb(null, os3.tmpdir());
+      cb(null, os4.tmpdir());
     }
     function DiskStorage(opts) {
       opts = opts || {};
@@ -96062,10 +96062,15 @@ var import_express5 = __toESM(require_express2(), 1);
 // apps/api/src/modules/files/files.service.ts
 var import_multer2 = __toESM(require_multer(), 1);
 import fs4 from "node:fs";
+import os3 from "node:os";
 import path3 from "node:path";
 import crypto10 from "node:crypto";
-var STORAGE_DIR = path3.resolve(process.cwd(), "storage");
-fs4.mkdirSync(STORAGE_DIR, { recursive: true });
+var STORAGE_DIR = process.env.VERCEL ? path3.join(os3.tmpdir(), "storage") : path3.resolve(process.cwd(), "storage");
+try {
+  fs4.mkdirSync(STORAGE_DIR, { recursive: true });
+} catch (err) {
+  console.error("Could not create storage dir:", err);
+}
 var INLINE_SAFE = /* @__PURE__ */ new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"]);
 var upload = (0, import_multer2.default)({
   storage: import_multer2.default.diskStorage({

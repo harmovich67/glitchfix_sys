@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { Request } from 'express';
@@ -13,8 +14,13 @@ import { auditService } from '../audit/audit.service';
 import { loadProjectAccess, type ProjectAccess } from '../projects/projects.access';
 import { briefUserSelect } from '../users/users.repository';
 
-export const STORAGE_DIR = path.resolve(process.cwd(), 'storage');
-fs.mkdirSync(STORAGE_DIR, { recursive: true });
+// Serverless hosts (Vercel) have a read-only filesystem except the OS temp dir, so uploads live there (ephemeral).
+export const STORAGE_DIR = process.env.VERCEL ? path.join(os.tmpdir(), 'storage') : path.resolve(process.cwd(), 'storage');
+try {
+  fs.mkdirSync(STORAGE_DIR, { recursive: true });
+} catch (err) {
+  console.error('Could not create storage dir:', err);
+}
 
 const INLINE_SAFE = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf']);
 
