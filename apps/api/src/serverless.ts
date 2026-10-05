@@ -1,6 +1,5 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
-import { createApp } from '../apps/api/src/app';
-import { registerNotificationListeners } from '../apps/api/src/modules/notifications/notifications.service';
+import { createApp } from './app';
+import { registerNotificationListeners } from './modules/notifications/notifications.service';
 
 const app = createApp();
 registerNotificationListeners();
