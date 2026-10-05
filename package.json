@@ -15,6 +15,9 @@
     "clean:demo": "npm run db:clean -w @welco/api --",
     "typecheck": "npm run typecheck -w @welco/shared && npm run typecheck -w @welco/api && npm run typecheck -w @welco/web"
   },
+  "dependencies": {
+    "@prisma/client": "~6.19.3"
+  },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "typescript": "~5.9.3"

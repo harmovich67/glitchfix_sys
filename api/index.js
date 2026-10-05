@@ -97852,6 +97852,11 @@ function getApp() {
 }
 function handler(req, res) {
   try {
+    if (req.url === "/api/ping") {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      return res.end(JSON.stringify({ ok: true, node: process.version }));
+    }
     if (req.url && !req.url.startsWith("/api")) {
       req.url = `/api${req.url.startsWith("/") ? req.url : `/${req.url}`}`;
     }
