@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import {
-  Bot, Building2, ChevronsUpDown, FolderKanban, LayoutDashboard, LogOut, Menu as MenuIcon, PieChart, Plus, ScrollText, Settings, ShieldCheck, Sparkles,
+  Bell, Bot, Building2, ChevronsUpDown, FolderKanban, LayoutDashboard, LogOut, Menu as MenuIcon, PieChart, Plus, ScrollText, Settings, ShieldCheck, Sparkles,
   UserRound, Users, Workflow,
 } from 'lucide-react';
 import { CalendarDays } from 'lucide-react';
@@ -13,7 +13,7 @@ import { useI18n } from '../../lib/i18n';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
 import { Logo } from './Logo';
-import { NotificationBell } from './NotificationBell';
+import { NotificationBell, useNotifications } from './NotificationBell';
 import { LanguageToggle, ThemeToggle } from './Preferences';
 import { Avatar, PageLoader } from '../ui/feedback';
 import { Menu } from '../ui/overlay';
@@ -289,6 +289,7 @@ export function AppShell() {
   const isAr = locale === 'ar';
   const { isClient } = useAuth();
   const createProject = useCreateProject();
+  const unreadCount = useNotifications().data?.unread ?? 0;
 
   // Reset scroll position on route changes
   useEffect(() => {
@@ -390,7 +391,14 @@ export function AppShell() {
                   )
                 }
               >
-                <NotificationBell />
+                <span className="relative">
+                  <Bell className="size-4 sm:size-5 shrink-0" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -end-2 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-semibold leading-none text-white ring-2 ring-bg">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </span>
                 <span className="mt-0.5 truncate text-[10px] sm:text-[11px] leading-tight text-center w-full">{t('nav.notifications')}</span>
               </NavLink>
             )}
