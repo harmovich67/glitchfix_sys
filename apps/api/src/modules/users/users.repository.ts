@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import type { Role } from '@welco/shared';
 import { prisma } from '../../core/prisma';
+import { invalidateUser } from '../../core/userCache';
 
 /** Never select passwordHash / tokenVersion outside the auth service. */
 export const publicUserSelect = {
@@ -65,5 +66,11 @@ export const usersRepository = {
     prisma.user.findMany({ where: { role: { in: roles }, isActive: true }, select: briefUserSelect }),
 
   create: (data: Prisma.UserCreateInput) => prisma.user.create({ data, select: publicUserSelect }),
-  update: (id: string, data: Prisma.UserUpdateInput) => prisma.user.update({ where: { id }, data, select: publicUserSelect }),
+  update: async (id: string, data: Prisma.UserUpdateInput) => {
+    try {
+      return await prisma.user.update({ where: { id }, data, select: publicUserSelect });
+    } finally {
+      invalidateUser(id);
+    }
+  },
 };

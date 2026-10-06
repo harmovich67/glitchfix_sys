@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { can, type Permission, type Role } from '@welco/shared';
 import { env, isProd } from '../config/env';
 import { prisma } from '../core/prisma';
+import { getCachedUser, setCachedUser } from '../core/userCache';
 import { forbidden, unauthorized } from '../core/errors';
 import type { AuthUser } from '../types/express';
 
@@ -44,7 +45,11 @@ export async function userFromToken(token: string | undefined): Promise<AuthUser
   if (!token) return null;
   try {
     const payload = jwt.verify(token, env.APP_SECRET, { issuer: 'welco' }) as unknown as TokenPayload;
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+    let user = getCachedUser<Awaited<ReturnType<typeof prisma.user.findUnique>>>(payload.sub);
+    if (!user) {
+      user = await prisma.user.findUnique({ where: { id: payload.sub } });
+      if (user) setCachedUser(payload.sub, user);
+    }
     if (!user || !user.isActive || user.tokenVersion !== payload.v) return null;
     return { id: user.id, email: user.email, name: user.name, role: user.role as Role, locale: user.locale, financeAccess: user.financeAccess };
   } catch {

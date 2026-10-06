@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import type { LoginInput, RegisterInput } from '@welco/shared';
 import { env } from '../../config/env';
 import { prisma } from '../../core/prisma';
+import { invalidateUser } from '../../core/userCache';
 import { badRequest, conflict, forbidden, unauthorized } from '../../core/errors';
 import { signToken } from '../../middleware/auth';
 import { auditService } from '../audit/audit.service';
@@ -93,6 +94,7 @@ export const authService = {
 
   async logoutEverywhere(userId: string) {
     await prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } });
+    invalidateUser(userId);
   },
 
   async forgotPassword(req: Request, email: string) {
@@ -178,6 +180,7 @@ export const authService = {
         tokenVersion: nextVersion,
       },
     });
+    invalidateUser(user.id);
 
     await auditService.log(
       req,
