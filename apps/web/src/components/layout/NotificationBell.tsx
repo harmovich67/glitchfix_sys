@@ -1,8 +1,8 @@
-import { useState, forwardRef } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Popover } from 'radix-ui';
 import { Bell, CheckCheck } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { api } from '../../lib/api';
 import type { Notification } from '../../lib/types';
 import { useI18n } from '../../lib/i18n';
@@ -26,47 +26,56 @@ export function useMarkRead() {
   });
 }
 
-export const NotificationItem = forwardRef<HTMLButtonElement, { n: Notification; onOpen?: () => void }>(
-  function NotificationItem({ n, onOpen }, ref) {
-    const { locale } = useI18n();
-    const navigate = useNavigate();
-    const markRead = useMarkRead();
+export const NotificationItem = forwardRef<
+  HTMLButtonElement,
+  { n: Notification; onOpen?: () => void } & React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function NotificationItem({ n, onOpen, onClick, ...rest }, ref) {
+  const { locale } = useI18n();
+  const navigate = useNavigate();
+  const markRead = useMarkRead();
 
-    const handleClick = () => {
-      if (!n.readAt) markRead.mutate({ ids: [n.id] });
-      onOpen?.();
-      const target = n.link || '/app/notifications';
-      if (target.startsWith('http://') || target.startsWith('https://')) {
-        window.location.href = target;
-      } else {
-        navigate(target);
-      }
-    };
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e);
+    if (!n.readAt) markRead.mutate({ ids: [n.id] });
+    onOpen?.();
+    const target = n.link || '/app/notifications';
+    if (target.startsWith('http://') || target.startsWith('https://')) {
+      window.location.href = target;
+    } else {
+      navigate(target);
+    }
+  };
 
-    return (
-      <button
-        ref={ref}
-        type="button"
-        onClick={handleClick}
-        className="group flex min-w-0 w-full max-w-full items-start gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-surface-2 cursor-pointer"
-      >
-        <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', n.readAt ? 'bg-transparent' : 'bg-brand shadow-[0_0_0_3px_var(--brand-soft)]')} />
-        <span className="min-w-0 max-w-full flex-1 [overflow-wrap:anywhere]">
-          <span className={cn('block max-w-full text-[13px] leading-snug', n.readAt ? 'text-fg-2' : 'font-medium text-fg')}>{n.title}</span>
-          {n.body && <span className="mt-0.5 block max-w-full text-xs leading-relaxed text-muted">{n.body}</span>}
-          <span className="mt-1 block text-[11px] text-muted">{timeAgo(n.createdAt, locale)}</span>
-        </span>
-      </button>
-    );
-  }
-);
+  return (
+    <button
+      ref={ref}
+      type="button"
+      onClick={handleClick}
+      {...rest}
+      className="group flex min-w-0 w-full max-w-full items-start gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-surface-2 cursor-pointer"
+    >
+      <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', n.readAt ? 'bg-transparent' : 'bg-brand shadow-[0_0_0_3px_var(--brand-soft)]')} />
+      <span className="min-w-0 max-w-full flex-1 [overflow-wrap:anywhere]">
+        <span className={cn('block max-w-full text-[13px] leading-snug', n.readAt ? 'text-fg-2' : 'font-medium text-fg')}>{n.title}</span>
+        {n.body && <span className="mt-0.5 block max-w-full text-xs leading-relaxed text-muted">{n.body}</span>}
+        <span className="mt-1 block text-[11px] text-muted">{timeAgo(n.createdAt, locale)}</span>
+      </span>
+    </button>
+  );
+});
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
   const { t } = useI18n();
   const { data } = useNotifications();
   const markRead = useMarkRead();
   const unread = data?.unread ?? 0;
+
+  // Automatically close popover when route or query parameters change
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname, location.search]);
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
@@ -93,7 +102,9 @@ export function NotificationBell() {
           <div className="max-h-[420px] overflow-y-auto p-1.5">
             {data?.items.length ? (
               data.items.slice(0, 12).map((n) => (
-                <NotificationItem key={n.id} n={n} onOpen={() => setOpen(false)} />
+                <Popover.Close asChild key={n.id}>
+                  <NotificationItem n={n} onOpen={() => setOpen(false)} />
+                </Popover.Close>
               ))
             ) : (
               <EmptyState icon={<Bell className="size-6" />} title={t('notifications.empty')} description={t('notifications.emptyBody')} className="py-10" />

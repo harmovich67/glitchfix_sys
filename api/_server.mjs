@@ -21587,7 +21587,7 @@ var require_application = __commonJS({
       return this;
     };
     app2.render = function render(name2, options, callback) {
-      var cache3 = this.cache;
+      var cache4 = this.cache;
       var done = callback;
       var engines = this.engines;
       var opts = options;
@@ -21601,7 +21601,7 @@ var require_application = __commonJS({
         renderOptions.cache = this.enabled("view cache");
       }
       if (renderOptions.cache) {
-        view = cache3[name2];
+        view = cache4[name2];
       }
       if (!view) {
         var View2 = this.get("view");
@@ -21617,7 +21617,7 @@ var require_application = __commonJS({
           return done(err);
         }
         if (renderOptions.cache) {
-          cache3[name2] = view;
+          cache4[name2] = view;
         }
       }
       tryRender(view, renderOptions, done);
@@ -27009,7 +27009,7 @@ var require_range2 = __commonJS({
         range = range.replace(BUILDSTRIPRE, "");
         const memoOpts = (this.options.includePrerelease && FLAG_INCLUDE_PRERELEASE) | (this.options.loose && FLAG_LOOSE);
         const memoKey = memoOpts + ":" + range;
-        const cached = cache3.get(memoKey);
+        const cached = cache4.get(memoKey);
         if (cached) {
           return cached;
         }
@@ -27043,7 +27043,7 @@ var require_range2 = __commonJS({
           rangeMap.delete("");
         }
         const result = [...rangeMap.values()];
-        cache3.set(memoKey, result);
+        cache4.set(memoKey, result);
         return result;
       }
       intersects(range, options) {
@@ -27082,7 +27082,7 @@ var require_range2 = __commonJS({
     };
     module.exports = Range;
     var LRU = require_lrucache();
-    var cache3 = new LRU();
+    var cache4 = new LRU();
     var parseOptions2 = require_parse_options();
     var Comparator = require_comparator();
     var debug = require_debug();
@@ -78750,6 +78750,27 @@ var prisma = globalForPrisma.prisma ?? new PrismaClient({
 });
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
+// apps/api/src/core/userCache.ts
+var TTL_MS = 15e3;
+var MAX_ENTRIES = 500;
+var cache = /* @__PURE__ */ new Map();
+function getCachedUser(id) {
+  const hit = cache.get(id);
+  if (!hit) return void 0;
+  if (hit.expires < Date.now()) {
+    cache.delete(id);
+    return void 0;
+  }
+  return hit.value;
+}
+function setCachedUser(id, value) {
+  if (cache.size >= MAX_ENTRIES) cache.clear();
+  cache.set(id, { value, expires: Date.now() + TTL_MS });
+}
+function invalidateUser(id) {
+  cache.delete(id);
+}
+
 // apps/api/src/core/errors.ts
 var AppError = class extends Error {
   constructor(status, code, message, details) {
@@ -78798,7 +78819,11 @@ async function userFromToken(token) {
   if (!token) return null;
   try {
     const payload = import_jsonwebtoken.default.verify(token, env.APP_SECRET, { issuer: "welco" });
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+    let user = getCachedUser(payload.sub);
+    if (!user) {
+      user = await prisma.user.findUnique({ where: { id: payload.sub } });
+      if (user) setCachedUser(payload.sub, user);
+    }
     if (!user || !user.isActive || user.tokenVersion !== payload.v) return null;
     return { id: user.id, email: user.email, name: user.name, role: user.role, locale: user.locale, financeAccess: user.financeAccess };
   } catch {
@@ -79766,7 +79791,13 @@ var usersRepository = {
   },
   byRoles: (roles) => prisma.user.findMany({ where: { role: { in: roles }, isActive: true }, select: briefUserSelect }),
   create: (data) => prisma.user.create({ data, select: publicUserSelect }),
-  update: (id, data) => prisma.user.update({ where: { id }, data, select: publicUserSelect })
+  update: async (id, data) => {
+    try {
+      return await prisma.user.update({ where: { id }, data, select: publicUserSelect });
+    } finally {
+      invalidateUser(id);
+    }
+  }
 };
 
 // apps/api/src/modules/projects/projects.repository.ts
@@ -79947,10 +79978,10 @@ var DEFAULT_SETTINGS = {
   seo: DEFAULT_SEO,
   proposal: DEFAULT_PROPOSAL
 };
-var cache = null;
+var cache2 = null;
 var settingsService = {
   async get() {
-    if (cache && Date.now() - cache.at < 1e4) return cache.value;
+    if (cache2 && Date.now() - cache2.at < 1e4) return cache2.value;
     const row = await prisma.setting.findUnique({ where: { key: KEY } });
     const parsed2 = platformSettingsSchema.partial().safeParse(row?.value ?? {});
     const raw = parsed2.success ? parsed2.data : {};
@@ -79965,7 +79996,7 @@ var settingsService = {
       seo: { ...DEFAULT_SEO, ...raw.seo ?? {} },
       proposal: { ...DEFAULT_PROPOSAL, ...raw.proposal ?? {} }
     };
-    cache = { value, at: Date.now() };
+    cache2 = { value, at: Date.now() };
     return value;
   },
   async update(input) {
@@ -79974,7 +80005,7 @@ var settingsService = {
       create: { key: KEY, value: input },
       update: { value: input }
     });
-    cache = null;
+    cache2 = null;
     return this.get();
   }
 };
@@ -92367,9 +92398,16 @@ function registerNotificationListeners() {
     realtime.projectChanged(projectId, "messages");
   });
   events.on("message.approved", async ({ messageId, actorId }) => {
-    const m = await prisma.message.findUnique({ where: { id: messageId } });
+    const m = await prisma.message.findUnique({
+      where: { id: messageId },
+      include: { thread: { select: { projectId: true } } }
+    });
     if (m?.authorId && m.authorId !== actorId)
-      await notificationsService.notify([m.authorId], { type: "message.approved", title: "Your message was approved and delivered" });
+      await notificationsService.notify([m.authorId], {
+        type: "message.approved",
+        title: "Your message was approved and delivered",
+        link: m.thread?.projectId ? link(m.thread.projectId, "conversation") : void 0
+      });
   });
   events.on("file.uploaded", async ({ projectId, category, actorId }) => {
     if (category === "PREVIEW") {
@@ -95937,6 +95975,7 @@ var authService = {
   },
   async logoutEverywhere(userId) {
     await prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } });
+    invalidateUser(userId);
   },
   async forgotPassword(req, email) {
     const normalized2 = email.trim().toLowerCase();
@@ -96004,6 +96043,7 @@ var authService = {
         tokenVersion: nextVersion2
       }
     });
+    invalidateUser(user.id);
     await auditService.log(
       req,
       {
@@ -96470,17 +96510,17 @@ var import_express9 = __toESM(require_express2(), 1);
 // apps/api/src/modules/settings/demo-logins.ts
 var DEMO_EMAILS = ["superadmin@welco.dev", "admin@welco.dev", "pm@welco.dev", "dev@welco.dev", "client@welco.dev"];
 var DEMO_PASSWORD = "Welco123!";
-var cache2 = null;
+var cache3 = null;
 async function demoLogins() {
   if (isProd) return [];
-  if (cache2 && Date.now() - cache2.at < 6e4) return cache2.value;
+  if (cache3 && Date.now() - cache3.at < 6e4) return cache3.value;
   const users = await prisma.user.findMany({
     where: { email: { in: DEMO_EMAILS }, isActive: true },
     select: { email: true, role: true, passwordHash: true }
   });
   const usable = await Promise.all(users.map(async (u) => await bcryptjs_default.compare(DEMO_PASSWORD, u.passwordHash) ? { email: u.email, role: u.role } : null));
   const value = DEMO_EMAILS.map((e) => usable.find((u) => u?.email === e)).filter((u) => !!u);
-  cache2 = { at: Date.now(), value };
+  cache3 = { at: Date.now(), value };
   return value;
 }
 
