@@ -13,19 +13,19 @@ export interface PublicSettings {
 }
 
 export const DEFAULT_BRAND: BrandSettings = {
-  nameEn: 'Welco',
-  nameAr: 'ويلكو',
-  taglineEn: 'Project Discovery',
-  taglineAr: 'استكشاف المشاريع',
+  nameEn: 'GlitchFix',
+  nameAr: 'جليتش فيكس',
+  taglineEn: 'Project Discovery & Issue Tracking',
+  taglineAr: 'نظام إدارة ومتابعة المشاريع وإصلاح الأعطال',
   logoUrl: '',
   faviconUrl: '',
 };
 
 /** The name every built-in string was written with; swapped for the configured brand at render time. */
-const BUILT_IN_NAME = /\bWelco\b|ويلكو/g;
+const BUILT_IN_NAME = /\bGlitchFix\b|جليتش فيكس|\bWelco\b|ويلكو/g;
 
 export function brandify(text: string, name: string) {
-  return text.replace(/WELCO/g, name.toUpperCase()).replace(BUILT_IN_NAME, name);
+  return text.replace(/ GLITCHFIX | WELCO /g, name.toUpperCase()).replace(BUILT_IN_NAME, name);
 }
 
 /** Latin, URL-safe form of the English name — for the fake addresses and codes shown in the landing demos. */
@@ -45,7 +45,7 @@ export function resolveBrand(brand: Partial<BrandSettings> | undefined, locale: 
   const ar = locale === 'ar';
   return {
     slug: brandSlug(b.nameEn),
-    name: (ar ? b.nameAr || b.nameEn : b.nameEn || b.nameAr) || 'Welco',
+    name: (ar ? b.nameAr || b.nameEn : b.nameEn || b.nameAr) || 'GlitchFix',
     tagline: (ar ? b.taglineAr || b.taglineEn : b.taglineEn || b.taglineAr) ?? '',
     logoUrl: b.logoUrl,
     faviconUrl: b.faviconUrl,

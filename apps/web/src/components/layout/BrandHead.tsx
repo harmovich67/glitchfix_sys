@@ -47,7 +47,7 @@ const APP_TITLES: [string, string][] = [
 
 /**
  * Keeps <head> in step with the brand and SEO settings: title, description, canonical, robots,
- * Open Graph / Twitter cards, favicon and structured data. The private dashboard is always noindex.
+ * Open Graph / Twitter cards, favicon, PWA manifests and structured data.
  */
 export function BrandHead() {
   const { pathname } = useLocation();
@@ -89,8 +89,13 @@ export function BrandHead() {
     meta('name', 'description', description);
     meta('name', 'keywords', isHome ? keywords : '');
     meta('name', 'robots', robots);
-    meta('name', 'application-name', brand.name);
-    meta('name', 'apple-mobile-web-app-title', brand.name);
+    
+    // Explicit English PWA name for Home Screen install
+    meta('name', 'application-name', 'GlitchFix');
+    meta('name', 'apple-mobile-web-app-title', 'GlitchFix');
+    
+    link('manifest', '/manifest.webmanifest');
+    link('apple-touch-icon', '/icons/apple-touch-icon.png');
     link('canonical', canonical);
     link('icon', brand.faviconUrl || '/favicon.svg', brand.faviconUrl ? {} : { type: 'image/svg+xml' });
 

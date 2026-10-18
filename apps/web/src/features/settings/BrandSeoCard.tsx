@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Field, Input, SegmentedControl, Switch, Textarea } from '../../components/ui/form';
 import { Card, CardHeader } from '../../components/ui/surfaces';
 
-const BRAND_DEFAULT: BrandSettings = { nameEn: 'Welco', nameAr: 'ويلكو', taglineEn: '', taglineAr: '', logoUrl: '', faviconUrl: '' };
+const BRAND_DEFAULT: BrandSettings = { nameEn: 'GlitchFix', nameAr: 'جليتش فيكس', taglineEn: '', taglineAr: '', logoUrl: '', faviconUrl: '' };
 const SEO_DEFAULT: SeoSettings = {
   titleEn: '', titleAr: '', descriptionEn: '', descriptionAr: '', keywordsEn: '', keywordsAr: '',
   siteUrl: '', ogImage: '', twitterHandle: '', indexable: true,

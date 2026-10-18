@@ -78662,10 +78662,10 @@ var contactInfoSchema = external_exports.object({
 });
 var assetUrl = external_exports.union([external_exports.literal(""), external_exports.string().trim().max(500).regex(/^(https?:\/\/|\/)[^\s"'<>]+$/, "Use an https:// link or a /path")]);
 var brandSchema = external_exports.object({
-  nameEn: external_exports.string().trim().min(1).max(40).default("Welco"),
-  nameAr: external_exports.string().trim().min(1).max(40).default("\u0648\u064A\u0644\u0643\u0648"),
-  taglineEn: external_exports.string().trim().max(120).default("Project Discovery"),
-  taglineAr: external_exports.string().trim().max(120).default("\u0627\u0633\u062A\u0643\u0634\u0627\u0641 \u0627\u0644\u0645\u0634\u0627\u0631\u064A\u0639"),
+  nameEn: external_exports.string().trim().min(1).max(40).default("GlitchFix"),
+  nameAr: external_exports.string().trim().min(1).max(40).default("\u062C\u0644\u064A\u062A\u0634 \u0641\u064A\u0643\u0633"),
+  taglineEn: external_exports.string().trim().max(120).default("Project & Issue Management"),
+  taglineAr: external_exports.string().trim().max(120).default("\u0646\u0638\u0627\u0645 \u0625\u062F\u0627\u0631\u0629 \u0648\u0645\u062A\u0627\u0628\u0639\u0629 \u0627\u0644\u0645\u0634\u0627\u0631\u064A\u0639 \u0648\u0625\u0635\u0644\u0627\u062D \u0627\u0644\u0623\u0639\u0637\u0627\u0644"),
   /** Replaces the built-in logo mark when set. */
   logoUrl: assetUrl.default(""),
   faviconUrl: assetUrl.default("")

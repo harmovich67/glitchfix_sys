@@ -3,21 +3,344 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#5b5bf6" />
+    <meta name="theme-color" content="#07080f" />
+    <meta name="color-scheme" content="dark light" />
+    
+    <!-- PWA & Mobile Home Screen Display Name -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Welco" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="GlitchFix" />
+    <meta name="application-name" content="GlitchFix" />
+    
+    <!-- Apple Touch Icons for iOS Home Screen -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
+
     <meta name="format-detection" content="telephone=no" />
-    <meta name="description" content="Welco — describe your digital project through a guided, visual discovery journey." />
-    <title>Welco · Project Discovery</title>
+    <meta name="description" content="GlitchFix · Digital projects, systems & issue management platform." />
+    <title>GlitchFix · جليتش فيكس</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Playfair+Display:wght@500;700&family=Space+Grotesk:wght@500;700&family=Nunito:wght@600;800&family=JetBrains+Mono:wght@500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Playfair+Display:wght@500;700&family=Space+Grotesk:wght@600;700;800&family=Nunito:wght@600;800&family=JetBrains+Mono:wght@500;700&display=swap"
       rel="stylesheet"
     />
+
+    <style>
+      /* ── Neon Splash Screen Critical Styles ───────────────────────────────── */
+      #glitchfix-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #06070f;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: pointer;
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+        transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform, filter;
+      }
+
+      #glitchfix-splash.gf-exit {
+        opacity: 0;
+        transform: scale(1.06);
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      /* Cyber grid background */
+      .gf-grid {
+        position: absolute;
+        inset: 0;
+        background-image: 
+          linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+        mask-image: radial-gradient(circle at 50% 50%, black 25%, transparent 75%);
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, black 25%, transparent 75%);
+        pointer-events: none;
+      }
+
+      /* Ambient Neon Aurora Orbs */
+      .gf-aurora-cyan {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-65%, -50%);
+        width: 380px;
+        height: 380px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(0, 240, 255, 0) 70%);
+        filter: blur(40px);
+        animation: gf-pulse-cyan 3.2s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+
+      .gf-aurora-purple {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-35%, -30%);
+        width: 360px;
+        height: 360px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(217, 70, 239, 0.2) 0%, rgba(139, 92, 246, 0) 70%);
+        filter: blur(45px);
+        animation: gf-pulse-purple 3.8s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+
+      /* Holographic Scanline Wave */
+      .gf-scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.6);
+        animation: gf-scan 2.6s linear infinite;
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      /* Center Content */
+      .gf-content {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 24px;
+      }
+
+      /* Neon Logo Emblem */
+      .gf-logo-box {
+        position: relative;
+        width: 104px;
+        height: 104px;
+        margin-bottom: 24px;
+        animation: gf-ignition 1.1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+      }
+
+      .gf-logo-halo {
+        position: absolute;
+        inset: -12px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.35), rgba(217, 70, 239, 0.35));
+        filter: blur(18px);
+        opacity: 0.8;
+        animation: gf-halo-breathe 2.4s ease-in-out infinite alternate;
+      }
+
+      .gf-logo-svg {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 0 14px rgba(0, 240, 255, 0.75)) drop-shadow(0 0 30px rgba(217, 70, 239, 0.5));
+      }
+
+      /* Neon Titles */
+      .gf-brand-en {
+        margin: 0;
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #ffffff;
+        text-indent: 0.22em;
+        text-shadow:
+          0 0 6px #ffffff,
+          0 0 14px #00f0ff,
+          0 0 28px #00f0ff,
+          0 0 55px #0284c7,
+          0 0 85px #0369a1;
+        animation: gf-neon-glow-cyan 2.2s ease-in-out infinite alternate,
+                   gf-text-flicker 1.4s ease forwards;
+      }
+
+      .gf-brand-ar {
+        margin: 8px 0 0 0;
+        font-family: 'IBM Plex Sans Arabic', sans-serif;
+        font-size: 21px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 0.04em;
+        text-shadow:
+          0 0 5px #ffffff,
+          0 0 12px #f43f5e,
+          0 0 26px #d946ef,
+          0 0 50px #8b5cf6;
+        animation: gf-neon-glow-magenta 2.6s ease-in-out infinite alternate;
+      }
+
+      /* Cyber Tagline Pill */
+      .gf-tagline-chip {
+        margin-top: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 14px;
+        border-radius: 9999px;
+        background: rgba(8, 12, 28, 0.75);
+        border: 1px solid rgba(0, 240, 255, 0.3);
+        box-shadow: 0 0 14px rgba(0, 240, 255, 0.15), inset 0 0 10px rgba(0, 240, 255, 0.08);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+
+      .gf-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #00f0ff;
+        box-shadow: 0 0 8px #00f0ff, 0 0 14px #00f0ff;
+        animation: gf-blink 1.2s infinite;
+      }
+
+      .gf-tagline-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: #a5f3fc;
+        text-transform: uppercase;
+      }
+
+      /* Neon Laser Progress Track */
+      .gf-laser-track {
+        margin-top: 32px;
+        width: 210px;
+        height: 3px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .gf-laser-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0%;
+        background: linear-gradient(90deg, #00f0ff, #818cf8, #f43f5e);
+        box-shadow: 0 0 12px #00f0ff, 0 0 20px #d946ef;
+        border-radius: 9999px;
+        animation: gf-laser-fill 1.85s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+      }
+
+      /* Skip hint */
+      .gf-hint {
+        margin-top: 20px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        letter-spacing: 0.05em;
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* Keyframe Animations */
+      @keyframes gf-scan {
+        0% { top: -20px; }
+        100% { top: 105%; }
+      }
+
+      @keyframes gf-pulse-cyan {
+        0% { transform: translate(-65%, -50%) scale(0.9); opacity: 0.25; }
+        100% { transform: translate(-60%, -45%) scale(1.15); opacity: 0.45; }
+      }
+
+      @keyframes gf-pulse-purple {
+        0% { transform: translate(-35%, -30%) scale(0.9); opacity: 0.22; }
+        100% { transform: translate(-40%, -35%) scale(1.18); opacity: 0.42; }
+      }
+
+      @keyframes gf-halo-breathe {
+        0% { transform: scale(0.96); opacity: 0.6; filter: blur(14px); }
+        100% { transform: scale(1.08); opacity: 0.95; filter: blur(22px); }
+      }
+
+      @keyframes gf-ignition {
+        0% { transform: scale(0.85); opacity: 0; }
+        20% { transform: scale(0.95); opacity: 0.4; }
+        35% { transform: scale(0.9); opacity: 0.2; }
+        55% { transform: scale(1.03); opacity: 0.95; }
+        70% { transform: scale(0.98); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      @keyframes gf-text-flicker {
+        0% { opacity: 0; }
+        15% { opacity: 0.8; }
+        25% { opacity: 0.3; }
+        40% { opacity: 1; }
+        55% { opacity: 0.7; }
+        70% { opacity: 1; }
+        100% { opacity: 1; }
+      }
+
+      @keyframes gf-neon-glow-cyan {
+        0% {
+          text-shadow:
+            0 0 6px #ffffff,
+            0 0 12px #00f0ff,
+            0 0 24px #00f0ff,
+            0 0 45px #0284c7;
+        }
+        100% {
+          text-shadow:
+            0 0 8px #ffffff,
+            0 0 18px #00f0ff,
+            0 0 36px #00f0ff,
+            0 0 68px #0284c7,
+            0 0 95px #0369a1;
+        }
+      }
+
+      @keyframes gf-neon-glow-magenta {
+        0% {
+          text-shadow:
+            0 0 5px #ffffff,
+            0 0 10px #f43f5e,
+            0 0 22px #d946ef,
+            0 0 40px #8b5cf6;
+        }
+        100% {
+          text-shadow:
+            0 0 7px #ffffff,
+            0 0 14px #f43f5e,
+            0 0 30px #d946ef,
+            0 0 55px #8b5cf6;
+        }
+      }
+
+      @keyframes gf-laser-fill {
+        0% { width: 0%; }
+        35% { width: 42%; }
+        70% { width: 78%; }
+        100% { width: 100%; }
+      }
+
+      @keyframes gf-blink {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.35; transform: scale(0.8); }
+      }
+    </style>
+
     <script>
       // Apply theme & direction before paint to avoid flashes.
       try {
@@ -30,6 +353,139 @@
     </script>
   </head>
   <body>
+    <!-- ── Distinctive Neon Splash Screen ─────────────────────────────────── -->
+    <div id="glitchfix-splash" role="presentation" aria-label="GlitchFix Splash Screen">
+      <div class="gf-grid"></div>
+      <div class="gf-aurora-cyan"></div>
+      <div class="gf-aurora-purple"></div>
+      <div class="gf-scanline"></div>
+
+      <div class="gf-content">
+        <!-- Neon Emblem -->
+        <div class="gf-logo-box">
+          <div class="gf-logo-halo"></div>
+          <svg class="gf-logo-svg" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="splash-shield-neon" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00f0ff" />
+                <stop offset="50%" stop-color="#818cf8" />
+                <stop offset="100%" stop-color="#f43f5e" />
+              </linearGradient>
+              <linearGradient id="splash-g-neon" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#67e8f9" />
+                <stop offset="100%" stop-color="#00f0ff" />
+              </linearGradient>
+              <linearGradient id="splash-f-neon" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f43f5e" />
+                <stop offset="100%" stop-color="#c026d3" />
+              </linearGradient>
+            </defs>
+
+            <!-- Base App Tile Shield -->
+            <rect width="512" height="512" rx="112" fill="#070814" stroke="url(#splash-shield-neon)" stroke-width="8" stroke-opacity="0.4" />
+
+            <!-- Outer Neon Shield -->
+            <path
+              d="M 256 68 L 420 162 L 420 350 L 256 444 L 92 350 L 92 162 Z"
+              stroke="url(#splash-shield-neon)"
+              stroke-width="16"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0.95"
+            />
+            <path
+              d="M 256 68 L 420 162 L 420 350 L 256 444 L 92 350 L 92 162 Z"
+              stroke="#ffffff"
+              stroke-width="4.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0.9"
+            />
+
+            <!-- 'G' Neon Tube -->
+            <path
+              d="M 345 180 L 280 180 A 84 84 0 0 0 172 256 A 84 84 0 0 0 256 340 L 326 340 L 326 270 L 260 270"
+              stroke="url(#splash-g-neon)"
+              stroke-width="32"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M 345 180 L 280 180 A 84 84 0 0 0 172 256 A 84 84 0 0 0 256 340 L 326 340 L 326 270 L 260 270"
+              stroke="#ffffff"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <!-- 'F' Lightning Bolt (Fix the Glitch!) -->
+            <path
+              d="M 320 130 L 230 250 L 285 250 L 205 380"
+              stroke="url(#splash-f-neon)"
+              stroke-width="24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M 320 130 L 230 250 L 285 250 L 205 380"
+              stroke="#ffffff"
+              stroke-width="7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <!-- Glowing Neon Titles -->
+        <h1 class="gf-brand-en">GLITCHFIX</h1>
+        <div class="gf-brand-ar">جليتش فيكس</div>
+
+        <!-- System Status Pill -->
+        <div class="gf-tagline-chip">
+          <span class="gf-dot"></span>
+          <span class="gf-tagline-text">SYSTEM ONLINE · إصلاح الأنظمة</span>
+        </div>
+
+        <!-- Neon Laser Progress Bar -->
+        <div class="gf-laser-track">
+          <div class="gf-laser-bar"></div>
+        </div>
+
+        <!-- Tap hint -->
+        <div class="gf-hint">اضغط للدخول فوراً · Tap to enter</div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var splash = document.getElementById('glitchfix-splash');
+        if (!splash) return;
+
+        var dismissed = false;
+        function dismiss() {
+          if (dismissed) return;
+          dismissed = true;
+          splash.classList.add('gf-exit');
+          setTimeout(function () {
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 680);
+        }
+
+        // Tap/click to bypass immediately
+        splash.addEventListener('click', dismiss);
+        splash.addEventListener('touchstart', dismiss, { passive: true });
+
+        // Auto dismiss after splash animation finishes
+        var timer = setTimeout(dismiss, 2100);
+
+        // Expose global for React to signal when loaded
+        window.__dismissGlitchFixSplash = function () {
+          clearTimeout(timer);
+          dismiss();
+        };
+      })();
+    </script>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

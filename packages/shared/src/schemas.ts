@@ -426,10 +426,10 @@ const assetUrl = z.union([z.literal(''), z.string().trim().max(500).regex(/^(htt
 
 /** The product name shown across the site, dashboard, e-mails and the AI assistant. */
 export const brandSchema = z.object({
-  nameEn: z.string().trim().min(1).max(40).default('Welco'),
-  nameAr: z.string().trim().min(1).max(40).default('ويلكو'),
-  taglineEn: z.string().trim().max(120).default('Project Discovery'),
-  taglineAr: z.string().trim().max(120).default('استكشاف المشاريع'),
+  nameEn: z.string().trim().min(1).max(40).default('GlitchFix'),
+  nameAr: z.string().trim().min(1).max(40).default('جليتش فيكس'),
+  taglineEn: z.string().trim().max(120).default('Project & Issue Management'),
+  taglineAr: z.string().trim().max(120).default('نظام إدارة ومتابعة المشاريع وإصلاح الأعطال'),
   /** Replaces the built-in logo mark when set. */
   logoUrl: assetUrl.default(''),
   faviconUrl: assetUrl.default(''),
