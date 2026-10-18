@@ -310,9 +310,6 @@ export function AppShell() {
         className="flex min-w-0 max-w-full flex-1 flex-col h-full overflow-y-auto overflow-x-hidden scroll-smooth pb-24 lg:pb-0 chic-scrollbar"
       >
         <header className="glass sticky top-0 z-30 flex h-14 sm:h-16 w-full max-w-full shrink-0 items-center gap-2 sm:gap-3 border-b border-border px-3 sm:px-6 lg:px-8">
-          <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Menu">
-            <MenuIcon className="size-5" />
-          </Button>
           <div className="lg:hidden">
             <Logo to="/app" />
           </div>
