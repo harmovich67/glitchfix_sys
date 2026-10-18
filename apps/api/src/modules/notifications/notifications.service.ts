@@ -165,9 +165,16 @@ export function registerNotificationListeners() {
   });
 
   events.on('message.approved', async ({ messageId, actorId }) => {
-    const m = await prisma.message.findUnique({ where: { id: messageId } });
+    const m = await prisma.message.findUnique({
+      where: { id: messageId },
+      include: { thread: { select: { projectId: true } } },
+    });
     if (m?.authorId && m.authorId !== actorId)
-      await notificationsService.notify([m.authorId], { type: 'message.approved', title: 'Your message was approved and delivered' });
+      await notificationsService.notify([m.authorId], {
+        type: 'message.approved',
+        title: 'Your message was approved and delivered',
+        link: m.thread?.projectId ? link(m.thread.projectId, 'conversation') : undefined,
+      });
   });
 
   events.on('file.uploaded', async ({ projectId, category, actorId }) => {
