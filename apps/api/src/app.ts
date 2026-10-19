@@ -14,6 +14,7 @@ import { filesRoutes, projectFilesRoutes } from './modules/files/files.routes';
 import { messagesRoutes, moderationRoutes, projectThreadsRoutes, threadsRoutes } from './modules/messages/messages.routes';
 import { notificationsRoutes } from './modules/notifications/notifications.routes';
 import { projectsRoutes } from './modules/projects/projects.routes';
+import { projectFixRoutes } from './modules/fixes/fixes.routes';
 import { settingsRoutes } from './modules/settings/settings.routes';
 import { projectProposalsRoutes, proposalsRoutes } from './modules/proposals/proposals.routes';
 import { seoRoutes } from './modules/settings/seo.routes';
@@ -58,6 +59,7 @@ export function createApp() {
   app.use('/api/projects/:id/notes', projectNotesRoutes);
   app.use('/api/projects/:id/proposals', projectProposalsRoutes);
   app.use('/api/projects/:id/wireframes', projectWireframesRoutes);
+  app.use('/api/projects/:id/fix', projectFixRoutes);
   app.use('/api/projects', projectsRoutes);
   app.use('/api/files', filesRoutes);
   app.use('/api/threads', threadsRoutes);

@@ -13,23 +13,23 @@ import { Button } from '../../components/ui/button';
 import { Input, SegmentedControl, Select } from '../../components/ui/form';
 import { Card, PageHeader, PriorityBadge, StatusBadge } from '../../components/ui/surfaces';
 import { AvatarStack, EmptyState, Progress, Skeleton } from '../../components/ui/feedback';
-import { useCreateProject } from './useCreateProject';
 import { DueLabel, ProjectCard, TypeTile } from './components';
 
 export function ProjectsPage() {
   const { t, locale } = useI18n();
   const { isClient } = useAuth();
   const navigate = useNavigate();
-  const create = useCreateProject();
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
+  const [kind, setKind] = useState('');
   const [view, setView] = useState<'list' | 'board'>(() => (storage.get('welco.projects.view') as 'list' | 'board') || 'list');
 
   const params = new URLSearchParams();
   if (q.trim()) params.set('q', q.trim());
   if (status) params.set('status', status);
   if (priority) params.set('priority', priority);
+  if (kind) params.set('kind', kind);
   const projects = useQuery({
     queryKey: ['projects', Object.fromEntries(params)],
     queryFn: () => api.get<ProjectListItem[]>(`/projects?${params}`),
@@ -48,8 +48,8 @@ export function ProjectsPage() {
         subtitle={!isClient ? t('projects.subtitle') : undefined}
         actions={
           isClient ? (
-            <Button loading={create.isPending} onClick={() => create.mutate()} leftIcon={<Plus className="size-4" />}>
-              {t('projects.newProject')}
+            <Button asChild leftIcon={<Plus className="size-4" />}>
+              <Link to="/app/new">{t('projects.newProject')}</Link>
             </Button>
           ) : (
             <SegmentedControl
@@ -65,7 +65,7 @@ export function ProjectsPage() {
       />
 
       {!isClient && (
-        <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_200px_180px]">
+        <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_180px_180px_170px]">
           <Input icon={<Search className="size-4" />} placeholder={t('common.search')} value={q} onChange={(e) => setQ(e.target.value)} />
           <Select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">{t('projects.filterStatus')}</option>
@@ -78,6 +78,11 @@ export function ProjectsPage() {
             {PRIORITIES.map((p) => (
               <option key={p} value={p}>{t(`priority.${p}`)}</option>
             ))}
+          </Select>
+          <Select value={kind} onChange={(e) => setKind(e.target.value)}>
+            <option value="">{t('fix.filterAll')}</option>
+            <option value="NEW">{t('fix.filterNew')}</option>
+            <option value="FIX">{t('fix.filterFix')}</option>
           </Select>
         </div>
       )}
@@ -147,7 +152,10 @@ export function ProjectsPage() {
                         <TypeTile type={p.projectType} size="sm" />
                         <div className="min-w-0">
                           <p className="truncate font-medium text-fg">{p.title}</p>
-                          <p className="font-mono text-[11px] text-muted">{p.code} · {timeAgo(p.updatedAt, locale)}</p>
+                          <p className="font-mono text-[11px] text-muted">
+                            {p.code} · {p.kind === 'FIX' && <span className="font-sans font-medium text-orange-600 dark:text-orange-300">{t('fix.kindBadge')} · </span>}
+                            {timeAgo(p.updatedAt, locale)}
+                          </p>
                         </div>
                       </div>
                     </td>

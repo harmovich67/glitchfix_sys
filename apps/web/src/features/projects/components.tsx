@@ -89,7 +89,7 @@ export function DueLabel({ date }: { date: string | null }) {
 
 export function ProjectCard({ p, index = 0, clientView }: { p: ProjectListItem; index?: number; clientView?: boolean }) {
   const { t, locale } = useI18n();
-  const draft = p.status === 'STARTED' || p.status === 'REQUIREMENTS';
+  const draft = p.kind !== 'FIX' && (p.status === 'STARTED' || p.status === 'REQUIREMENTS');
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
       <Card className="group relative overflow-hidden p-5 transition-shadow hover:shadow-md">
@@ -103,13 +103,14 @@ export function ProjectCard({ p, index = 0, clientView }: { p: ProjectListItem; 
             </div>
             <p className="mt-0.5 font-mono text-[11px] text-muted break-words">
               {p.code}
+              {p.kind === 'FIX' && <span className="font-sans font-medium text-orange-600 dark:text-orange-300"> · {t('fix.kindBadge')}</span>}
               {!clientView && ` · ${p.client.clientProfile?.companyName || p.client.name}`}
             </p>
           </div>
           <StatusBadge status={p.status} short />
         </div>
 
-        {clientView && !draft ? (
+        {(clientView && !draft) || p.kind === 'FIX' ? (
           <div className="mt-6">
             <StatusTracker status={p.status} compact />
           </div>

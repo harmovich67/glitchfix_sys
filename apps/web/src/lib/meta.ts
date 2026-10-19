@@ -1,4 +1,4 @@
-import type { Priority, ProjectStatus, TaskStatus } from '@welco/shared';
+import type { FixSeverity, Priority, ProjectStatus, TaskStatus } from '@welco/shared';
 
 export const STATUS_STYLE: Record<ProjectStatus, { dot: string; badge: string }> = {
   STARTED: { dot: 'bg-slate-400', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-300 ring-slate-500/20' },
@@ -34,6 +34,7 @@ export const TYPE_GRADIENT: Record<string, string> = {
   real_estate: 'from-teal-500 to-emerald-600',
   landing_page: 'from-rose-500 to-pink-500',
   custom: 'from-slate-600 to-slate-800',
+  fix: 'from-orange-500 to-rose-500',
   other: 'from-fuchsia-500 to-cyan-500',
 };
 
@@ -46,5 +47,13 @@ export const TYPE_ICON: Record<string, string> = {
   real_estate: 'Home',
   landing_page: 'Rocket',
   custom: 'Code2',
+  fix: 'Wrench',
   other: 'Sparkles',
+};
+
+export const FIX_SEVERITY_STYLE: Record<FixSeverity, string> = {
+  LOW: 'text-slate-600 dark:text-slate-300 bg-slate-500/10 ring-slate-500/20',
+  MEDIUM: 'text-sky-700 dark:text-sky-300 bg-sky-500/10 ring-sky-500/20',
+  HIGH: 'text-amber-700 dark:text-amber-300 bg-amber-500/10 ring-amber-500/25',
+  CRITICAL: 'text-rose-700 dark:text-rose-300 bg-rose-500/10 ring-rose-500/25',
 };

@@ -25,6 +25,7 @@ export const projectDetailInclude = {
   answers: true,
   steps: true,
   template: { select: { id: true, name: true, version: true } },
+  fixRequest: true,
 } satisfies Prisma.ProjectInclude;
 
 export type ProjectDetailRow = Prisma.ProjectGetPayload<{ include: typeof projectDetailInclude }>;

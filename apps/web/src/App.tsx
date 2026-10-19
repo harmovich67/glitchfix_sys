@@ -31,6 +31,7 @@ const NotificationsPage = lazy(() => import('./features/notifications/Notificati
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
 const ReportPage = lazy(() => import('./features/reports/ReportPage'));
 const TimeOffPage = lazy(() => import('./features/timeoff/TimeOffPage'));
+const NewRequestPage = lazy(() => import('./features/fixes/NewRequestPage'));
 
 /** Keeps the account's saved language in step with the UI, so AI replies and emails match what the user sees. */
 function LocaleSync() {
@@ -97,6 +98,7 @@ const router = createBrowserRouter(
       <Route path="/app/projects/:id/journey" element={<RequireAuth><WizardPage /></RequireAuth>} />
       <Route path="/app" element={<RequireAuth><AppShell /></RequireAuth>}>
         <Route index element={<DashboardPage />} />
+        <Route path="new" element={<NewRequestPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectPage />} />
         <Route path="reports/:id" element={<ReportPage />} />

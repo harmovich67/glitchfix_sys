@@ -33,7 +33,7 @@ export const analyticsService = {
       const answers: AnswerMap = Object.fromEntries(p.answers.map((a) => [a.questionKey, a.value as AnswerMap[string]]));
       if (p.projectType) {
         const q = qs.get('project_type');
-        const label = q ? formatAnswer(q, p.projectType)[0] : p.projectType;
+        const label = p.projectType === 'fix' ? 'Fix request' : q ? formatAnswer(q, p.projectType)[0] : p.projectType;
         const cur = typeCounts.get(p.projectType) ?? { value: p.projectType, label, count: 0 };
         cur.count++;
         typeCounts.set(p.projectType, cur);

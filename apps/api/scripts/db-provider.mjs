@@ -69,6 +69,14 @@ const NATIVE = {
   'Wireframe.title': 'VarChar(255)',
   'Wireframe.notes': 'Text',
   'Wireframe.responseNote': 'VarChar(1000)',
+  'FixRequest.siteUrl': 'VarChar(500)',
+  'FixRequest.loginUrl': 'VarChar(500)',
+  'FixRequest.username': 'VarChar(255)',
+  'FixRequest.passwordEnc': 'Text',
+  'FixRequest.extraAccessEnc': 'Text',
+  'FixRequest.problem': 'Text',
+  'FixRequest.history': 'Text',
+  'FixRequest.aiAnalysis': 'LongText',
 };
 
 /** Field names that usually hold prose: if one is left as VARCHAR(191) on MySQL, warn so it gets a mapping. */

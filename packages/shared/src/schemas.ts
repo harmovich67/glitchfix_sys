@@ -10,7 +10,9 @@ import {
   MEMBER_ROLES,
   MESSAGE_KINDS,
   PRIORITIES,
+  PROJECT_KINDS,
   PROJECT_STATUSES,
+  FIX_PLATFORMS,
   TASK_STATUSES,
   VISIBILITIES,
 } from './constants';
@@ -220,10 +222,56 @@ export const addMemberSchema = z.object({
 
 export const projectListQuery = z.object({
   q: z.string().max(100).optional(),
+  kind: z.enum(PROJECT_KINDS).optional(),
   status: z.enum(PROJECT_STATUSES).optional(),
   priority: z.enum(PRIORITIES).optional(),
   clientId: z.string().optional(),
 });
+
+// ─── Fix requests (repairs to the client's existing site) ──────────────────────
+const siteUrl = z
+  .string()
+  .trim()
+  .min(4)
+  .max(500)
+  .transform((v) => (/^[a-z][a-z0-9+.-]*:\/\//i.test(v) ? v : `https://${v}`))
+  .refine((v) => {
+    try {
+      const u = new URL(v);
+      return ['http:', 'https:'].includes(u.protocol) && u.hostname.includes('.');
+    } catch {
+      return false;
+    }
+  }, 'Enter a valid web address');
+const optionalSiteUrl = z.union([z.literal(''), siteUrl]).optional();
+const fixFields = {
+  title: z.string().trim().min(2).max(120),
+  siteUrl,
+  platform: z.enum(FIX_PLATFORMS).optional(),
+  loginUrl: optionalSiteUrl,
+  username: z.string().trim().max(255).optional(),
+  /** Write-only: never returned by the API. */
+  password: z.string().max(500).optional(),
+  extraAccess: z.string().max(4000).optional(),
+  problem: z.string().trim().min(15).max(8000),
+  history: z.string().trim().max(4000).optional(),
+  urgency: z.enum(PRIORITIES).default('MEDIUM'),
+  consent: z.boolean().optional(),
+};
+const needsConsent = (v: { password?: string; extraAccess?: string; consent?: boolean }) => !(v.password || v.extraAccess?.trim()) || v.consent === true;
+const consentIssue = { message: 'Please confirm the team may use these access details', path: ['consent'] };
+
+export const createFixRequestSchema = z.object(fixFields).refine(needsConsent, consentIssue);
+export type CreateFixRequestInput = z.infer<typeof createFixRequestSchema>;
+
+/** Empty password / extraAccess keep what is stored; use the credentials endpoint to remove them. */
+export const updateFixRequestSchema = z
+  .object({ ...fixFields, urgency: z.enum(PRIORITIES).optional() })
+  .partial()
+  .refine(needsConsent, consentIssue);
+export type UpdateFixRequestInput = z.infer<typeof updateFixRequestSchema>;
+
+export const fixAnalysisSchema = z.object({ locale: z.enum(['en', 'ar']).optional() });
 
 // ─── Files ─────────────────────────────────────────────────────────────────────
 export const uploadMetaSchema = z.object({

@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { addMemberSchema, createProjectSchema, projectListQuery, saveAnswersSchema, updateProjectSchema } from '@welco/shared';
+import { addMemberSchema, createFixRequestSchema, createProjectSchema, projectListQuery, saveAnswersSchema, updateProjectSchema } from '@welco/shared';
 import { requireAuth } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { currentUser, param } from '../../core/http';
 import { projectsService } from './projects.service';
+import { fixesService } from '../fixes/fixes.service';
 
 export const projectsRoutes = Router();
 
@@ -15,6 +16,11 @@ projectsRoutes.get('/', validate(projectListQuery, 'query'), async (req, res) =>
 
 projectsRoutes.post('/', validate(createProjectSchema), async (req, res) => {
   res.status(201).json(await projectsService.create(req, currentUser(req), req.body));
+});
+
+/** A repair request for the client's existing site (instead of the discovery journey). */
+projectsRoutes.post('/fix', validate(createFixRequestSchema), async (req, res) => {
+  res.status(201).json(await fixesService.create(req, currentUser(req), req.body));
 });
 
 projectsRoutes.get('/:id', async (req, res) => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -214,6 +214,7 @@ export default function WizardPage() {
     (await api.post<{ text: string }>('/ai/improve', { projectId: id, questionKey, text })).text;
 
   if (projectQ.isLoading || !project) return <PageLoader />;
+  if (project.kind === 'FIX') return <Navigate to={`/app/projects/${project.id}`} replace />;
 
   const showAI = !!ai.data?.enabled;
   const canImprove = showAI && ai.data?.features.improve;

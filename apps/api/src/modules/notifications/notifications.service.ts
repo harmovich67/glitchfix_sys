@@ -60,7 +60,7 @@ async function projectManagers(projectId: string) {
 async function projectContext(projectId: string) {
   return prisma.project.findUnique({
     where: { id: projectId },
-    select: { id: true, code: true, title: true, clientId: true, members: { select: { userId: true } } },
+    select: { id: true, code: true, title: true, kind: true, clientId: true, members: { select: { userId: true } } },
   });
 }
 
@@ -73,8 +73,8 @@ export function registerNotificationListeners() {
     if (!p) return;
     await notificationsService.notify(await usersByRole(MANAGERS, actorId), {
       type: 'project.submitted',
-      title: `New project submitted · ${p.code}`,
-      body: `“${p.title}” is ready for review.`,
+      title: p.kind === 'FIX' ? `New fix request · ${p.code}` : `New project submitted · ${p.code}`,
+      body: p.kind === 'FIX' ? `“${p.title}”: the client needs help with their live site. The AI analysis is in the request.` : `“${p.title}” is ready for review.`,
       link: link(projectId),
       email: true,
     });

@@ -9,6 +9,22 @@ export const PROJECT_STATUSES = [
 ] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
+/** NEW: a product built from the discovery journey. FIX: a repair request for the client's existing live site or app. */
+export const PROJECT_KINDS = ['NEW', 'FIX'] as const;
+export type ProjectKind = (typeof PROJECT_KINDS)[number];
+
+/** What the client's existing site runs on (as far as they know). */
+export const FIX_PLATFORMS = ['wordpress', 'woocommerce', 'shopify', 'wix', 'laravel', 'php', 'react', 'node', 'mobile_app', 'other', 'unknown'] as const;
+export type FixPlatform = (typeof FIX_PLATFORMS)[number];
+
+/** AI triage of a fix request. */
+export const FIX_CATEGORIES = [
+  'BUG', 'PERFORMANCE', 'SECURITY', 'HOSTING', 'EMAIL', 'PAYMENT', 'DESIGN', 'CONTENT', 'INTEGRATION', 'DATA', 'FEATURE', 'OTHER',
+] as const;
+export type FixCategory = (typeof FIX_CATEGORIES)[number];
+export const FIX_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
+export type FixSeverity = (typeof FIX_SEVERITIES)[number];
+
 /** Statuses a client is still allowed to be in while filling the journey. */
 export const DRAFT_STATUSES: ProjectStatus[] = ['STARTED', 'REQUIREMENTS'];
 
@@ -58,7 +74,7 @@ export type DevClientMode = (typeof DEV_CLIENT_MODES)[number];
 export const AI_PERSONAS = ['consultant', 'friendly', 'concise', 'technical'] as const;
 export type AIPersona = (typeof AI_PERSONAS)[number];
 
-export const AI_USAGE_KINDS = ['CHAT', 'IMPROVE', 'BRIEF', 'TECHNICAL_REPORT', 'TASK_PLAN', 'PROPOSAL', 'WIREFRAME', 'TEST'] as const;
+export const AI_USAGE_KINDS = ['CHAT', 'IMPROVE', 'BRIEF', 'TECHNICAL_REPORT', 'TASK_PLAN', 'PROPOSAL', 'WIREFRAME', 'FIX_ANALYSIS', 'TEST'] as const;
 export type AIUsageKind = (typeof AI_USAGE_KINDS)[number];
 
 /** Requirement questions that hold the client's price or budget: hidden from staff without finance access. */

@@ -155,9 +155,12 @@ model Project {
   startDate        DateTime?
   dueDate          DateTime?
   aiBrief          String?
+  /// NEW (built from the discovery journey) or FIX (repair of the client's existing live site/app).
+  kind             String    @default("NEW")
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  fixRequest FixRequest?
   members    ProjectMember[]
   steps      ProjectStep[]
   answers    Answer[]
@@ -174,6 +177,36 @@ model Project {
 
   @@index([clientId])
   @@index([status])
+  @@index([kind])
+}
+
+/// What the client told us about a problem on their existing site, plus the access they handed over.
+/// Secrets are AES-256-GCM encrypted, never sent to the AI and only revealed to the delivery team on demand.
+model FixRequest {
+  id             String    @id @default(cuid())
+  projectId      String    @unique
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  siteUrl        String
+  platform       String?
+  loginUrl       String?
+  username       String?
+  passwordEnc    String?
+  /// Hosting / cPanel / FTP / server access the client chose to share, encrypted.
+  extraAccessEnc String?
+  /// The problem in the client's own words.
+  problem        String
+  /// When it started and what the client already tried.
+  history        String?
+  urgency        String    @default("MEDIUM")
+  /// The client confirmed the team may sign in to their site to fix it.
+  consentAt      DateTime?
+  /// Last time the client changed the description (an older AI analysis is then out of date).
+  editedAt       DateTime?
+  credentialsClearedAt DateTime?
+  /// AI technical triage per language (JSON, see fix-analysis.ts). Internal only.
+  aiAnalysis     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model ProjectMember {

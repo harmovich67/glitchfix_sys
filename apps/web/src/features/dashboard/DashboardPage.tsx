@@ -13,7 +13,6 @@ import { Card, CardHeader, PageHeader, PriorityBadge, StatCard, StatusBadge } fr
 import { Avatar, EmptyState, Progress, Skeleton } from '../../components/ui/feedback';
 import { Tabs } from '../../components/ui/tabs';
 import { NotificationItem, useNotifications } from '../../components/layout/NotificationBell';
-import { useCreateProject } from '../projects/useCreateProject';
 import { DueLabel, ProjectCard, TypeTile } from '../projects/components';
 import { DeliveryBoard } from '../tickets/DeliveryBoard';
 import { SharedReportsCard } from '../reports/SharedReportsCard';
@@ -75,7 +74,6 @@ function DashTabs({ tab, onChange, trackingLabel, count }: { tab: DashTab; onCha
 function ClientDashboard() {
   const { t } = useI18n();
   const projects = useProjects();
-  const create = useCreateProject();
   const underReview = projects.data?.some((p) => p.status === 'UNDER_REVIEW');
 
   if (projects.isLoading) return <div className="grid gap-4 md:grid-cols-2">{[0, 1].map((i) => <Skeleton key={i} className="h-56 rounded-2xl" />)}</div>;
@@ -90,7 +88,7 @@ function ClientDashboard() {
             icon={<Rocket className="size-6" />}
             title={t('dashboard.emptyClientTitle')}
             description={t('dashboard.emptyClientBody')}
-            action={<Button size="lg" loading={create.isPending} onClick={() => create.mutate()} leftIcon={<Plus className="size-4" />}>{t('dashboard.startNew')}</Button>}
+            action={<Button asChild size="lg" leftIcon={<Plus className="size-4" />}><Link to="/app/new">{t('dashboard.startNew')}</Link></Button>}
             className="py-20"
           />
         </Card>
@@ -101,7 +99,7 @@ function ClientDashboard() {
     <>
       <Greeting
         subtitle={t('dashboard.clientSubtitle')}
-        actions={<Button loading={create.isPending} onClick={() => create.mutate()} leftIcon={<Plus className="size-4" />}>{t('dashboard.startNew')}</Button>}
+        actions={<Button asChild leftIcon={<Plus className="size-4" />}><Link to="/app/new">{t('dashboard.startNew')}</Link></Button>}
       />
       <ProposalsFeed />
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">

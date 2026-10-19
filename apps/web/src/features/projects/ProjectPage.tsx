@@ -4,7 +4,7 @@ import { Link, useParams, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import {
   ArrowLeft, ArrowRight, Building2, CalendarClock, CircleHelp, ClipboardList, FolderOpen, Languages, LayoutGrid, Lock, Mail, MessagesSquare, Phone,
-  ScrollText, Settings2, Sparkles, Wrench, FileSignature, LayoutTemplate,
+  ScrollText, Settings2, Sparkles, Wrench, FileSignature, LayoutTemplate, Globe,
 } from 'lucide-react';
 import { formatAnswer, allQuestions } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
@@ -29,6 +29,7 @@ import { TechnicalReportsPanel } from '../reports/TechnicalReportsPanel';
 import { ProposalPanel } from '../proposals/ProposalPanel';
 import { WireframePanel } from '../wireframes/WireframePanel';
 import { Timeline } from './Timeline';
+import { FixAccessCard, FixAnalysisCard, FixDetailsCard } from '../fixes/FixRequestPanel';
 
 type Tab = 'overview' | 'requirements' | 'proposal' | 'design' | 'conversation' | 'files' | 'workspace' | 'manage';
 
@@ -123,6 +124,7 @@ function Overview({ project, threads, onTab }: { project: ProjectDetail; threads
   const cp = project.client.clientProfile;
   const proposals = useQuery({ queryKey: ['proposals', project.id], queryFn: () => api.get<ProposalsResponse>(`/projects/${project.id}/proposals`), enabled: isClient });
   const waiting = proposals.data?.proposals.find((p) => p.status === 'SENT' && !p.expired);
+  const fix = project.kind === 'FIX' ? project.fixRequest : null;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
@@ -164,18 +166,36 @@ function Overview({ project, threads, onTab }: { project: ProjectDetail; threads
         )}
 
         <div className="grid gap-4 sm:grid-cols-3">
+          {fix ? (
+            <Card className="flex items-center gap-4 p-5">
+              <TypeTile type="fix" />
+              <div className="min-w-0">
+                <p className="text-xs text-muted">{t('fix.kindBadge')}</p>
+                <p className="text-sm font-semibold">{project.submittedAt ? t('hub.submittedOn', { date: formatDate(project.submittedAt, locale) }) : '—'}</p>
+              </div>
+            </Card>
+          ) : (
+            <Card className="flex items-center gap-4 p-5">
+              <ProgressRing value={project.progress} />
+              <div>
+                <p className="text-xs text-muted">{t('hub.progress')}</p>
+                <p className="text-sm font-semibold">{project.submittedAt ? t('hub.submittedOn', { date: formatDate(project.submittedAt, locale) }) : t('hub.notSubmitted')}</p>
+              </div>
+            </Card>
+          )}
           <Card className="flex items-center gap-4 p-5">
-            <ProgressRing value={project.progress} />
-            <div>
-              <p className="text-xs text-muted">{t('hub.progress')}</p>
-              <p className="text-sm font-semibold">{project.submittedAt ? t('hub.submittedOn', { date: formatDate(project.submittedAt, locale) }) : t('hub.notSubmitted')}</p>
-            </div>
-          </Card>
-          <Card className="flex items-center gap-4 p-5">
-            <TypeTile type={project.projectType} />
+            {fix ? (
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-fg-2 ring-1 ring-border">
+                <Globe className="size-5" />
+              </div>
+            ) : (
+              <TypeTile type={project.projectType} />
+            )}
             <div className="min-w-0">
-              <p className="text-xs text-muted">{t('hub.projectType')}</p>
-              <p className="truncate text-sm font-semibold">{project.projectType && typeQ ? formatAnswer(typeQ, project.projectType, locale)[0] : '—'}</p>
+              <p className="text-xs text-muted">{fix ? t('fix.platformLabel') : t('hub.projectType')}</p>
+              <p className="truncate text-sm font-semibold">
+                {fix ? (fix.platform ? t(`fix.platforms.${fix.platform}`) : '—') : project.projectType && typeQ ? formatAnswer(typeQ, project.projectType, locale)[0] : '—'}
+              </p>
             </div>
           </Card>
           <Card className="flex items-center gap-4 p-5">
@@ -190,11 +210,26 @@ function Overview({ project, threads, onTab }: { project: ProjectDetail; threads
           </Card>
         </div>
 
-        {project.access.canWork && <BriefCard project={project} />}
-        {isClient && <RequirementsView project={project} />}
+        {fix ? (
+          <>
+            {isClient && project.status === 'UNDER_REVIEW' && (
+              <Card className="bg-gradient-to-br from-brand-soft via-surface to-surface p-5">
+                <p className="text-sm text-fg-2">{t('fix.clientNext')}</p>
+              </Card>
+            )}
+            {project.access.canWork && <FixAnalysisCard project={project} />}
+            <FixDetailsCard project={project} onFiles={() => onTab('files')} />
+          </>
+        ) : (
+          <>
+            {project.access.canWork && <BriefCard project={project} />}
+            {isClient && <RequirementsView project={project} />}
+          </>
+        )}
       </div>
 
       <div className="space-y-6">
+        {fix && (project.access.canWork || project.access.isOwner) && <FixAccessCard project={project} />}
         <Card>
           <CardHeader title={t('hub.teamTitle')} />
           <div className="space-y-1 px-3 pb-4">
@@ -263,7 +298,16 @@ function RequirementsTab({ project }: { project: ProjectDetail }) {
           ]}
         />
       )}
-      {view === 'reports' ? <TechnicalReportsPanel project={project} /> : <RequirementsView project={project} />}
+      {view === 'reports' ? (
+        <TechnicalReportsPanel project={project} />
+      ) : project.kind === 'FIX' && project.fixRequest ? (
+        <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+          <FixDetailsCard project={project} />
+          <FixAccessCard project={project} />
+        </div>
+      ) : (
+        <RequirementsView project={project} />
+      )}
     </div>
   );
 }
@@ -287,7 +331,7 @@ export default function ProjectPage() {
   const wireframesQ = useQuery({
     queryKey: ['wireframes', id],
     queryFn: () => api.get<WireframesResponse>(`/projects/${id}/wireframes`),
-    enabled: !!project && (isClient || project.access.canWork),
+    enabled: !!project && project.kind !== 'FIX' && (isClient || project.access.canWork),
   });
 
   if (projectQ.isLoading) return <PageLoader />;
@@ -305,7 +349,7 @@ export default function ProjectPage() {
           badge: isClient && proposalsQ.data?.proposals.some((p) => p.status === 'SENT' && !p.expired) ? <span className="size-2 rounded-full bg-warning" /> : undefined,
         }]
       : []),
-    ...(project.access.canManage || (wireframesQ.data?.wireframes.length ?? 0) > 0
+    ...(project.kind !== 'FIX' && (project.access.canManage || (wireframesQ.data?.wireframes.length ?? 0) > 0)
       ? [{
           value: 'design' as Tab,
           label: t('wireframe.tab'),
@@ -333,11 +377,16 @@ export default function ProjectPage() {
       </Link>
 
       <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-center">
-        <TypeTile type={project.projectType} size="lg" />
+        <TypeTile type={project.kind === 'FIX' ? 'fix' : project.projectType} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-2xl font-semibold sm:text-[28px]">{project.title}</h1>
             <StatusBadge status={project.status} />
+            {project.kind === 'FIX' && (
+              <Badge className="bg-orange-500/10 text-orange-700 ring-orange-500/25 dark:text-orange-300">
+                <Wrench className="size-3" /> {t('fix.kindBadge')}
+              </Badge>
+            )}
             {!isClient && <PriorityBadge priority={project.priority} />}
             {project.approvedAt && (
               <Badge className="bg-success-soft text-success ring-success/20">
@@ -350,7 +399,7 @@ export default function ProjectPage() {
             {!isClient && ` · ${project.client.clientProfile?.companyName || project.client.name}`}
           </p>
         </div>
-        {project.access.canEditAnswers && (isClient || draft) && (
+        {project.kind !== 'FIX' && project.access.canEditAnswers && (isClient || draft) && (
           <Button asChild size="lg" rightIcon={<ArrowRight className="rtl-flip size-4" />}>
             <Link to={`/app/projects/${project.id}/journey`}>{draft ? t('hub.continue') : t('hub.editAnswers')}</Link>
           </Button>

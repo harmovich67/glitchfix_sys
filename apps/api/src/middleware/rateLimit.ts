@@ -9,4 +9,6 @@ const base = {
 export const globalLimiter = rateLimit({ ...base, windowMs: 15 * 60 * 1000, limit: 1500 });
 export const authLimiter = rateLimit({ ...base, windowMs: 15 * 60 * 1000, limit: 30 });
 export const aiLimiter = rateLimit({ ...base, windowMs: 60 * 1000, limit: 20 });
+/** Revealing stored client secrets (site access). */
+export const secretLimiter = rateLimit({ ...base, windowMs: 15 * 60 * 1000, limit: 40 });
 export const uploadLimiter = rateLimit({ ...base, windowMs: 15 * 60 * 1000, limit: 120 });

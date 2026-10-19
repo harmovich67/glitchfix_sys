@@ -4,7 +4,7 @@ import {
   KeyRound, Layers, LayoutDashboard, LayoutGrid, LineChart, ListChecks, Mail, Map, MapPin, MessageSquare, MessagesSquare, Newspaper,
   Package, Palette, Paperclip, PlayCircle, Plug, Quote, Repeat, Rocket, Route, Send, Share2, ShieldCheck, ShoppingBag, ShoppingCart,
   SlidersHorizontal, Smartphone, Sparkles, Star, Store, Tags, TicketPercent, Timer, Truck, UserRound, Users, View, Wallet, Wand2,
-  WifiOff, Circle, type LucideIcon,
+  WifiOff, Wrench, Circle, type LucideIcon,
 } from 'lucide-react';
 
 /** Curated icons that workflow content (steps & options) may reference by name. */
@@ -13,7 +13,7 @@ export const ICONS: Record<string, LucideIcon> = {
   Code2, Coins, Columns3, CreditCard, FileBarChart, FolderOpen, Gift, GitBranch, Heart, HelpCircle, History, Home, Images, Info,
   KeyRound, Layers, LayoutDashboard, LayoutGrid, LineChart, ListChecks, Mail, Map, MapPin, MessageSquare, MessagesSquare, Newspaper,
   Package, Palette, Paperclip, PlayCircle, Plug, Quote, Repeat, Rocket, Route, Send, Share2, ShieldCheck, ShoppingBag, ShoppingCart,
-  SlidersHorizontal, Smartphone, Sparkles, Star, Store, Tags, TicketPercent, Timer, Truck, UserRound, Users, View, Wallet, Wand2, WifiOff,
+  SlidersHorizontal, Smartphone, Sparkles, Star, Store, Tags, TicketPercent, Timer, Truck, UserRound, Users, View, Wallet, Wand2, WifiOff, Wrench,
 };
 
 export const ICON_NAMES = Object.keys(ICONS).sort();

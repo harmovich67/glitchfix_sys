@@ -27,6 +27,7 @@ import { workflowsService } from '../workflows/workflows.service';
 import { assertManage, loadProjectAccess } from './projects.access';
 import { projectsRepository } from './projects.repository';
 import { parseBriefs } from '../ai/brief-store';
+import { serializeFixRequest } from '../fixes/fixes.serialize';
 
 export const STATUS_LABELS: Record<ProjectStatus, string> = {
   STARTED: 'Started',
@@ -56,6 +57,7 @@ export const projectsService = {
     else if (!can(user.role, 'projects.view_all')) where.members = { some: { userId: user.id } };
     if (filter.status) where.status = filter.status;
     if (filter.priority) where.priority = filter.priority;
+    if (filter.kind) where.kind = filter.kind;
     if (filter.clientId && user.role !== 'CLIENT') where.clientId = filter.clientId;
     if (filter.q) where.OR = [{ title: { contains: filter.q } }, { code: { contains: filter.q } }, { client: { name: { contains: filter.q } } }];
     return projectsRepository.list(where);
@@ -94,9 +96,10 @@ export const projectsService = {
     let workflow = p.workflowSnapshot as unknown as WorkflowDefinition;
     // The client's budget is a price: only the client and people cleared for finances get to read it.
     if (!access.isOwner && !access.canViewFinance) ({ def: workflow, answers } = stripFinancials(workflow, answers));
-    const { answers: _a, workflowSnapshot: _w, aiBrief, ...rest } = p;
+    const { answers: _a, workflowSnapshot: _w, aiBrief, fixRequest, ...rest } = p;
     return {
       ...rest,
+      fixRequest: serializeFixRequest(fixRequest, access),
       aiBriefs: access.isClient ? null : parseBriefs(aiBrief, p.updatedAt),
       workflow,
       answers,
@@ -119,6 +122,7 @@ export const projectsService = {
     if (!access.isOwner && !access.canViewFinance && Object.keys(input.answers).some((k) => FINANCIAL_QUESTION_KEYS.includes(k)))
       throw forbidden('You are not allowed to see or change the budget');
     const project = access.project;
+    if (project.kind === 'FIX') throw badRequest('Fix requests are edited from the request form');
     const def = snapshotOf(project);
     const questionStep = new Map(allQuestions(def).map((q) => [q.key, q.stepKey]));
 
@@ -165,6 +169,7 @@ export const projectsService = {
     const access = await loadProjectAccess(user, id);
     if (!access.isOwner) throw forbidden('Only the client can submit the project');
     const project = access.project;
+    if (project.kind === 'FIX') throw badRequest('Fix requests are sent when they are created');
     if (project.approvedAt) throw badRequest('Requirements are already approved');
     const def = snapshotOf(project);
     const answers = await projectsRepository.answerMap(id);

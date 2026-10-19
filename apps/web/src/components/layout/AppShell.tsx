@@ -19,7 +19,6 @@ import { Avatar, PageLoader } from '../ui/feedback';
 import { Menu } from '../ui/overlay';
 import { Button } from '../ui/button';
 import { Drawer } from '../ui/overlay';
-import { useCreateProject } from '../../features/projects/useCreateProject';
 import type { TimeOffSummary } from '../../lib/types';
 
 interface NavItem {
@@ -143,7 +142,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, isClient, logout } = useAuth();
   const { main, control } = useNav();
   const navigate = useNavigate();
-  const createProject = useCreateProject();
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -166,8 +164,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <Button
             className="w-full justify-center shadow-md shadow-brand/20 hover:shadow-lg hover:shadow-brand/35 transition-all duration-300 font-semibold rounded-xl bg-gradient-to-r from-brand via-brand-600 to-indigo-600 hover:brightness-105 active:scale-[0.98]"
             leftIcon={<Plus className="size-4" />}
-            loading={createProject.isPending}
-            onClick={() => createProject.mutate()}
+            onClick={() => {
+              onNavigate?.();
+              navigate('/app/new');
+            }}
           >
             {t('nav.newProject')}
           </Button>
@@ -288,7 +288,7 @@ export function AppShell() {
   const { t, locale } = useI18n();
   const isAr = locale === 'ar';
   const { isClient } = useAuth();
-  const createProject = useCreateProject();
+  const navigate = useNavigate();
   const unreadCount = useNotifications().data?.unread ?? 0;
 
   // Reset scroll position on route changes
@@ -370,7 +370,7 @@ export function AppShell() {
             {isClient ? (
               <button
                 type="button"
-                onClick={() => createProject.mutate()}
+                onClick={() => navigate('/app/new')}
                 className="flex-1 min-w-0 flex flex-col items-center justify-center -mt-5"
                 title={t('nav.newProject')}
               >

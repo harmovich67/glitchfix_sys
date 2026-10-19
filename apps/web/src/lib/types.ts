@@ -1,9 +1,13 @@
 import type {
   AnswerMap,
+  FixCategory,
+  FixPlatform,
+  FixSeverity,
   MemberRole,
   MessageKind,
   MessageStatus,
   Priority,
+  ProjectKind,
   ProjectStatus,
   Role,
   TaskStatus,
@@ -62,6 +66,7 @@ export interface ProjectListItem {
   id: string;
   code: string;
   title: string;
+  kind: ProjectKind;
   status: ProjectStatus;
   priority: Priority;
   projectType: string | null;
@@ -94,8 +99,48 @@ export interface ProjectAccess {
   isOwner: boolean;
 }
 
+export interface FixAnalysis {
+  technicalTitle: string;
+  category: FixCategory;
+  severity: FixSeverity;
+  estimateHours: number | null;
+  text: string;
+  generatedAt: string;
+  model?: string;
+  mock?: boolean;
+}
+
+/** A repair request for the client's live site. Secrets never come back from the API: only whether they are stored. */
+export interface FixRequestDetail {
+  id: string;
+  siteUrl: string;
+  platform: FixPlatform | null;
+  loginUrl: string | null;
+  username: string | null;
+  hasPassword: boolean;
+  hasExtraAccess: boolean;
+  problem: string;
+  history: string | null;
+  urgency: Priority;
+  consentAt: string | null;
+  editedAt: string | null;
+  credentialsClearedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Team only (null for the client). */
+  analyses: Partial<Record<'en' | 'ar', FixAnalysis>> | null;
+}
+
+export interface FixCredentials {
+  loginUrl: string | null;
+  username: string | null;
+  password: string | null;
+  extraAccess: string | null;
+}
+
 export interface ProjectDetail extends Omit<ProjectListItem, '_count' | 'client'> {
   startDate: string | null;
+  fixRequest: FixRequestDetail | null;
   aiBriefs: Partial<Record<'en' | 'ar', AIBrief>> | null;
   workflow: WorkflowDefinition;
   answers: AnswerMap;
