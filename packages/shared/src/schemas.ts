@@ -278,6 +278,8 @@ export const uploadMetaSchema = z.object({
   category: z.enum(FILE_CATEGORIES).default('ATTACHMENT'),
   visibility: z.enum(VISIBILITIES).default('CLIENT'),
   questionKey: key.optional(),
+  /** The team's file request (message id) these files answer. */
+  requestId: z.string().min(1).max(40).optional(),
 });
 
 // ─── Messages ──────────────────────────────────────────────────────────────────

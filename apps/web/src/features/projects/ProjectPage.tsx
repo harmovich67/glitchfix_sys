@@ -4,7 +4,7 @@ import { Link, useParams, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import {
   ArrowLeft, ArrowRight, Building2, CalendarClock, CircleHelp, ClipboardList, FolderOpen, Languages, LayoutGrid, Lock, Mail, MessagesSquare, Phone,
-  ScrollText, Settings2, Sparkles, Wrench, FileSignature, LayoutTemplate, Globe,
+  ScrollText, Settings2, Sparkles, Wrench, FileSignature, LayoutTemplate, Globe, Paperclip, UploadCloud,
 } from 'lucide-react';
 import { formatAnswer, allQuestions } from '@welco/shared';
 import { api, errorMessage } from '../../lib/api';
@@ -119,8 +119,9 @@ function Overview({ project, threads, onTab }: { project: ProjectDetail; threads
   const { t, locale } = useI18n();
   const { isClient } = useAuth();
   const typeQ = allQuestions(project.workflow).find((q) => q.key === 'project_type');
-  const openClarifications =
-    threads?.threads.find((th) => th.type === 'CLIENT')?.messages.filter((m) => m.kind === 'CLARIFICATION' && !m.resolvedAt && m.status === 'VISIBLE') ?? [];
+  const clientMessages = threads?.threads.find((th) => th.type === 'CLIENT')?.messages ?? [];
+  const openClarifications = clientMessages.filter((m) => m.kind === 'CLARIFICATION' && !m.resolvedAt && m.status === 'VISIBLE');
+  const openFileRequests = clientMessages.filter((m) => m.kind === 'FILE_REQUEST' && !m.resolvedAt && m.status === 'VISIBLE');
   const cp = project.client.clientProfile;
   const proposals = useQuery({ queryKey: ['proposals', project.id], queryFn: () => api.get<ProposalsResponse>(`/projects/${project.id}/proposals`), enabled: isClient });
   const waiting = proposals.data?.proposals.find((p) => p.status === 'SENT' && !p.expired);
@@ -145,6 +146,29 @@ function Overview({ project, threads, onTab }: { project: ProjectDetail; threads
           <p className="mb-5 text-sm font-semibold">{t('status_tracker.title')}</p>
           <StatusTracker status={project.status} />
         </Card>
+
+        {openFileRequests.length > 0 && (
+          <Card className="bg-info-soft/40 p-5 ring-info/25">
+            <div className="flex items-center gap-2 text-sm font-semibold text-info">
+              <Paperclip className="size-4" /> {t('hub.openFileRequests')} · {openFileRequests.length}
+            </div>
+            <ul className="mt-3 space-y-2">
+              {openFileRequests.map((m) => (
+                <li key={m.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-surface p-3 text-sm ring-1 ring-border">
+                  <div className="min-w-0 flex-1">
+                    <p className="whitespace-pre-wrap text-fg">{m.body}</p>
+                    <p className="mt-1 text-xs text-muted">{m.author?.name}</p>
+                  </div>
+                  {isClient && (
+                    <Button asChild size="sm" leftIcon={<UploadCloud className="size-4" />}>
+                      <Link to={`?tab=files&request=${m.id}`}>{t('chat.uploadFiles')}</Link>
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
 
         {openClarifications.length > 0 && (
           <Card className="bg-warning-soft/40 p-5 ring-warning/25">

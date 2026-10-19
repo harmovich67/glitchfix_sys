@@ -140,14 +140,23 @@ export function registerNotificationListeners() {
     const members = p.members.length ? p.members.map((m) => m.userId) : await usersByRole(MANAGERS);
     const recipients = (threadType === 'CLIENT' ? [...members, p.clientId] : members).filter((id) => id !== actorId);
     const clarification = message.kind === 'CLARIFICATION';
+    const fileRequest = message.kind === 'FILE_REQUEST';
+    const filesSent = message.kind === 'SYSTEM';
     await notificationsService.notify(recipients, {
-      type: clarification ? 'clarification' : 'message',
+      type: clarification ? 'clarification' : fileRequest ? 'files.requested' : filesSent ? 'files.received' : 'message',
       title: clarification
         ? `Clarification requested on ${p.code}`
-        : `${message.author?.name ?? 'Someone'} · ${threadType === 'INTERNAL' ? 'internal' : p.code}`,
-      body: message.body.slice(0, 160),
-      link: link(projectId, threadType === 'INTERNAL' ? 'workspace' : 'conversation'),
-      email: clarification,
+        : fileRequest
+          ? `Files requested on ${p.code}`
+          : filesSent
+            ? `${message.author?.name ?? 'The client'} sent the requested files · ${p.code}`
+            : `${message.author?.name ?? 'Someone'} · ${threadType === 'INTERNAL' ? 'internal' : p.code}`,
+      body: filesSent ? message.body.split('\n').join(', ').slice(0, 160) : message.body.slice(0, 160),
+      // A file request opens the upload area with the request attached, so the client uploads in one click.
+      link: fileRequest
+        ? `/app/projects/${projectId}?tab=files&request=${message.id}`
+        : link(projectId, threadType === 'INTERNAL' ? 'workspace' : filesSent ? 'files' : 'conversation'),
+      email: clarification || fileRequest,
     });
     realtime.projectChanged(projectId, 'messages');
   });

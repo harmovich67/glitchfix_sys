@@ -43,7 +43,13 @@ export type Visibility = (typeof VISIBILITIES)[number];
 export const THREAD_TYPES = ['CLIENT', 'INTERNAL'] as const;
 export type ThreadType = (typeof THREAD_TYPES)[number];
 
-export const MESSAGE_KINDS = ['MESSAGE', 'CLARIFICATION', 'SYSTEM'] as const;
+/**
+ * FILE_REQUEST: the team asks the client for specific files; it links the client straight to the upload area and is
+ * resolved when they upload. SYSTEM: posted by the platform (e.g. the receipt of those files, body = file names).
+ */
+export const MESSAGE_KINDS = ['MESSAGE', 'CLARIFICATION', 'FILE_REQUEST', 'SYSTEM'] as const;
+/** Team requests the client can act on, each shown until resolved. */
+export const REQUEST_KINDS: readonly MessageKind[] = ['CLARIFICATION', 'FILE_REQUEST'];
 export type MessageKind = (typeof MESSAGE_KINDS)[number];
 
 export const MESSAGE_STATUSES = ['VISIBLE', 'PENDING', 'HIDDEN'] as const;

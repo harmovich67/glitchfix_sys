@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 import { Prisma } from '@prisma/client';
-import type { MessageKind, MessageStatus } from '@welco/shared';
+import { REQUEST_KINDS, type MessageKind, type MessageStatus } from '@welco/shared';
 import { prisma } from '../../core/prisma';
 import { badRequest, forbidden, notFound } from '../../core/errors';
 import { events } from '../../core/events';
@@ -51,8 +51,8 @@ export const messagesService = {
   async post(req: Request, user: AuthUser, threadId: string, input: { body: string; kind: Exclude<MessageKind, 'SYSTEM'> }) {
     const { thread, access } = await loadThread(user, threadId);
     if (thread.locked && !access.canModerate) throw forbidden('This conversation is locked by an administrator');
-    if (input.kind === 'CLARIFICATION' && (access.isClient || thread.type !== 'CLIENT'))
-      throw badRequest('Clarification requests are sent by the team in the client conversation');
+    if (REQUEST_KINDS.includes(input.kind) && (access.isClient || thread.type !== 'CLIENT'))
+      throw badRequest('Requests are sent by the team in the client conversation');
 
     let status: MessageStatus = 'VISIBLE';
     if (thread.type === 'CLIENT' && user.role === 'DEVELOPER') {
@@ -68,6 +68,9 @@ export const messagesService = {
 
     if (input.kind === 'CLARIFICATION') {
       await auditService.log(req, { action: 'clarification.requested', entityType: 'Message', entityId: message.id });
+    }
+    if (input.kind === 'FILE_REQUEST') {
+      await auditService.log(req, { action: 'files.requested', entityType: 'Message', entityId: message.id });
     }
     if (status === 'PENDING') events.emit('message.pending', { messageId: message.id, projectId: thread.projectId, actorId: user.id });
     else events.emit('message.created', { messageId: message.id, projectId: thread.projectId, threadType: thread.type, actorId: user.id });
@@ -102,7 +105,7 @@ export const messagesService = {
 
   async resolve(user: AuthUser, messageId: string) {
     const message = await prisma.message.findUnique({ where: { id: messageId }, include: { thread: true } });
-    if (!message || message.kind !== 'CLARIFICATION') throw notFound('Clarification');
+    if (!message || !REQUEST_KINDS.includes(message.kind as MessageKind)) throw notFound('Request');
     const access = await loadProjectAccess(user, message.thread.projectId);
     if (!access.isOwner && !access.canWork) throw forbidden();
     const updated = await prisma.message.update({

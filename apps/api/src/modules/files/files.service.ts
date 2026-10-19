@@ -61,6 +61,23 @@ function safeName(name: string) {
   return decoded.replace(/[\\/\r\n"]/g, '_').slice(0, 200);
 }
 
+/**
+ * The client uploaded files in answer to the team's file request: close the request and drop a receipt in the
+ * conversation (body = the file names) so the team is notified and sees exactly what arrived.
+ */
+async function answerFileRequest(user: AuthUser, projectId: string, requestId: string, names: string[]) {
+  const request = await prisma.message.findFirst({
+    where: { id: requestId, kind: 'FILE_REQUEST', status: 'VISIBLE', thread: { projectId, type: 'CLIENT' } },
+    select: { id: true, threadId: true, resolvedAt: true },
+  });
+  if (!request) return;
+  if (!request.resolvedAt) await prisma.message.update({ where: { id: request.id }, data: { resolvedAt: new Date() } });
+  const receipt = await prisma.message.create({
+    data: { threadId: request.threadId, authorId: user.id, kind: 'SYSTEM', body: names.join('\n').slice(0, 5000) },
+  });
+  events.emit('message.created', { messageId: receipt.id, projectId, threadType: 'CLIENT', actorId: user.id });
+}
+
 export const filesService = {
   async uploadAccess(user: AuthUser, projectId: string) {
     return loadProjectAccess(user, projectId);
@@ -74,7 +91,7 @@ export const filesService = {
       throw badRequest('Invalid upload metadata', meta.error.flatten());
     }
     if (!files.length) throw badRequest('No files received');
-    const { category, visibility, questionKey } = meta.data;
+    const { category, visibility, questionKey, requestId } = meta.data;
     if (access.isClient && (visibility === 'INTERNAL' || category === 'PREVIEW')) {
       cleanup();
       throw forbidden('Clients can only upload shared files');
@@ -106,6 +123,7 @@ export const filesService = {
     for (const f of created) {
       events.emit('file.uploaded', { fileId: f.id, projectId: access.project.id, actorId: user.id, visibility, category });
     }
+    if (requestId && access.isOwner) await answerFileRequest(user, access.project.id, requestId, created.map((f) => f.originalName));
     if (category === 'PREVIEW') {
       await prisma.projectEvent.create({
         data: {

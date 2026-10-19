@@ -101,6 +101,7 @@ export default function ModerationPage() {
                     <span>{formatDateTime(m.createdAt, locale)}</span>
                   </div>
                   {m.kind === 'CLARIFICATION' && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-warning"><CircleHelp className="size-3.5" />{t('chat.clarification')}</p>}
+                  {m.kind === 'FILE_REQUEST' && <p className="mt-2 text-xs font-semibold text-info">{t('chat.fileRequest')}</p>}
                   <p className={cn('mt-2 text-sm leading-relaxed whitespace-pre-wrap', m.status === 'HIDDEN' && 'text-muted line-through')}>{m.body}</p>
                   {m.moderatedBy && <p className="mt-2 text-[11px] text-muted">{m.moderatedBy.name} · {m.moderatedAt && formatDateTime(m.moderatedAt, locale)}</p>}
                 </div>

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
-import { ArrowUp, CheckCircle2, CircleHelp, Clock, Eye, EyeOff, Lock, LockOpen, MessagesSquare, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router';
+import { ArrowUp, CheckCircle2, CircleHelp, Clock, Eye, EyeOff, FileCheck2, FolderOpen, Lock, LockOpen, MessagesSquare, Paperclip, ShieldCheck, UploadCloud } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
@@ -13,16 +14,45 @@ import { Badge } from '../../components/ui/surfaces';
 import { Button } from '../../components/ui/button';
 import { Tooltip } from '../../components/ui/overlay';
 
-function MessageBubble({ m, mine, canModerate, canResolve, onModerate, onResolve }: {
+type ComposeKind = 'MESSAGE' | 'CLARIFICATION' | 'FILE_REQUEST';
+const QUICK_REQUESTS = ['screenshots', 'brand', 'content', 'documents'] as const;
+
+/** The client's receipt for requested files: the names that arrived, one per line. */
+function FilesReceipt({ m }: { m: Message }) {
+  const { t } = useI18n();
+  const names = m.body.split('\n').filter(Boolean);
+  return (
+    <div className="rounded-2xl bg-success-soft/50 px-4 py-3 text-start text-sm ring-1 ring-success/25">
+      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-success">
+        <FileCheck2 className="size-3.5" /> {t('chat.filesUploaded', { n: names.length })}
+      </p>
+      <ul className="space-y-0.5">
+        {names.slice(0, 10).map((n, i) => (
+          <li key={i} className="flex items-center gap-1.5 truncate text-[13px] text-fg-2" dir="auto">
+            <Paperclip className="size-3 shrink-0 text-muted" /> {n}
+          </li>
+        ))}
+      </ul>
+      <Link to="?tab=files" className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:underline">
+        <FolderOpen className="size-3.5" /> {t('chat.viewFiles')}
+      </Link>
+    </div>
+  );
+}
+
+function MessageBubble({ m, mine, canModerate, canResolve, canUpload, onModerate, onResolve }: {
   m: Message;
   mine: boolean;
   canModerate: boolean;
   canResolve: boolean;
+  /** The project's client: a file request gives them a one-click way to the upload area. */
+  canUpload: boolean;
   onModerate: (action: 'approve' | 'hide' | 'unhide') => void;
   onResolve: () => void;
 }) {
   const { t, locale } = useI18n();
   const clarification = m.kind === 'CLARIFICATION';
+  const fileRequest = m.kind === 'FILE_REQUEST';
   return (
     <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn('group flex gap-3', mine && 'flex-row-reverse')}>
       <Avatar name={m.author?.name ?? 'System'} size="sm" className="mt-5" />
@@ -32,12 +62,17 @@ function MessageBubble({ m, mine, canModerate, canResolve, onModerate, onResolve
           {m.author && <span>{t(`roles.${m.author.role}`)}</span>}
           <span>{formatDateTime(m.createdAt, locale)}</span>
         </div>
+        {m.kind === 'SYSTEM' ? (
+          <FilesReceipt m={m} />
+        ) : (
         <div
           className={cn(
             'inline-block rounded-2xl px-4 py-2.5 text-start text-sm leading-relaxed whitespace-pre-wrap',
             clarification
               ? 'bg-warning-soft text-fg ring-1 ring-warning/25'
-              : mine
+              : fileRequest
+                ? 'bg-info-soft/70 text-fg ring-1 ring-info/25'
+                : mine
                 ? 'rounded-se-md bg-brand text-white'
                 : 'rounded-ss-md bg-surface-2 text-fg',
             m.status === 'HIDDEN' && 'opacity-50 line-through decoration-muted/40',
@@ -50,8 +85,22 @@ function MessageBubble({ m, mine, canModerate, canResolve, onModerate, onResolve
               {m.resolvedAt && <Badge className="bg-success-soft text-success ring-success/20">{t('chat.resolved')}</Badge>}
             </div>
           )}
+          {fileRequest && (
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-info">
+              <Paperclip className="size-3.5" /> {t('chat.fileRequest')}
+              {m.resolvedAt && <Badge className="bg-success-soft text-success ring-success/20">{t('chat.filesReceived')}</Badge>}
+            </div>
+          )}
           {m.body}
+          {fileRequest && canUpload && m.status === 'VISIBLE' && (
+            <div className="mt-3">
+              <Button asChild size="sm" variant={m.resolvedAt ? 'secondary' : 'primary'} leftIcon={<UploadCloud className="size-4" />}>
+                <Link to={`?tab=files&request=${m.id}`}>{m.resolvedAt ? t('chat.uploadMore') : t('chat.uploadFiles')}</Link>
+              </Button>
+            </div>
+          )}
         </div>
+        )}
         <div className={cn('mt-1.5 flex flex-wrap items-center gap-1.5', mine && 'justify-end')}>
           {m.status === 'PENDING' && (
             <Badge className="bg-warning-soft text-warning ring-warning/20">
@@ -78,7 +127,7 @@ function MessageBubble({ m, mine, canModerate, canResolve, onModerate, onResolve
               {t('chat.unhide')}
             </Button>
           )}
-          {clarification && canResolve && m.status === 'VISIBLE' && (
+          {(clarification || fileRequest) && canResolve && m.status === 'VISIBLE' && !(fileRequest && canUpload) && (
             <Button size="xs" variant="ghost" leftIcon={<CheckCircle2 className="size-3.5" />} onClick={onResolve}>
               {m.resolvedAt ? t('chat.reopen') : t('chat.markResolved')}
             </Button>
@@ -105,10 +154,11 @@ export function ThreadView({
   heightClass?: string;
 }) {
   const { t } = useI18n();
-  const { user, isStaff } = useAuth();
+  const { user, isStaff, isClient } = useAuth();
   const qc = useQueryClient();
   const [body, setBody] = useState('');
-  const [clarify, setClarify] = useState(false);
+  const [mode, setMode] = useState<ComposeKind>('MESSAGE');
+  const toggle = (k: ComposeKind) => setMode((cur) => (cur === k ? 'MESSAGE' : k));
   const scroller = useRef<HTMLDivElement>(null);
   const invalidate = () => qc.invalidateQueries({ queryKey: ['threads', projectId] });
 
@@ -117,10 +167,10 @@ export function ThreadView({
   }, [thread.messages.length]);
 
   const post = useMutation({
-    mutationFn: () => api.post<Message>(`/threads/${thread.id}/messages`, { body, kind: clarify ? 'CLARIFICATION' : 'MESSAGE' }),
+    mutationFn: () => api.post<Message>(`/threads/${thread.id}/messages`, { body, kind: mode }),
     onSuccess: (m) => {
       setBody('');
-      setClarify(false);
+      setMode('MESSAGE');
       if (m.status === 'PENDING') toast.message(t('chat.pending'), { description: t('chat.moderatedNote') });
       invalidate();
     },
@@ -169,6 +219,7 @@ export function ThreadView({
                 mine={m.author?.id === user?.id}
                 canModerate={canModerate}
                 canResolve={canResolve}
+                canUpload={isClient && thread.type === 'CLIENT'}
                 onModerate={(action) => moderate.mutate({ id: m.id, action })}
                 onResolve={() => resolve.mutate(m.id)}
               />
@@ -192,8 +243,26 @@ export function ThreadView({
               e.preventDefault();
               if (body.trim()) post.mutate();
             }}
-            className={cn('rounded-2xl bg-surface-2 p-1.5 ring-1 focus-within:ring-2 focus-within:ring-brand', clarify ? 'ring-warning/50' : 'ring-border')}
+            className={cn(
+              'rounded-2xl bg-surface-2 p-1.5 ring-1 focus-within:ring-2 focus-within:ring-brand',
+              mode === 'CLARIFICATION' ? 'ring-warning/50' : mode === 'FILE_REQUEST' ? 'ring-info/50' : 'ring-border',
+            )}
           >
+            {mode === 'FILE_REQUEST' && (
+              <div className="flex flex-wrap items-center gap-1.5 px-2 pt-1.5">
+                <span className="text-[11px] text-muted">{t('chat.quickRequests')}:</span>
+                {QUICK_REQUESTS.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => setBody(t(`chat.quick.${q}Text`))}
+                    className="rounded-full bg-surface px-2.5 py-1 text-[11.5px] font-medium text-fg-2 ring-1 ring-border transition hover:text-info hover:ring-info/40"
+                  >
+                    {t(`chat.quick.${q}`)}
+                  </button>
+                ))}
+              </div>
+            )}
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -202,18 +271,27 @@ export function ThreadView({
               }}
               rows={2}
               maxLength={5000}
-              placeholder={clarify ? t('chat.requestClarification') : t('chat.placeholder')}
+              placeholder={mode === 'CLARIFICATION' ? t('chat.requestClarification') : mode === 'FILE_REQUEST' ? t('chat.fileRequestPlaceholder') : t('chat.placeholder')}
               className="w-full resize-none bg-transparent px-2.5 py-2 text-sm text-fg outline-none placeholder:text-muted"
             />
             <div className="flex items-center justify-between px-1">
               {isStaff && thread.type === 'CLIENT' ? (
-                <button
-                  type="button"
-                  onClick={() => setClarify((c) => !c)}
-                  className={cn('inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition', clarify ? 'bg-warning-soft text-warning' : 'text-muted hover:text-fg')}
-                >
-                  <CircleHelp className="size-3.5" /> {t('chat.requestClarification')}
-                </button>
+                <div className="flex flex-wrap items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => toggle('CLARIFICATION')}
+                    className={cn('inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition', mode === 'CLARIFICATION' ? 'bg-warning-soft text-warning' : 'text-muted hover:text-fg')}
+                  >
+                    <CircleHelp className="size-3.5" /> {t('chat.requestClarification')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggle('FILE_REQUEST')}
+                    className={cn('inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition', mode === 'FILE_REQUEST' ? 'bg-info-soft text-info' : 'text-muted hover:text-fg')}
+                  >
+                    <Paperclip className="size-3.5" /> {t('chat.requestFiles')}
+                  </button>
+                </div>
               ) : (
                 <span />
               )}
