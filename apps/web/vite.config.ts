@@ -1,6 +1,47 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { META, renderBody, renderHead, resolveSite } from './seo/static-seo';
+
+/**
+ * Bakes crawler-visible SEO into index.html (head tags + a content block inside #root) so tools that do not
+ * run JavaScript see the page's heading, calls to action, contact details, structured data and so on.
+ */
+function staticSeo(): Plugin {
+  return {
+    name: 'static-seo',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html) {
+        Object.assign(process.env, { ...loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), 'VITE_'), ...process.env });
+        const site = resolveSite();
+        return html
+          .replace('<!--static-seo:title-->', () => META.title)
+          .replace('<!--static-seo:description-->', () => META.description)
+          .replace('<!--static-seo:head-->', () => renderHead(site))
+          .replace('<!--static-seo:body-->', () => renderBody(site));
+      },
+    },
+    // The SPA rewrite would otherwise answer /robots.txt and /sitemap.xml with index.html on Vercel.
+    // The API still serves live versions in dev (see the proxy below); these are the deployed defaults.
+    generateBundle() {
+      const { url } = resolveSite();
+      this.emitFile({
+        type: 'asset',
+        fileName: 'robots.txt',
+        source: `User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /api\n\nSitemap: ${url}/sitemap.xml\n`,
+      });
+      this.emitFile({
+        type: 'asset',
+        fileName: 'sitemap.xml',
+        source:
+          `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+          `  <url><loc>${url}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n` +
+          `  <url><loc>${url}/register</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>\n</urlset>\n`,
+      });
+    },
+  };
+}
 
 const API = 'http://localhost:4000';
 
@@ -19,7 +60,7 @@ const quietProxy = (proxy: any) => {
 };
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), staticSeo()],
   server: {
     port: 5173,
     proxy: {

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
 import { useAuth } from '../../lib/auth';
+import { usePublicSettings } from '../../lib/brand';
 import { Button } from '../../components/ui/button';
 import { Logo } from '../../components/layout/Logo';
 import { LanguageToggle, ThemeToggle } from '../../components/layout/Preferences';
@@ -35,6 +36,7 @@ import { InteractiveRoiCalculator } from './InteractiveRoiCalculator';
 import { InteractivePerspectiveTabs } from './InteractivePerspectiveTabs';
 import { InteractiveFaq } from './InteractiveFaq';
 import { LandingFooter } from './LandingFooter';
+import { LandingProof } from './LandingProof';
 
 const TYPES: { key: string; en: string; ar: string; count: string }[] = [
   { key: 'ecommerce', en: 'Ecommerce Store', ar: 'متجر إلكتروني', count: '140+ تم إنجازه' },
@@ -57,7 +59,9 @@ const fadeUp = {
 export function LandingPage() {
   const { t, locale, b } = useI18n();
   const { user } = useAuth();
+  const { data: settings } = usePublicSettings();
   const isAr = locale === 'ar';
+  const waDigits = (settings?.contact?.whatsapp ?? '+201022596130').replace(/\D/g, '');
   const startHref = user ? '/app' : '/register';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -92,6 +96,9 @@ export function LandingPage() {
             </a>
             <a href="#perspectives" className="transition-colors hover:text-fg">
               {isAr ? 'كيف يعمل' : 'How it Works'}
+            </a>
+            <a href="#portfolio" className="transition-colors hover:text-fg">
+              {isAr ? 'أعمالنا' : 'Our Work'}
             </a>
             <a href="#faq" className="transition-colors hover:text-fg">
               {isAr ? 'الأسئلة الشائعة' : 'FAQ'}
@@ -450,6 +457,8 @@ export function LandingPage() {
         <InteractivePerspectiveTabs />
       </section>
 
+      <LandingProof />
+
       {/* Interactive FAQ Section */}
       <section id="faq" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-20 border-t border-border/60">
         <InteractiveFaq />
@@ -488,6 +497,13 @@ export function LandingPage() {
               <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto px-8 py-3.5 bg-white/10 text-white hover:bg-white/20 border border-white/20 text-base">
                 <Link to="/login">{isAr ? 'تسجيل الدخول' : 'Sign In'}</Link>
               </Button>
+              {waDigits && (
+                <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto px-8 py-3.5 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-400/30 text-base">
+                  <a href={`https://wa.me/${waDigits}?text=${encodeURIComponent(isAr ? 'مرحباً، أرغب في حجز موعد لمناقشة مشروعي.' : 'Hello, I would like to book a call about my project.')}`} target="_blank" rel="noreferrer">
+                    {isAr ? 'احجز موعداً عبر واتساب' : 'Book a call on WhatsApp'}
+                  </a>
+                </Button>
+              )}
             </div>
 
             <p className="text-xs text-white/50 pt-2">

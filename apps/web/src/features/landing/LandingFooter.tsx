@@ -16,9 +16,9 @@ import { Logo } from '../../components/layout/Logo';
 import { LanguageToggle, ThemeToggle } from '../../components/layout/Preferences';
 
 const DEFAULT_FALLBACK_CONTACT: ContactInfo = {
-  email: 'contact@welco.dev',
-  phone: '+966 50 123 4567',
-  whatsapp: '+966501234567',
+  email: 'saidd.mahmoud4@gmail.com',
+  phone: '+20 102 259 6130',
+  whatsapp: '+201022596130',
   addressAr: 'الرياض، المملكة العربية السعودية - طريق الملك فهد',
   addressEn: 'Riyadh, Saudi Arabia - King Fahd Road',
   workingHoursAr: 'الأحد - الخميس: ٩:٠٠ ص - ٦:٠٠ م',
