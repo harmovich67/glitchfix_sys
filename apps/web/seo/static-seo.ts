@@ -59,7 +59,7 @@ export function resolveSite(): SiteConfig {
 
 const TITLE = 'GlitchFix · جليتش فيكس — Digital projects, systems and fixes';
 const DESCRIPTION =
-  'GlitchFix turns a project idea into a clear technical brief with AI, then tracks delivery and repairs on your existing website — in Arabic and English. جليتش فيكس: متطلبات المشاريع الرقمية وإصلاح المواقع.';
+  'GlitchFix turns your project idea into a clear AI-written brief and fixes live websites. جليتش فيكس: متطلبات المشاريع الرقمية وإصلاح المواقع.';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const digits = (s: string) => s.replace(/\D/g, '');
@@ -161,7 +161,7 @@ export function renderBody(site: SiteConfig): string {
       </style>
       <main id="seo-fallback">
         <section lang="en" dir="ltr">
-          <h1>${esc(site.nameEn)} — turn your project idea into a clear technical brief, then get it built and fixed</h1>
+          <h1>Project briefs and website fixes for business owners and agencies</h1>
           <p>${esc(site.nameEn)} is a digital projects, systems and issue-management platform. Describe what you want to build in plain words; our AI consultant asks the right follow-up questions, suggests missing features and hands your developers a structured requirements document they can estimate and start on. Already have a website with a problem? Report it and get a clear diagnosis and fix plan.</p>
           <p class="cta">
             <a href="/register">Start your project free</a>
