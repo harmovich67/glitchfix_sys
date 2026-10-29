@@ -66,7 +66,8 @@ const digits = (s: string) => s.replace(/\D/g, '');
 
 export function renderHead(site: SiteConfig): string {
   const home = `${site.url}/`;
-  const image = `${site.url}/icons/icon-512.png`;
+  const logo = `${site.url}/icons/icon-512.png`;
+  const image = `${site.url}/og-image.png`;
   const sameAs = site.social.map((s) => s.url);
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -77,7 +78,7 @@ export function renderHead(site: SiteConfig): string {
         name: site.nameEn,
         alternateName: site.nameAr,
         url: home,
-        logo: image,
+        logo,
         email: site.email,
         telephone: site.phone,
         ...(sameAs.length ? { sameAs } : {}),
@@ -118,7 +119,7 @@ export function renderHead(site: SiteConfig): string {
     `<meta property="og:image:alt" content="${esc(site.nameEn)}" />`,
     `<meta property="og:locale" content="en_US" />`,
     `<meta property="og:locale:alternate" content="ar_AR" />`,
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${esc(TITLE)}" />`,
     `<meta name="twitter:description" content="${esc(DESCRIPTION)}" />`,
     `<meta name="twitter:image" content="${esc(image)}" />`,

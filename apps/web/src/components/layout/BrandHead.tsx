@@ -25,7 +25,7 @@ function link(rel: string, href: string, extra: Record<string, string> = {}) {
     document.head.appendChild(el);
   }
   el.href = href;
-  ['type'].forEach((k) => el!.removeAttribute(k));
+  ['type', 'sizes'].forEach((k) => el!.removeAttribute(k));
   Object.entries(extra).forEach(([k, v]) => el!.setAttribute(k, v));
 }
 
@@ -81,7 +81,7 @@ export function BrandHead() {
     const keywords = pick(seo?.keywordsEn, seo?.keywordsAr);
     const robots = !indexable || isApp ? 'noindex,nofollow' : isAuth ? 'noindex,follow' : 'index,follow,max-image-preview:large';
     const canonical = !isApp && indexable ? `${site}${isHome ? '/' : pathname}` : '';
-    const image = abs(seo?.ogImage ?? '');
+    const image = abs(seo?.ogImage || '/og-image.png');
     const handle = seo?.twitterHandle ? `@${seo.twitterHandle.replace(/^@/, '')}` : '';
 
     document.title = title;
@@ -97,7 +97,7 @@ export function BrandHead() {
     link('manifest', '/manifest.webmanifest');
     link('apple-touch-icon', '/icons/apple-touch-icon.png');
     link('canonical', canonical);
-    link('icon', brand.faviconUrl || '/favicon.svg', brand.faviconUrl ? {} : { type: 'image/svg+xml' });
+    link('icon', brand.faviconUrl || '/icons/favicon-32.png', brand.faviconUrl ? {} : { type: 'image/png', sizes: '32x32' });
 
     // Open Graph & Twitter (what link previews use).
     meta('property', 'og:type', 'website');
@@ -129,7 +129,7 @@ export function BrandHead() {
             '@type': 'Organization',
             name: brand.name,
             url: `${site}/`,
-            ...(image || brand.logoUrl ? { logo: abs(brand.logoUrl || seo?.ogImage || '') } : {}),
+            logo: abs(brand.logoUrl || seo?.ogImage || '/icons/icon-512.png'),
             ...(contact?.email ? { email: contact.email } : {}),
             ...(contact?.phone ? { telephone: contact.phone } : {}),
             ...(sameAs.length ? { sameAs } : {}),

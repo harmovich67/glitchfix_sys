@@ -2,7 +2,9 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#07080f" />
@@ -131,9 +133,10 @@
 
       /* Neon Logo Emblem */
       .gf-logo-box {
+        --gf-logo: 104px;
         position: relative;
-        width: 104px;
-        height: 104px;
+        width: var(--gf-logo);
+        height: var(--gf-logo);
         margin-bottom: 24px;
         animation: gf-ignition 1.1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
       }
@@ -150,8 +153,11 @@
 
       .gf-logo-svg {
         position: relative;
+        display: block;
         width: 100%;
         height: 100%;
+        border-radius: 24px;
+        object-fit: cover;
         filter: drop-shadow(0 0 14px rgba(0, 240, 255, 0.75)) drop-shadow(0 0 30px rgba(217, 70, 239, 0.5));
       }
 
@@ -224,7 +230,7 @@
 
       /* Neon Laser Progress Track */
       .gf-laser-track {
-        margin-top: 32px;
+        margin-top: 24px;
         width: 210px;
         height: 3px;
         border-radius: 9999px;
@@ -238,11 +244,13 @@
         top: 0;
         left: 0;
         bottom: 0;
-        width: 0%;
+        width: 100%;
         background: linear-gradient(90deg, #00f0ff, #818cf8, #f43f5e);
         box-shadow: 0 0 12px #00f0ff, 0 0 20px #d946ef;
         border-radius: 9999px;
-        animation: gf-laser-fill 1.85s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+        transform: scaleX(0);
+        transform-origin: left center;
+        animation: gf-laser-fill 2.8s cubic-bezier(0.3, 0.6, 0.3, 1) forwards;
       }
 
       /* Skip hint */
@@ -252,6 +260,223 @@
         color: rgba(255, 255, 255, 0.35);
         letter-spacing: 0.05em;
         font-family: 'Inter', sans-serif;
+      }
+
+      /* ── Intro story: client papers stream into the emblem, then code writes itself ──
+         Everything below animates transform/opacity only (compositor-friendly, so it stays smooth
+         while the app bundle parses). Text layers sit above the papers via DOM order. */
+      .gf-brand-en,
+      .gf-brand-ar,
+      .gf-tagline-chip {
+        position: relative;
+      }
+
+      /* Documents flying in */
+      .gf-papers {
+        --gf-dx: clamp(110px, 32vw, 300px);
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .gf-paper-slot {
+        --d: 1.3s;
+        position: absolute;
+        inset: 0;
+      }
+
+      /* Ripple on the emblem at the moment a paper lands */
+      .gf-paper-slot::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 28px;
+        border: 1.5px solid rgba(var(--c), 0.7);
+        box-shadow: 0 0 14px rgba(var(--c), 0.45);
+        opacity: 0;
+        animation: gf-landing var(--d) var(--delay) linear infinite both;
+      }
+
+      /* Outer layer travels on X (ease-in: slow start, pulled in at the end) and shrinks;
+         the inner layer travels on Y with its own easing, which bends the path into an arc. */
+      .gf-paper {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 30px;
+        height: 38px;
+        margin: -19px 0 0 -15px;
+        will-change: transform;
+        animation: gf-paper-x var(--d) var(--delay) cubic-bezier(0.5, 0, 0.85, 0.5) infinite both;
+      }
+
+      .gf-paper > i {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(var(--c), 0.6);
+        box-shadow: 0 0 12px rgba(var(--c), 0.4), inset 0 0 8px rgba(var(--c), 0.15);
+        will-change: transform, opacity;
+        animation: gf-paper-y var(--d) var(--delay) cubic-bezier(0.2, 0.7, 0.3, 1) infinite both,
+                   gf-paper-fade var(--d) var(--delay) linear infinite both;
+      }
+
+      /* Text lines on the sheet */
+      .gf-paper > i::before {
+        content: '';
+        position: absolute;
+        inset: 8px 5px 5px;
+        background:
+          linear-gradient(rgba(var(--c), 0.95) 0 0) 0 0 / 55% 2px no-repeat,
+          linear-gradient(rgba(255, 255, 255, 0.6) 0 0) 0 6px / 100% 2px no-repeat,
+          linear-gradient(rgba(255, 255, 255, 0.45) 0 0) 0 11px / 100% 2px no-repeat,
+          linear-gradient(rgba(255, 255, 255, 0.45) 0 0) 0 16px / 78% 2px no-repeat,
+          linear-gradient(rgba(255, 255, 255, 0.35) 0 0) 0 21px / 90% 2px no-repeat;
+      }
+
+      /* Sheet with a picture block instead of a headline */
+      .gf-paper--img > i::before {
+        background:
+          linear-gradient(rgba(var(--c), 0.45) 0 0) 0 0 / 100% 11px no-repeat,
+          linear-gradient(rgba(255, 255, 255, 0.55) 0 0) 0 15px / 100% 2px no-repeat,
+          linear-gradient(rgba(255, 255, 255, 0.4) 0 0) 0 20px / 70% 2px no-repeat;
+      }
+
+      /* Folded corner */
+      .gf-paper > i::after {
+        content: '';
+        position: absolute;
+        top: -1px;
+        right: -1px;
+        width: 10px;
+        height: 10px;
+        border-radius: 0 4px 0 3px;
+        background: linear-gradient(225deg, #06070f 50%, rgba(var(--c), 0.75) 50%);
+      }
+
+      /* Code window that types itself */
+      .gf-code {
+        position: relative;
+        width: min(320px, calc(100vw - 48px));
+        margin-top: 20px;
+        border-radius: 12px;
+        background: rgba(8, 12, 28, 0.8);
+        border: 1px solid rgba(0, 240, 255, 0.24);
+        box-shadow: 0 0 26px rgba(0, 240, 255, 0.12), 0 12px 40px rgba(0, 0, 0, 0.45), inset 0 0 18px rgba(129, 140, 248, 0.07);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        direction: ltr;
+        text-align: left;
+        opacity: 0;
+        transform: translateY(10px);
+        animation: gf-code-in 0.6s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .gf-code-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .gf-code-bar i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #f43f5e;
+        opacity: 0.85;
+      }
+
+      .gf-code-bar i:nth-child(2) { background: #fbbf24; }
+      .gf-code-bar i:nth-child(3) { background: #34d399; }
+
+      .gf-code-file {
+        margin-left: 8px;
+        font: 600 10px/1 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.06em;
+        color: rgba(165, 243, 252, 0.65);
+      }
+
+      /* Fixed height (4 lines) so the layout never shifts while typing */
+      .gf-code-body {
+        box-sizing: border-box;
+        height: calc(1.7em * 4 + 22px);
+        padding: 10px 12px 12px;
+        overflow: hidden;
+        font: 500 11px/1.7 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        color: #e0e7ff;
+        white-space: pre;
+      }
+
+      .gf-code-line {
+        display: flex;
+        min-height: 1.7em;
+      }
+
+      .gf-ln {
+        flex: 0 0 20px;
+        color: rgba(148, 163, 184, 0.4);
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .gf-code-text { min-width: 0; }
+      .gf-code .k { color: #e879f9; }
+      .gf-code .f { color: #67e8f9; }
+      .gf-code .v { color: #e0e7ff; }
+      .gf-code .p { color: #94a3b8; }
+      .gf-code .s { color: #fbbf24; }
+      .gf-code .ok { color: #34d399; }
+
+      .gf-caret {
+        display: inline-block;
+        width: 6px;
+        height: 1.15em;
+        margin-left: 1px;
+        vertical-align: -0.2em;
+        background: #00f0ff;
+        box-shadow: 0 0 8px #00f0ff;
+        animation: gf-caret 1s step-end infinite;
+      }
+
+      /* Small / short screens: keep the whole story on screen */
+      @media (max-width: 340px) {
+        .gf-code-body { font-size: 10px; }
+      }
+
+      @media (max-height: 620px) {
+        .gf-logo-box { --gf-logo: 80px; margin-bottom: 16px; }
+        .gf-brand-en { font-size: 28px; }
+        .gf-brand-ar { font-size: 18px; }
+        .gf-tagline-chip { margin-top: 12px; }
+        .gf-code { margin-top: 14px; }
+        .gf-laser-track { margin-top: 18px; }
+        .gf-hint { display: none; }
+      }
+
+      @media (max-height: 480px) {
+        .gf-tagline-chip { display: none; }
+      }
+
+      @media (max-height: 380px) {
+        .gf-code { display: none; }
+      }
+
+      /* Reduced motion: a calm static splash with the finished code, no flying papers */
+      @media (prefers-reduced-motion: reduce) {
+        #glitchfix-splash *,
+        #glitchfix-splash *::before,
+        #glitchfix-splash *::after {
+          animation: none !important;
+        }
+        .gf-papers,
+        .gf-scanline { display: none; }
+        .gf-code { opacity: 1; transform: none; }
+        .gf-laser-bar { transform: none; }
       }
 
       /* Keyframe Animations */
@@ -330,17 +555,53 @@
       }
 
       @keyframes gf-laser-fill {
-        0% { width: 0%; }
-        35% { width: 42%; }
-        70% { width: 78%; }
-        100% { width: 100%; }
+        0% { transform: scaleX(0); }
+        35% { transform: scaleX(0.42); }
+        70% { transform: scaleX(0.78); }
+        100% { transform: scaleX(1); }
       }
 
       @keyframes gf-blink {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.35; transform: scale(0.8); }
       }
+
+      @keyframes gf-paper-x {
+        from { transform: translate3d(var(--sx), 0, 0) scale(1); }
+        to { transform: translate3d(0, 0, 0) scale(0.25); }
+      }
+
+      @keyframes gf-paper-y {
+        from { transform: translate3d(0, var(--sy), 0) rotate(var(--rot)); }
+        to { transform: translate3d(0, 0, 0) rotate(0deg); }
+      }
+
+      @keyframes gf-paper-fade {
+        0% { opacity: 0; }
+        14% { opacity: 1; }
+        82% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      @keyframes gf-landing {
+        0%, 80% { opacity: 0; transform: scale(0.92); }
+        88% { opacity: 0.6; }
+        100% { opacity: 0; transform: scale(1.28); }
+      }
+
+      @keyframes gf-code-in {
+        to { opacity: 1; transform: none; }
+      }
+
+      @keyframes gf-caret {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
     </style>
+    <noscript>
+      <!-- Without JavaScript nothing would ever dismiss the splash, so never show it. -->
+      <style>#glitchfix-splash { display: none !important; }</style>
+    </noscript>
 
     <script>
       // Apply theme & direction before paint to avoid flashes.
@@ -365,76 +626,18 @@
         <!-- Neon Emblem -->
         <div class="gf-logo-box">
           <div class="gf-logo-halo"></div>
-          <svg class="gf-logo-svg" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="splash-shield-neon" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#00f0ff" />
-                <stop offset="50%" stop-color="#818cf8" />
-                <stop offset="100%" stop-color="#f43f5e" />
-              </linearGradient>
-              <linearGradient id="splash-g-neon" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#67e8f9" />
-                <stop offset="100%" stop-color="#00f0ff" />
-              </linearGradient>
-              <linearGradient id="splash-f-neon" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#f43f5e" />
-                <stop offset="100%" stop-color="#c026d3" />
-              </linearGradient>
-            </defs>
 
-            <!-- Base App Tile Shield -->
-            <rect width="512" height="512" rx="112" fill="#070814" stroke="url(#splash-shield-neon)" stroke-width="8" stroke-opacity="0.4" />
+          <!-- Client documents flying into the emblem (decorative) -->
+          <div class="gf-papers" aria-hidden="true">
+            <div class="gf-paper-slot" style="--sx: calc(var(--gf-dx) * -1); --sy: -48px; --rot: -20deg; --c: 0, 240, 255; --delay: 0.1s"><div class="gf-paper"><i></i></div></div>
+            <div class="gf-paper-slot" style="--sx: calc(var(--gf-dx) * 0.9); --sy: 36px; --rot: 16deg; --c: 129, 140, 248; --delay: 0.36s"><div class="gf-paper gf-paper--img"><i></i></div></div>
+            <div class="gf-paper-slot" style="--sx: calc(var(--gf-dx) * -0.8); --sy: 50px; --rot: 12deg; --c: 217, 70, 239; --delay: 0.62s"><div class="gf-paper"><i></i></div></div>
+            <div class="gf-paper-slot" style="--sx: calc(var(--gf-dx) * 1.1); --sy: -62px; --rot: -14deg; --c: 0, 240, 255; --delay: 0.88s"><div class="gf-paper gf-paper--img"><i></i></div></div>
+            <div class="gf-paper-slot" style="--sx: calc(var(--gf-dx) * -1.1); --sy: -8px; --rot: -8deg; --c: 129, 140, 248; --delay: 1.14s"><div class="gf-paper"><i></i></div></div>
+            <div class="gf-paper-slot" style="--sx: calc(var(--gf-dx) * 0.8); --sy: 44px; --rot: 22deg; --c: 217, 70, 239; --delay: 1.4s"><div class="gf-paper"><i></i></div></div>
+          </div>
 
-            <!-- Outer Neon Shield -->
-            <path
-              d="M 256 68 L 420 162 L 420 350 L 256 444 L 92 350 L 92 162 Z"
-              stroke="url(#splash-shield-neon)"
-              stroke-width="16"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              opacity="0.95"
-            />
-            <path
-              d="M 256 68 L 420 162 L 420 350 L 256 444 L 92 350 L 92 162 Z"
-              stroke="#ffffff"
-              stroke-width="4.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              opacity="0.9"
-            />
-
-            <!-- 'G' Neon Tube -->
-            <path
-              d="M 345 180 L 280 180 A 84 84 0 0 0 172 256 A 84 84 0 0 0 256 340 L 326 340 L 326 270 L 260 270"
-              stroke="url(#splash-g-neon)"
-              stroke-width="32"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M 345 180 L 280 180 A 84 84 0 0 0 172 256 A 84 84 0 0 0 256 340 L 326 340 L 326 270 L 260 270"
-              stroke="#ffffff"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-
-            <!-- 'F' Lightning Bolt (Fix the Glitch!) -->
-            <path
-              d="M 320 130 L 230 250 L 285 250 L 205 380"
-              stroke="url(#splash-f-neon)"
-              stroke-width="24"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M 320 130 L 230 250 L 285 250 L 205 380"
-              stroke="#ffffff"
-              stroke-width="7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+          <img class="gf-logo-svg" src="/icons/logo-mark.png" alt="" width="104" height="104" decoding="async" />
         </div>
 
         <!-- Glowing Neon Titles -->
@@ -445,6 +648,12 @@
         <div class="gf-tagline-chip">
           <span class="gf-dot"></span>
           <span class="gf-tagline-text">SYSTEM ONLINE · إصلاح الأنظمة</span>
+        </div>
+
+        <!-- Code window: lines are typed in by the script below (decorative) -->
+        <div class="gf-code" aria-hidden="true">
+          <div class="gf-code-bar"><i></i><i></i><i></i><span class="gf-code-file">fix-site.ts</span></div>
+          <div class="gf-code-body" id="gf-code-body"></div>
         </div>
 
         <!-- Neon Laser Progress Bar -->
@@ -462,10 +671,15 @@
         var splash = document.getElementById('glitchfix-splash');
         if (!splash) return;
 
+        var reduceMotion = false;
+        try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
         var dismissed = false;
+        var frame = 0;
         function dismiss() {
           if (dismissed) return;
           dismissed = true;
+          if (frame) cancelAnimationFrame(frame);
           splash.classList.add('gf-exit');
           setTimeout(function () {
             if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
@@ -476,14 +690,83 @@
         splash.addEventListener('click', dismiss);
         splash.addEventListener('touchstart', dismiss, { passive: true });
 
-        // Auto dismiss after splash animation finishes
-        var timer = setTimeout(dismiss, 2100);
+        // Auto dismiss once the intro has played (the story below is timed to finish just before this)
+        var timer = setTimeout(dismiss, reduceMotion ? 1200 : 3000);
 
         // Expose global for React to signal when loaded
         window.__dismissGlitchFixSplash = function () {
           clearTimeout(timer);
           dismiss();
         };
+
+        // ── Code window: types itself while the client papers fly into the emblem ──
+        var host = document.getElementById('gf-code-body');
+        if (!host) return;
+
+        // [token class, text]: k keyword, f function, v identifier, p punctuation, s literal, ok success
+        var SNIPPET = [
+          [['k', 'const '], ['v', 'brief'], ['p', ' = '], ['k', 'await '], ['f', 'discover'], ['p', '('], ['v', 'idea'], ['p', ');']],
+          [['k', 'const '], ['v', 'spec'], ['p', ' = '], ['v', 'brief'], ['p', '.'], ['f', 'toSpec'], ['p', '();']],
+          [['k', 'await '], ['f', 'fix'], ['p', '('], ['v', 'site'], ['p', ', { '], ['v', 'ai'], ['p', ': '], ['s', 'true'], ['p', ' });']],
+          [['ok', '✓ glitch fixed · deployed']]
+        ];
+        var START_MS = 650;  // after the window has faded in
+        var CHAR_MS = 10;    // base time per character
+        var LINE_PAUSE_MS = 90;
+
+        var caret = document.createElement('span');
+        caret.className = 'gf-caret';
+
+        // Build every line up front so nothing reflows, and schedule each character on a timeline.
+        var steps = [];
+        var lineEls = [];
+        var at = START_MS;
+        SNIPPET.forEach(function (tokens, n) {
+          var row = document.createElement('div');
+          row.className = 'gf-code-line';
+          var num = document.createElement('span');
+          num.className = 'gf-ln';
+          num.textContent = String(n + 1);
+          var text = document.createElement('span');
+          text.className = 'gf-code-text';
+          row.appendChild(num);
+          row.appendChild(text);
+          host.appendChild(row);
+          lineEls.push(text);
+          tokens.forEach(function (tok) {
+            var el = document.createElement('span');
+            el.className = tok[0];
+            text.appendChild(el);
+            for (var i = 0; i < tok[1].length; i++) {
+              steps.push({ at: at, el: el, ch: tok[1].charAt(i), line: text });
+              at += CHAR_MS + (steps.length * 7) % 7; // deterministic, slightly uneven rhythm
+            }
+          });
+          at += LINE_PAUSE_MS;
+        });
+
+        if (reduceMotion) {
+          steps.forEach(function (s) { s.el.textContent += s.ch; });
+          lineEls[lineEls.length - 1].appendChild(caret);
+          return;
+        }
+
+        // Time-based (not tick-based): if the main thread is busy parsing the app bundle and a frame
+        // is late, the next frame simply catches up instead of the typing drifting behind the papers.
+        var t0 = performance.now();
+        var cursor = 0;
+        lineEls[0].appendChild(caret);
+        function type() {
+          var elapsed = performance.now() - t0;
+          var last = null;
+          while (cursor < steps.length && steps[cursor].at <= elapsed) {
+            last = steps[cursor++];
+            last.el.textContent += last.ch;
+          }
+          if (last) last.line.appendChild(caret);
+          if (cursor < steps.length && !dismissed) frame = requestAnimationFrame(type);
+        }
+        frame = requestAnimationFrame(type);
       })();
     </script>
 
