@@ -41,7 +41,7 @@ function TextBody({ id }: { id: string }) {
   if (q.isError) return <p className="py-10 text-center text-sm text-danger">{t('files.previewFailed')}</p>;
   const text = q.data ?? '';
   return (
-    <pre dir="auto" className="max-h-[65vh] overflow-auto rounded-xl bg-surface-2 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-fg">
+    <pre dir="auto" className="max-h-[calc(90vh-13rem)] overflow-y-auto rounded-xl bg-surface-2 p-4 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-fg">
       {text.length > TEXT_LIMIT ? `${text.slice(0, TEXT_LIMIT)}\n…` : text}
     </pre>
   );
@@ -68,11 +68,11 @@ export function FilePreviewModal({ file, open, onOpenChange }: { file: Previewab
       }
     >
       {kind === 'image' && (
-        <div className="flex max-h-[65vh] justify-center overflow-auto rounded-xl bg-surface-2 p-2">
-          <img src={fileUrl(file.id, true)} alt={file.originalName} className="max-h-[62vh] max-w-full object-contain" />
+        <div className="flex justify-center overflow-hidden rounded-xl bg-surface-2 p-2">
+          <img src={fileUrl(file.id, true)} alt={file.originalName} className="max-h-[calc(90vh-14rem)] min-w-0 max-w-full object-contain" />
         </div>
       )}
-      {kind === 'pdf' && <iframe src={fileUrl(file.id, true)} title={file.originalName} className="h-[65vh] w-full rounded-xl bg-surface-2 ring-1 ring-border" />}
+      {kind === 'pdf' && <iframe src={fileUrl(file.id, true)} title={file.originalName} className="h-[calc(90vh-13rem)] w-full rounded-xl bg-surface-2 ring-1 ring-border" />}
       {kind === 'text' && <TextBody id={file.id} />}
       {kind === 'none' && (
         <div className="flex flex-col items-center gap-3 py-10 text-center text-muted">

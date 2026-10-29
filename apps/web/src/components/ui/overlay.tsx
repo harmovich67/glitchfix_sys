@@ -39,7 +39,7 @@ export function Modal({
             <Dialog.Content asChild>
               <motion.div
                 className={cn(
-                  'fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl bg-surface shadow-lg ring-1 ring-border focus:outline-none',
+                  'fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] overflow-x-hidden overflow-y-auto rounded-2xl bg-surface shadow-lg ring-1 ring-border focus:outline-none',
                   widths[size],
                 )}
                 initial={{ opacity: 0, scale: 0.96, x: '-50%', y: '-48%' }}
@@ -48,15 +48,15 @@ export function Modal({
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               >
                 <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
-                  <div>
-                    <Dialog.Title className="text-base font-semibold text-fg">{title}</Dialog.Title>
+                  <div className="min-w-0 flex-1">
+                    <Dialog.Title className="text-base font-semibold break-words text-fg">{title}</Dialog.Title>
                     {description ? (
-                      <Dialog.Description className="mt-1 text-sm text-muted">{description}</Dialog.Description>
+                      <Dialog.Description className="mt-1 text-sm break-words text-muted">{description}</Dialog.Description>
                     ) : (
                       <Dialog.Description className="sr-only">{typeof title === 'string' ? title : ''}</Dialog.Description>
                     )}
                   </div>
-                  <Dialog.Close className="rounded-lg p-1 text-muted hover:bg-surface-2 hover:text-fg">
+                  <Dialog.Close className="shrink-0 rounded-lg p-1 text-muted hover:bg-surface-2 hover:text-fg">
                     <X className="size-4" />
                   </Dialog.Close>
                 </div>
